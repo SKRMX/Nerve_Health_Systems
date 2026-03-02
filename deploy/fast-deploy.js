@@ -10,7 +10,7 @@ const VPS = {
 const conn = new Client();
 conn.on('ready', () => {
     console.log('✅ Connected to VPS');
-    conn.exec('cd /var/www/nerve && git pull origin main', { pty: true }, (err, stream) => {
+    conn.exec('cd /var/www/nerve && git pull origin main && pm2 restart ecosystem.config.js', { pty: true }, (err, stream) => {
         stream.on('data', d => process.stdout.write(d.toString()));
         stream.on('close', code => {
             console.log(`✅ Git pulled (Code ${code})`);

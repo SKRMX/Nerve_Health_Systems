@@ -16,8 +16,8 @@ let selectedPlan = null;
 let billingCycle = 'monthly';
 
 const planPrices = {
-    monthly: { starter: 399, clinica: 1499 },
-    annual: { starter: 319, clinica: 1199 },
+    monthly: { starter: 699, clinica: 4999 },
+    annual: { starter: 559, clinica: 3999 },
 };
 
 // ---- Step navigation ----
@@ -79,7 +79,7 @@ function updateSummary() {
     document.getElementById('summaryPlan').textContent = selectedPlan.label;
     document.getElementById('summaryBilling').textContent = billingCycle === 'monthly' ? 'Facturación mensual' : 'Facturación anual (ahorra 20%)';
     document.getElementById('summaryPrice').textContent = `$${price.toLocaleString()}/mes`;
-    document.getElementById('summaryLabel').textContent = billingCycle === 'annual' ? 'Precio anual' : 'Desde el día 31';
+    document.getElementById('summaryLabel').textContent = billingCycle === 'annual' ? 'Precio anual' : 'Desde el día 16';
 }
 
 // ---- Billing toggle ----

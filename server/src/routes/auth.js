@@ -7,12 +7,26 @@ const prisma = require('../config/database');
 const { authenticate, generateTokens, verifyRefreshToken } = require('../middleware/auth');
 const { logAudit } = require('../middleware/audit');
 const { VALID_ROLES } = require('../middleware/rbac');
+const rateLimit = require('express-rate-limit');
 
 const router = express.Router();
 
+// Rate limiter to prevent abuse: Max 3 free accounts per IP
+const registerLimiter = rateLimit({
+    windowMs: 30 * 24 * 60 * 60 * 1000, // 30 days duration (in memory)
+    max: 3, // limit each IP to 3 signups
+    message: { error: '⚠️ Límite de cuentas gratuitas alcanzado. Por favor contacta a soporte para continuar.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        // Use true IP when deployed behind Nginx proxy
+        return req.headers['x-forwarded-for'] || req.ip;
+    }
+});
+
 // ---- POST /api/auth/register ----
 // Creates an organization + org_owner in one step
-router.post('/register', async (req, res) => {
+router.post('/register', registerLimiter, async (req, res) => {
     try {
         const { name, email, password, orgName, phone, specialty } = req.body;
 
