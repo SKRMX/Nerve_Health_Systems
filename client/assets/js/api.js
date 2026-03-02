@@ -4,10 +4,12 @@
 // ================================================
 
 const API = (() => {
-    // Auto-detect: if running locally use localhost, in production use same domain
-    const BASE_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:3001/api'
-        : '/api';
+    // The base URL for the API
+    // Auto-detects if we are running locally or in production (Hostinger VPS)
+    const isProd = window.location.hostname === 'nervehealthsystems.com' || window.location.hostname === 'www.nervehealthsystems.com';
+    const BASE_URL = isProd
+        ? 'https://nervehealthsystems.com/api'
+        : 'http://localhost:3001/api';
 
     let accessToken = localStorage.getItem('nerve_token') || null;
     let refreshToken = localStorage.getItem('nerve_refresh') || null;
