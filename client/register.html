@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crear cuenta — NERVE Health Systems</title>
+    <meta name="description"
+        content="Crea tu cuenta en NERVE Health Systems y comienza tu prueba gratuita de 30 días." />
+    <link rel="stylesheet" href="assets/css/index.css" />
+    <link rel="stylesheet" href="assets/css/register.css" />
+</head>
+
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- Navbar minimal -->
+    <nav class="reg-nav">
+        <a href="index.html" class="nav-logo">
+            <img src="logos/logo_nerve.svg" alt="NERVE Health Systems" />
+        </a>
+        <a href="app.html" class="reg-nav-login">¿Ya tienes cuenta? <span>Iniciar sesión →</span></a>
+    </nav>
+
+    <!-- Main -->
+    <div class="reg-wrapper">
+
+        <!-- Progress Bar -->
+        <div class="reg-progress" id="regProgress">
+            <div class="prog-step active" data-step="1">
+                <div class="prog-dot"><span>1</span></div>
+                <div class="prog-label">Plan</div>
+            </div>
+            <div class="prog-line"></div>
+            <div class="prog-step" data-step="2">
+                <div class="prog-dot"><span>2</span></div>
+                <div class="prog-label">Organización</div>
+            </div>
+            <div class="prog-line"></div>
+            <div class="prog-step" data-step="3">
+                <div class="prog-dot"><span>3</span></div>
+                <div class="prog-label">Tu cuenta</div>
+            </div>
+            <div class="prog-line"></div>
+            <div class="prog-step" data-step="4">
+                <div class="prog-dot"><span>4</span></div>
+                <div class="prog-label">Pago</div>
+            </div>
+            <div class="prog-line"></div>
+            <div class="prog-step" data-step="5">
+                <div class="prog-dot"><span>✓</span></div>
+                <div class="prog-label">Listo</div>
+            </div>
+        </div>
+
+        <!-- ===== STEP 1: Elegir Plan ===== -->
+        <div class="reg-step active" id="step1">
+            <div class="reg-step-header">
+                <div class="reg-badge">✦ Paso 1 de 4</div>
+                <h1>Elige tu plan</h1>
+                <p>Sin contratos. Cancela cuando quieras. Los primeros <strong>30 días son gratis</strong>.</p>
+            </div>
+            <div class="plan-grid">
+
+                <div class="plan-card" data-plan="starter" data-price="399" data-label="Doctor Solo"
+                    onclick="selectPlan(this)">
+                    <div class="plan-name">Doctor Solo</div>
+                    <div class="plan-type">Starter</div>
+                    <div class="plan-price"><span class="p-currency">$</span><span class="p-amount">399</span><span
+                            class="p-period">/mes MXN</span></div>
+                    <ul class="plan-features">
+                        <li>✓ 1 Doctor</li>
+                        <li>✓ Hasta 500 pacientes</li>
+                        <li>✓ Expediente clínico dinámico</li>
+                        <li>✓ Agenda y citas</li>
+                        <li>✓ Recetas PDF con branding</li>
+                        <li>✓ Portal del paciente</li>
+                    </ul>
+                    <div class="plan-select-btn">Seleccionar</div>
+                </div>
+
+                <div class="plan-card featured" data-plan="clinica" data-price="1499" data-label="Clínica Pro"
+                    onclick="selectPlan(this)">
+                    <div class="plan-badge">MÁS POPULAR</div>
+                    <div class="plan-name">Clínica Pro</div>
+                    <div class="plan-type">Clínica</div>
+                    <div class="plan-price"><span class="p-currency">$</span><span class="p-amount">1,499</span><span
+                            class="p-period">/mes MXN · hasta 10 doctores</span></div>
+                    <ul class="plan-features">
+                        <li>✓ Hasta 10 doctores</li>
+                        <li>✓ Pacientes ilimitados</li>
+                        <li>✓ Expediente dinámico + adjuntos</li>
+                        <li>✓ Agenda con recordatorios</li>
+                        <li>✓ WhatsApp + Email reminders</li>
+                        <li>✓ Reportes de rendimiento</li>
+                    </ul>
+                    <div class="plan-select-btn">Seleccionar</div>
+                </div>
+
+                <div class="plan-card" data-plan="hospital" data-price="0" data-label="Hospital Enterprise"
+                    onclick="selectPlan(this)">
+                    <div class="plan-name">Hospital</div>
+                    <div class="plan-type">Enterprise</div>
+                    <div class="plan-price"><span class="p-amount" style="font-size:1.6rem;">A medida</span></div>
+                    <ul class="plan-features">
+                        <li>✓ Doctores ilimitados</li>
+                        <li>✓ Pacientes ilimitados</li>
+                        <li>✓ Jefes de departamento</li>
+                        <li>✓ Importador CSV masivo</li>
+                        <li>✓ Logs de auditoría médica</li>
+                        <li>✓ Soporte dedicado 24/7</li>
+                    </ul>
+                    <div class="plan-select-btn">Contactar ventas</div>
+                </div>
+
+            </div>
+            <div class="reg-nav-btns">
+                <div></div>
+                <button class="btn btn-primary btn-lg" onclick="nextStep()" id="step1Next" disabled>Continuar →</button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 2: Datos organización ===== -->
+        <div class="reg-step" id="step2">
+            <div class="reg-step-header">
+                <div class="reg-badge">✦ Paso 2 de 4</div>
+                <h1>Tu organización</h1>
+                <p>Cuéntanos sobre tu clínica u hospital para configurar tu espacio de trabajo.</p>
+            </div>
+            <div class="reg-form">
+                <div class="org-type-grid">
+                    <div class="org-type-card selected" data-orgtype="consultorio" onclick="selectOrgType(this)">
+                        <div class="ot-icon">🩺</div>
+                        <div class="ot-name">Consultorio</div>
+                        <div class="ot-desc">1 doctor, práctica independiente</div>
+                    </div>
+                    <div class="org-type-card" data-orgtype="clinica" onclick="selectOrgType(this)">
+                        <div class="ot-icon">🏥</div>
+                        <div class="ot-name">Clínica</div>
+                        <div class="ot-desc">Varios doctores y especialidades</div>
+                    </div>
+                    <div class="org-type-card" data-orgtype="hospital" onclick="selectOrgType(this)">
+                        <div class="ot-icon">🏨</div>
+                        <div class="ot-name">Hospital</div>
+                        <div class="ot-desc">Estructura con departamentos</div>
+                    </div>
+                </div>
+
+                <div class="form-row form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">Nombre de la organización *</label>
+                        <input type="text" class="form-control" id="orgName" placeholder="Ej. Clínica Santa Fe" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Especialidad principal</label>
+                        <select class="form-control" id="orgSpecialty"
+                            onchange="toggleOtherSpecialty(this,'orgSpecialtyOther')">
+                            <option>Medicina General</option>
+                            <option>Cardiología</option>
+                            <option>Pediatría</option>
+                            <option>Ginecología</option>
+                            <option>Cirugía</option>
+                            <option>Neurología</option>
+                            <option>Ortopedia</option>
+                            <option>Dermatología</option>
+                            <option>Psiquiatría</option>
+                            <option>Oncología</option>
+                            <option>Endocrinología</option>
+                            <option>Multidisciplinario</option>
+                            <option>Otra especialidad...</option>
+                        </select>
+                        <input type="text" class="form-control" id="orgSpecialtyOther"
+                            placeholder="Escribe la especialidad" style="display:none;margin-top:8px;" />
+                    </div>
+                </div>
+                <div class="form-row form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">País</label>
+                        <select class="form-control" id="orgCountry">
+                            <option>México</option>
+                            <option>Colombia</option>
+                            <option>Argentina</option>
+                            <option>Chile</option>
+                            <option>Perú</option>
+                            <option>España</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ciudad *</label>
+                        <input type="text" class="form-control" id="orgCity" placeholder="Ej. Ciudad de México" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono de la clínica</label>
+                    <input type="tel" class="form-control" id="orgPhone" placeholder="+52 55 1234 5678" />
+                </div>
+            </div>
+            <div class="reg-nav-btns">
+                <button class="btn btn-outline" onclick="prevStep()">← Atrás</button>
+                <button class="btn btn-primary btn-lg" onclick="nextStep()">Continuar →</button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 3: Cuenta del administrador ===== -->
+        <div class="reg-step" id="step3">
+            <div class="reg-step-header">
+                <div class="reg-badge">✦ Paso 3 de 4</div>
+                <h1>Tu cuenta personal</h1>
+                <p>Estos serán tus credenciales como administrador de la organización.</p>
+            </div>
+            <div class="reg-form">
+                <div class="form-row form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="userFirst" placeholder="Ej. Roberto" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellido *</label>
+                        <input type="text" class="form-control" id="userLast" placeholder="Ej. Sánchez" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo electrónico *</label>
+                    <input type="email" class="form-control" id="userEmail" placeholder="dr@miclinica.mx" />
+                    <div id="emailError" class="form-error" style="display:none;">Ingresa un correo válido</div>
+                </div>
+                <div class="form-row form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">Contraseña *</label>
+                        <input type="password" class="form-control" id="userPass" placeholder="Mínimo 8 caracteres" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmar contraseña *</label>
+                        <input type="password" class="form-control" id="userPassConf"
+                            placeholder="Repite la contraseña" />
+                        <div id="passError" class="form-error" style="display:none;">Las contraseñas no coinciden</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cédula profesional (opcional)</label>
+                    <input type="text" class="form-control" id="userCedula" placeholder="Ej. 12345678" />
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" id="acceptTerms" />
+                    <label for="acceptTerms">Acepto los <a href="#" style="color:var(--cyan)">Términos de uso</a> y el
+                        <a href="#" style="color:var(--cyan)">Aviso de privacidad</a></label>
+                </div>
+            </div>
+            <div class="reg-nav-btns">
+                <button class="btn btn-outline" onclick="prevStep()">← Atrás</button>
+                <button class="btn btn-primary btn-lg" onclick="validateStep3()">Continuar →</button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 4: Pago ===== -->
+        <div class="reg-step" id="step4">
+            <div class="reg-step-header">
+                <div class="reg-badge">✦ Paso 4 de 4</div>
+                <h1>Método de pago</h1>
+                <p>Tu primer mes es <strong style="color:var(--cyan)">completamente gratis</strong>. No se realizará
+                    ningún cargo hasta el día 31.</p>
+            </div>
+            <div class="checkout-layout">
+                <div class="checkout-form">
+                    <!-- Billing toggle -->
+                    <div class="billing-toggle">
+                        <button class="bill-btn active" id="billMonthly"
+                            onclick="setBilling('monthly')">Mensual</button>
+                        <button class="bill-btn" id="billAnnual" onclick="setBilling('annual')">Anual <span
+                                class="disc-badge">-20%</span></button>
+                    </div>
+
+                    <div class="checkout-section">
+                        <div class="checkout-section-title">💳 Datos de pago</div>
+                        <div class="form-group">
+                            <label class="form-label">Número de tarjeta</label>
+                            <div class="card-input-wrap">
+                                <input type="text" class="form-control" id="cardNumber"
+                                    placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" />
+                                <div class="card-brands">
+                                    <span>VISA</span><span>MC</span><span>AMEX</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row form-row-2">
+                            <div class="form-group">
+                                <label class="form-label">Vencimiento</label>
+                                <input type="text" class="form-control" id="cardExp" placeholder="MM/AA" maxlength="5"
+                                    oninput="formatExp(this)" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">CVV</label>
+                                <input type="text" class="form-control" id="cardCvv" placeholder="•••" maxlength="4" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nombre en la tarjeta</label>
+                            <input type="text" class="form-control" id="cardName"
+                                placeholder="Como aparece en la tarjeta" />
+                        </div>
+                    </div>
+
+                    <div class="checkout-section">
+                        <div class="checkout-section-title">🧾 Facturación (opcional)</div>
+                        <div class="form-group">
+                            <label class="form-label">RFC</label>
+                            <input type="text" class="form-control" id="rfc" placeholder="GOSA800101AB1"
+                                style="text-transform:uppercase;" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Razón social</label>
+                            <input type="text" class="form-control" id="razonSocial" placeholder="Para CFDI" />
+                        </div>
+                    </div>
+
+                    <div class="secure-badge">
+                        🔒 Pago seguro con encriptación TLS/AES-256 · Powered by Stripe
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="order-summary">
+                    <div class="summary-title">Resumen de tu pedido</div>
+                    <div class="summary-plan" id="summaryPlan">Clínica Pro</div>
+                    <div class="summary-billing" id="summaryBilling">Facturación mensual</div>
+
+                    <div class="summary-line">
+                        <span>Trial gratuito (30 días)</span>
+                        <span class="summary-free">GRATIS</span>
+                    </div>
+                    <div class="summary-line">
+                        <span id="summaryLabel">Desde el día 31</span>
+                        <span id="summaryPrice">$1,499/mes</span>
+                    </div>
+                    <div class="summary-divider"></div>
+                    <div class="summary-line summary-total">
+                        <span>Hoy pagas</span>
+                        <span class="summary-zero">$0.00</span>
+                    </div>
+                    <div class="summary-note">Cancela antes del día 31 y no se te cobrará nada.</div>
+
+                    <button class="btn btn-primary"
+                        style="width:100%;justify-content:center;padding:14px;font-size:1rem;margin-top:16px;"
+                        onclick="submitPayment()">
+                        Activar prueba gratuita →
+                    </button>
+
+                    <div class="summary-features">
+                        <div>✓ Sin compromiso</div>
+                        <div>✓ Cancela en 1 click</div>
+                        <div>✓ Soporte incluido</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reg-nav-btns" style="margin-top:24px;">
+                <button class="btn btn-outline" onclick="prevStep()">← Atrás</button>
+                <div></div>
+            </div>
+        </div>
+
+        <!-- ===== STEP 5: Confirmación ===== -->
+        <div class="reg-step" id="step5">
+            <div class="success-container">
+                <div class="success-icon">🎉</div>
+                <h1>¡Tu cuenta está lista!</h1>
+                <p>Hemos enviado un correo de confirmación a <strong
+                        id="confirmEmail">tu@email.com</strong>.<br />Confirma tu correo para activar todas las
+                    funciones.</p>
+
+                <div class="success-cards">
+                    <div class="success-card">
+                        <div class="sc-icon">📧</div>
+                        <div class="sc-title">Revisa tu correo</div>
+                        <div class="sc-desc">Te mandamos un link de verificación. Expira en 24 horas.</div>
+                    </div>
+                    <div class="success-card">
+                        <div class="sc-icon">🚀</div>
+                        <div class="sc-title">Entra a tu dashboard</div>
+                        <div class="sc-desc">Puedes empezar a usar la plataforma mientras verificas.</div>
+                    </div>
+                    <div class="success-card">
+                        <div class="sc-icon">💬</div>
+                        <div class="sc-title">Soporte disponible</div>
+                        <div class="sc-desc">Chat en vivo durante tu trial para ayudarte en el setup.</div>
+                    </div>
+                </div>
+
+                <div class="success-actions">
+                    <a href="app.html" class="btn btn-primary btn-lg" onclick="setFirstTimeUser()">Entrar a mi dashboard
+                        →</a>
+                    <button class="btn btn-outline btn-lg" onclick="resendEmail()">Reenviar correo de
+                        verificación</button>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /reg-wrapper -->
+
+    <script src="assets/js/register.js"></script>
+</body>
+
+</html>

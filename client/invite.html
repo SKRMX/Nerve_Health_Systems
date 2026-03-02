@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invitación de equipo — NERVE Health Systems</title>
+    <link rel="stylesheet" href="assets/css/index.css" />
+    <link rel="stylesheet" href="assets/css/register.css" />
+</head>
+
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <nav class="reg-nav">
+        <a href="index.html" class="nav-logo">
+            <img src="logos/logo_nerve.svg" alt="NERVE Health Systems" />
+        </a>
+    </nav>
+
+    <div class="reg-wrapper" style="max-width:560px;">
+
+        <!-- Identify invite type -->
+        <div class="invite-container" id="inviteContainer">
+            <!-- Loaded by JS based on URL params -->
+            <div class="invite-org-badge" id="inviteOrgBadge">
+                <div class="inv-org-icon">H</div>
+                <div>
+                    <div class="inv-org-name" id="inviteOrgName">Hospital Ángeles</div>
+                    <div class="inv-org-sub">te ha invitado a NERVE Health Systems</div>
+                </div>
+            </div>
+
+            <div class="invite-role-card" id="inviteRoleCard">
+                <div class="inv-role-icon" id="inviteRoleIcon">🩺</div>
+                <div class="inv-role-title" id="inviteRoleTitle">Eres invitado como Doctor</div>
+                <div class="inv-role-desc" id="inviteRoleDesc">Tendrás acceso a tu agenda, expedientes de pacientes y
+                    generación de recetas.</div>
+            </div>
+
+            <div class="invite-steps" id="inviteSteps">
+                <!-- Step A: Confirm identity -->
+                <div class="inv-step active" id="invStepA">
+                    <h2>Completa tu registro</h2>
+                    <p style="color:var(--text-muted);margin-bottom:24px;font-size:0.9rem;">
+                        La invitación fue enviada a <strong id="inviteEmail">dr.garcia@hospital.mx</strong>
+                    </p>
+                    <div class="form-row form-row-2">
+                        <div class="form-group">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="invFirst" placeholder="Tu nombre" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Apellido *</label>
+                            <input type="text" class="form-control" id="invLast" placeholder="Tu apellido" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Correo electrónico *</label>
+                        <input type="email" class="form-control" id="invEmail" placeholder="tu@correo.com" />
+                    </div>
+                    <div class="form-row form-row-2">
+                        <div class="form-group">
+                            <label class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" id="invPass"
+                                placeholder="Mínimo 8 caracteres" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirmar contraseña *</label>
+                            <input type="password" class="form-control" id="invPassConf"
+                                placeholder="Repite la contraseña" />
+                        </div>
+                    </div>
+
+                    <!-- Doctor-specific fields -->
+                    <div id="doctorFields">
+                        <div class="form-row form-row-2">
+                            <div class="form-group">
+                                <label class="form-label">Cédula profesional *</label>
+                                <input type="text" class="form-control" id="invCedula" placeholder="Ej. 12345678" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Especialidad</label>
+                                <select class="form-control" id="invSpecialty"
+                                    onchange="toggleOtherSpecialty(this,'invSpecialtyOther')">
+                                    <option>Medicina General</option>
+                                    <option>Cardiología</option>
+                                    <option>Pediatría</option>
+                                    <option>Ginecología</option>
+                                    <option>Cirugía</option>
+                                    <option>Neurología</option>
+                                    <option>Ortopedia</option>
+                                    <option>Dermatología</option>
+                                    <option>Psiquiatría</option>
+                                    <option>Oncología</option>
+                                    <option>Endocrinología</option>
+                                    <option>Otra especialidad...</option>
+                                </select>
+                                <input type="text" class="form-control" id="invSpecialtyOther"
+                                    placeholder="Escribe tu especialidad" style="display:none;margin-top:8px;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patient-specific fields -->
+                    <div id="patientFields" style="display:none;">
+                        <div class="form-row form-row-2">
+                            <div class="form-group">
+                                <label class="form-label">Fecha de nacimiento</label>
+                                <input type="date" class="form-control" id="invBirthdate" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="invPhone" placeholder="+52 55 1234 5678" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-check" style="margin-top:8px;">
+                        <input type="checkbox" id="invTerms" />
+                        <label for="invTerms">Acepto los <a href="#" style="color:var(--cyan);">Términos de uso</a> y <a
+                                href="#" style="color:var(--cyan);">Aviso de privacidad</a></label>
+                    </div>
+                    <button class="btn btn-primary"
+                        style="width:100%;justify-content:center;padding:13px;margin-top:20px;font-size:0.97rem;"
+                        onclick="submitInvite()">
+                        Activar mi cuenta →
+                    </button>
+                </div>
+
+                <!-- Step B: Success -->
+                <div class="inv-step" id="invStepB">
+                    <div class="invite-success">
+                        <div class="success-icon" style="font-size:3rem;margin-bottom:16px;">🎉</div>
+                        <h2>¡Bienvenido al equipo!</h2>
+                        <p style="color:var(--text-muted);margin:12px 0 28px;">Tu cuenta ha sido activada correctamente.
+                            Ya puedes acceder a tu espacio de trabajo en <strong id="inviteOrgNameSuccess">Hospital
+                                Ángeles</strong>.</p>
+                        <a href="app.html" class="btn btn-primary btn-lg" onclick="setInviteUser()"
+                            style="width:100%;justify-content:center;">
+                            Ir a mi dashboard →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expired/Invalid invite -->
+        <div class="invite-error" id="inviteError" style="display:none;">
+            <div style="font-size:3rem;margin-bottom:16px;">⚠️</div>
+            <h2>Invitación inválida o expirada</h2>
+            <p style="color:var(--text-muted);margin:12px 0 28px;">Este link de invitación ya fue usado o expiró.
+                Solicita a tu administrador que te envíe uno nuevo.</p>
+            <a href="index.html" class="btn btn-outline">Volver al inicio</a>
+        </div>
+
+    </div>
+
+    <script>
+        // ---- Specialty toggle ----
+        function toggleOtherSpecialty(select, inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const isOther = select.value === 'Otra especialidad...';
+            input.style.display = isOther ? 'block' : 'none';
+            if (isOther) input.focus();
+        }
+
+        // Read URL params to customize the invite page
+        const params = new URLSearchParams(window.location.search);
+        const role = params.get('role') || 'doctor';      // doctor | dept_head | patient
+        const org = params.get('org') || 'Hospital Ángeles';
+        const email = params.get('email') || 'usuario@hospital.mx';
+        const token = params.get('token') || '';
+
+        // Simulate: invalid if no token
+        if (!token && !['demo', 'test'].includes(params.get('mode'))) {
+            // For demo purposes keep it visible
+        }
+
+        document.getElementById('inviteOrgName').textContent = org;
+        document.getElementById('inviteOrgBadge').querySelector('.inv-org-icon').textContent = org.charAt(0).toUpperCase();
+        document.getElementById('inviteEmail').textContent = email;
+
+        const roleConfig = {
+            doctor: { icon: '🩺', title: 'Eres invitado como Doctor', desc: 'Tendrás acceso a tu agenda, expedientes de pacientes y generación de recetas.', fields: 'doctorFields' },
+            dept_head: { icon: '👔', title: 'Eres invitado como Jefe de Departamento', desc: 'Podrás supervisar el rendimiento de tu equipo y ver reportes del departamento.', fields: 'doctorFields' },
+            patient: { icon: '👤', title: 'Te han invitado como Paciente', desc: 'Accede a tu historial de consultas, recetas y citas futuras desde tu portal.', fields: 'patientFields' },
+        };
+        const rc = roleConfig[role] || roleConfig.doctor;
+        document.getElementById('inviteRoleIcon').textContent = rc.icon;
+        document.getElementById('inviteRoleTitle').textContent = rc.title;
+        document.getElementById('inviteRoleDesc').textContent = rc.desc;
+        if (rc.fields === 'patientFields') {
+            document.getElementById('doctorFields').style.display = 'none';
+            document.getElementById('patientFields').style.display = 'block';
+        }
+        document.getElementById('inviteOrgNameSuccess').textContent = org;
+        // Pre-fill email field from URL param
+        window.addEventListener('DOMContentLoaded', () => {
+            const emailInput = document.getElementById('invEmail');
+            if (emailInput && email !== 'usuario@hospital.mx') emailInput.value = email;
+        });
+
+        function submitInvite() {
+            const pass = document.getElementById('invPass').value;
+            const conf = document.getElementById('invPassConf').value;
+            const userEmail = document.getElementById('invEmail').value.trim();
+            const first = document.getElementById('invFirst').value.trim();
+            const last = document.getElementById('invLast').value.trim();
+            if (!userEmail.match(/^[^@]+@[^@]+\.[^@]+$/)) { alert('Ingresa un correo válido.'); return; }
+            if (!pass || pass.length < 8) { alert('La contraseña debe tener al menos 8 caracteres.'); return; }
+            if (pass !== conf) { alert('Las contraseñas no coinciden.'); return; }
+            if (!document.getElementById('invTerms').checked) { alert('Debes aceptar los términos.'); return; }
+
+            // Simulate API call
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Creando cuenta...';
+            setTimeout(() => {
+                // Store session data for app.html
+                localStorage.setItem('nerve_role', role);
+                localStorage.setItem('nerve_org', org);
+                localStorage.setItem('nerve_email', userEmail);
+                localStorage.setItem('nerve_name', `${first} ${last}`.trim());
+                localStorage.setItem('nerve_firsttime', '1');
+                document.getElementById('invStepA').classList.remove('active');
+                document.getElementById('invStepB').classList.add('active');
+            }, 1800);
+        }
+
+        function setInviteUser() {
+            localStorage.setItem('nerve_role', role);
+            localStorage.setItem('nerve_firsttime', '1');
+        }
+    </script>
+</body>
+
+</html>

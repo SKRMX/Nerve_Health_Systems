@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NERVE Health Systems — App</title>
+    <link rel="stylesheet" href="assets/css/app.css" />
+    <link rel="stylesheet" href="assets/css/register.css" />
+</head>
+
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-bg-glow login-bg-1"></div>
+        <div class="login-bg-glow login-bg-2"></div>
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="logos/logo_nerve.svg" alt="NERVE Health Systems" />
+            </div>
+            <h1 class="login-title">Bienvenido de vuelta</h1>
+            <p class="login-sub">Selecciona tu rol para acceder al sistema</p>
+            <div class="role-selector" id="roleSelector">
+                <div class="role-option" data-role="org_owner" onclick="selectRole(this)">
+                    <div class="r-icon">🏥</div>
+                    <div class="r-name">Hospital / Clínica</div>
+                </div>
+                <div class="role-option" data-role="dept_head" onclick="selectRole(this)">
+                    <div class="r-icon">👔</div>
+                    <div class="r-name">Jefe de Depto.</div>
+                </div>
+                <div class="role-option" data-role="doctor" onclick="selectRole(this)">
+                    <div class="r-icon">🩺</div>
+                    <div class="r-name">Doctor</div>
+                </div>
+                <div class="role-option" data-role="patient" onclick="selectRole(this)">
+                    <div class="r-icon">👤</div>
+                    <div class="r-name">Paciente</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Usuario o correo electrónico</label>
+                <input type="text" class="form-control" id="loginEmail"
+                    placeholder="usuario@hospital.mx o MauricioCV" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="loginPass" placeholder="••••••••" />
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="doLogin()">
+                Ingresar al sistema →
+            </button>
+            <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-dim);">
+                ¿Primera vez? <a href="index.html" style="color:var(--cyan);">Solicitar demo gratuita</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- APP LAYOUT -->
+    <div id="app-layout" class="hidden" style="display:none;">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <img src="logos/logo_nerve.svg" alt="NERVE" class="logo-full" />
+                <img src="logos/isotipo_nerve.svg" alt="N" class="logo-icon" />
+            </div>
+            <div class="sidebar-org">
+                <div class="sidebar-org-avatar" id="sidebarOrgAvatar">H</div>
+                <div class="sidebar-org-info">
+                    <div class="sidebar-org-name" id="sidebarOrgName">Hospital General</div>
+                    <div class="sidebar-org-role" id="sidebarOrgRole">Doctor</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav" id="sidebarNav"></nav>
+            <div class="sidebar-footer">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <span style="font-size:1rem;">⟨</span>
+                    <span class="toggle-label" style="font-size:0.82rem;font-weight:500;">Colapsar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="main">
+            <!-- Topbar -->
+            <header class="topbar">
+                <button onclick="toggleMobileSidebar()"
+                    style="display:none;background:none;border:none;cursor:pointer;color:var(--text);font-size:1.2rem;padding:4px;margin-right:8px;"
+                    id="mobileMenuBtn">☰</button>
+                <div class="topbar-breadcrumb">
+                    <span id="breadcrumbSection" style="color:var(--text-dim)">Dashboard</span>
+                    <span class="sep">/</span>
+                    <span class="current" id="breadcrumbPage">Inicio</span>
+                </div>
+                <div class="topbar-actions">
+                    <div class="topbar-search">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Buscar pacientes, citas..." id="globalSearch" />
+                    </div>
+                    <div style="position:relative;">
+                        <div class="icon-btn" onclick="toggleNotifications()" title="Notificaciones">
+                            🔔
+                            <div class="badge">3</div>
+                        </div>
+                        <div class="notif-drop" id="notifDrop">
+                            <div class="notif-header">Notificaciones</div>
+                            <div class="notif-item unread" onclick="closeNotifications()">
+                                <div class="notif-dot"></div>
+                                <div>
+                                    <div class="notif-title">Nueva cita programada</div>
+                                    <div class="notif-desc">María García · Mañana 09:00 AM</div>
+                                    <div class="notif-time">Hace 5 min</div>
+                                </div>
+                            </div>
+                            <div class="notif-item unread" onclick="closeNotifications()">
+                                <div class="notif-dot"></div>
+                                <div>
+                                    <div class="notif-title">Recordatorio de seguimiento</div>
+                                    <div class="notif-desc">Carlos López · Resultados pendientes</div>
+                                    <div class="notif-time">Hace 1 hr</div>
+                                </div>
+                            </div>
+                            <div class="notif-item" onclick="closeNotifications()">
+                                <div class="notif-dot" style="background:var(--text-dim)"></div>
+                                <div>
+                                    <div class="notif-title">Prescripción descargada</div>
+                                    <div class="notif-desc">Ana Ruiz descargó su receta</div>
+                                    <div class="notif-time">Hace 3 hrs</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="user-avatar" id="userAvatarTopbar" onclick="doLogout()" title="Cerrar sesión">DR</div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="page-content" id="pageContent">
+                <!-- Dynamic content rendered here -->
+            </main>
+        </div>
+    </div>
+
+    <!-- MODALS (shared) -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modalBox">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">Modal</span>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="assets/js/data/seed.js?v=5"></script>
+    <script src="assets/js/app.js?v=5"></script>
+    <script src="assets/js/utils/charts.js?v=5"></script>
+    <script src="assets/js/modules/dashboard.js?v=5"></script>
+    <script src="assets/js/modules/patients.js?v=5"></script>
+    <script src="assets/js/modules/appointments.js?v=5"></script>
+    <script src="assets/js/modules/prescriptions.js?v=5"></script>
+    <script src="assets/js/modules/admin.js?v=5"></script>
+    <script src="assets/js/modules/staff.js?v=5"></script>
+    <script src="assets/js/modules/reports.js?v=5"></script>
+    <script src="assets/js/modules/importer.js?v=5"></script>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "nerve-health-systems",
+  "version": "1.0.0",
+  "description": "NERVE Health Systems — Plataforma SaaS de gestión médica",
+  "private": true,
+  "scripts": {
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npx http-server -p 3000 -c-1",
+    "start": "cd server && npm start",
+    "db:migrate": "cd server && npx prisma migrate dev",
+    "db:push": "cd server && npx prisma db push",
+    "db:seed": "cd server && npx prisma db seed",
+    "db:studio": "cd server && npx prisma studio"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SKRMX/Nerve_Health_Systems.git"
+  },
+  "author": "MauricioCV",
+  "license": "UNLICENSED"
+}

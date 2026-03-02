@@ -1,0 +1,170 @@
+// ================================================
+// NERVE Health Systems — Prisma Schema
+// ================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---- Organizations (Hospitals / Clinics) ----
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  plan        String   @default("trial") // trial, consultorio, clinica_pro, enterprise
+  maxDoctors  Int      @default(3)
+  location    String?
+  city        String?
+  phone       String?
+  email       String?
+  active      Boolean  @default(true)
+  mpSubscriptionId String? // Mercado Pago subscription ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  patients    Patient[]
+  departments Department[]
+
+  @@map("organizations")
+}
+
+// ---- Users (all roles) ----
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         String   // superadmin, org_owner, dept_head, doctor, asistente, patient
+  specialty    String?
+  phone        String?
+  avatarUrl    String?  @map("avatar_url")
+  active       Boolean  @default(true)
+
+  orgId        String?  @map("org_id")
+  org          Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  departmentId String?  @map("department_id")
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  // Relations
+  patients      Patient[]      @relation("DoctorPatients")
+  appointments  Appointment[]  @relation("DoctorAppointments")
+  prescriptions Prescription[] @relation("DoctorPrescriptions")
+  auditLogs     AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ---- Patients ----
+model Patient {
+  id           String   @id @default(uuid())
+  name         String
+  email        String?
+  phone        String?
+  dob          DateTime? @map("date_of_birth")
+  gender       String?
+  bloodType    String?  @map("blood_type")
+  allergies    String?
+  diagnosis    String?
+  medicalNotes String?  @map("medical_notes") // AES-256 encrypted
+  status       String   @default("Activo")
+
+  doctorId     String   @map("doctor_id")
+  doctor       User     @relation("DoctorPatients", fields: [doctorId], references: [id])
+
+  orgId        String   @map("org_id")
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  appointments  Appointment[]
+  prescriptions Prescription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("patients")
+}
+
+// ---- Appointments ----
+model Appointment {
+  id        String   @id @default(uuid())
+  date      DateTime
+  time      String
+  type      String   // consulta, seguimiento, primera_vez, urgencia
+  status    String   @default("programada") // programada, completada, cancelada, no_asistio
+  reason    String?
+  notes     String?
+
+  patientId String   @map("patient_id")
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId  String   @map("doctor_id")
+  doctor    User     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("appointments")
+}
+
+// ---- Prescriptions ----
+model Prescription {
+  id          String   @id @default(uuid())
+  medication  String
+  dosage      String
+  frequency   String
+  duration    String
+  notes       String?
+  active      Boolean  @default(true)
+
+  patientId   String   @map("patient_id")
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId    String   @map("doctor_id")
+  doctor      User     @relation("DoctorPrescriptions", fields: [doctorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("prescriptions")
+}
+
+// ---- Departments ----
+model Department {
+  id     String @id @default(uuid())
+  name   String
+
+  orgId  String @map("org_id")
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  users  User[]
+
+  @@map("departments")
+}
+
+// ---- Audit Log ----
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String   // CREATE, READ, UPDATE, DELETE, LOGIN, LOGOUT
+  entity    String   // patient, appointment, prescription, user, organization
+  entityId  String?  @map("entity_id")
+  details   String?
+  ip        String?
+
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

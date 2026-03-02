@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NERVE Health Systems — Plataforma Médica SaaS</title>
+  <meta name="description"
+    content="La plataforma médica SaaS más avanzada. Gestión clínica integral multi-tenant para doctores independientes, clínicas y hospitales." />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <!-- Preload logo -->
+  <link rel="preload" href="logos/logo_nerve.svg" as="image" type="image/svg+xml" />
+</head>
+
+<body>
+
+  <!-- Background Decorations -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu-close" id="mobileClose" aria-label="Cerrar menú">✕</button>
+    <a href="#funcionalidades" onclick="closeMobileMenu()">Funcionalidades</a>
+    <a href="#roles" onclick="closeMobileMenu()">¿Para quién?</a>
+    <a href="#precios" onclick="closeMobileMenu()">Precios</a>
+    <a href="app.html" class="btn btn-primary btn-lg">Iniciar sesión →</a>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="nav-logo">
+        <img src="logos/logo_nerve.svg" alt="NERVE Health Systems" />
+      </a>
+      <ul class="nav-links">
+        <li><a href="#funcionalidades">Funcionalidades</a></li>
+        <li><a href="#roles">¿Para quién?</a></li>
+        <li><a href="#precios">Precios</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="app.html" class="btn btn-outline">Iniciar sesión</a>
+        <a href="app.html" class="btn btn-primary">Demo gratuita →</a>
+        <button class="hamburger" id="hamburger" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge reveal">
+          <span class="tag">✦ Plataforma Médica SaaS · Multi-Tenant</span>
+        </div>
+        <h1 class="reveal">
+          <span>La clínica del futuro,</span>
+          <span class="gradient-text">en tus manos hoy.</span>
+        </h1>
+        <p class="reveal">
+          NERVE Health Systems centraliza expedientes clínicos, consultas, recetas y citas en una plataforma segura,
+          escalable y diseñada para la velocidad de trabajo del médico moderno.
+        </p>
+        <div class="hero-actions reveal">
+          <a href="register.html" class="btn btn-primary btn-lg">Comenzar prueba gratuita →</a>
+          <a href="#funcionalidades" class="btn btn-outline btn-lg">Ver funcionalidades</a>
+        </div>
+        <div class="hero-stats reveal">
+          <div>
+            <div class="hero-stat-num">+2,400</div>
+            <div class="hero-stat-label">Doctores activos</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">98.9%</div>
+            <div class="hero-stat-label">Uptime garantizado</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">+180k</div>
+            <div class="hero-stat-label">Expedientes gestionados</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Visual (Dashboard Mockup) -->
+      <div class="hero-visual">
+        <div class="hero-mockup">
+          <div class="hero-mockup-bar">
+            <div class="mockup-dot"></div>
+            <div class="mockup-dot"></div>
+            <div class="mockup-dot"></div>
+            <div class="mockup-url">app.nervehealthsystems.com/dashboard</div>
+          </div>
+          <div class="hero-mockup-body">
+            <div class="mockup-header">
+              <div class="mockup-title">Buenos días, Dr. González 👋</div>
+              <div class="mockup-date">Sábado 28 Feb 2026 · 14 citas hoy</div>
+            </div>
+            <div class="mockup-stats">
+              <div class="mockup-stat">
+                <div class="mockup-stat-val">14</div>
+                <div class="mockup-stat-lbl">Citas hoy</div>
+              </div>
+              <div class="mockup-stat">
+                <div class="mockup-stat-val">3</div>
+                <div class="mockup-stat-lbl">Pendientes</div>
+              </div>
+              <div class="mockup-stat">
+                <div class="mockup-stat-val">247</div>
+                <div class="mockup-stat-lbl">Pacientes</div>
+              </div>
+            </div>
+            <div class="mockup-chart">
+              <div class="mockup-chart-title">Consultas esta semana</div>
+              <div class="mockup-bars" id="mockupBars"></div>
+            </div>
+            <div class="mockup-appointments">
+              <div class="mockup-appt">
+                <div class="mockup-appt-dot"></div>
+                <div>
+                  <div class="mockup-appt-name">María García · Consulta General</div>
+                  <div class="mockup-appt-time">09:00 AM · Sala 3</div>
+                </div>
+              </div>
+              <div class="mockup-appt" style="border-left-color: var(--mint)">
+                <div class="mockup-appt-dot" style="background:var(--mint)"></div>
+                <div>
+                  <div class="mockup-appt-name">Carlos López · Seguimiento</div>
+                  <div class="mockup-appt-time">10:30 AM · Sala 1</div>
+                </div>
+              </div>
+              <div class="mockup-appt" style="border-left-color: var(--primary-light)">
+                <div class="mockup-appt-dot" style="background:var(--primary-light)"></div>
+                <div>
+                  <div class="mockup-appt-name">Ana Ruiz · Primera vez</div>
+                  <div class="mockup-appt-time">11:15 AM · Sala 2</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Features -->
+  <section class="features" id="funcionalidades">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag"><span class="tag">✦ Funcionalidades</span></div>
+        <h2>Todo lo que tu clínica necesita, <span class="gradient-text">en un solo lugar.</span></h2>
+        <p>Diseñado con médicos, para médicos. Cada flujo optimizado para reducir tiempo administrativo.</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">📂</div>
+          <h3>Expediente Clínico Dinámico</h3>
+          <p>Campos personalizados por especialidad usando esquemas JSON dinámicos. Un sistema genérico que se adapta a
+            cualquier rama médica.</p>
+          <ul class="feature-list">
+            <li>Constructor visual de campos</li>
+            <li>Plantillas por especialidad</li>
+            <li>Historial cronológico completo</li>
+            <li>Adjuntos y estudios de imagen</li>
+          </ul>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">💊</div>
+          <h3>Consultas y Recetas Digitales</h3>
+          <p>Genera recetas en PDF con el branding del hospital o del doctor en segundos. SOAP notes integradas en el
+            flujo de consulta.</p>
+          <ul class="feature-list">
+            <li>Recetas PDF con branding</li>
+            <li>Catálogo de medicamentos</li>
+            <li>Notas SOAP estructuradas</li>
+            <li>Firma digital del médico</li>
+          </ul>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">📅</div>
+          <h3>Agenda Inteligente</h3>
+          <p>Sistema de citas con recordatorios automáticos por WhatsApp y Email. Reduce el ausentismo hasta un 40%.</p>
+          <ul class="feature-list">
+            <li>Vista semanal / mensual</li>
+            <li>Recordatorios por WhatsApp y Email</li>
+            <li>Autoconfirmación del paciente</li>
+            <li>Gestión de cancelaciones</li>
+          </ul>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">👥</div>
+          <h3>Multi-Rol y Multi-Tenant</h3>
+          <p>Arquitectura jerárquica completa. Desde doctores independientes hasta hospitales con cientos de usuarios y
+            departamentos.</p>
+          <ul class="feature-list">
+            <li>5 niveles de acceso</li>
+            <li>Aislamiento total por organización</li>
+            <li>Gestión de departamentos</li>
+            <li>Control granular de permisos</li>
+          </ul>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">📤</div>
+          <h3>Importador de Datos Masivo</h3>
+          <p>Migra tu base de datos actual en minutos con nuestro importador CSV/Excel inteligente con mapeo visual de
+            columnas.</p>
+          <ul class="feature-list">
+            <li>Drag & drop de archivos</li>
+            <li>Mapeo de columnas inteligente</li>
+            <li>Vista previa antes de importar</li>
+            <li>Reporte de errores detallado</li>
+          </ul>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">📊</div>
+          <h3>Reportes y Analítica</h3>
+          <p>Dashboards para cada nivel jerárquico. Métricas de rendimiento por doctor, departamento y organización
+            completa.</p>
+          <ul class="feature-list">
+            <li>KPIs en tiempo real</li>
+            <li>Exportación a PDF/Excel</li>
+            <li>Comparativas por periodo</li>
+            <li>Logs de auditoría por acceso</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Roles Section -->
+  <section class="roles" id="roles">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag"><span class="tag">✦ Para cada rol</span></div>
+        <h2>Una plataforma, <span class="gradient-text">múltiples realidades.</span></h2>
+        <p>Cada usuario ve exactamente lo que necesita para trabajar de forma eficiente y segura.</p>
+      </div>
+      <div class="roles-grid">
+        <div class="role-card reveal">
+          <div class="role-emoji">🏥</div>
+          <h3>Dueño de Hospital</h3>
+          <p>Crea doctores, asistentes y departamentos. Control total sobre tu organización.</p>
+        </div>
+        <div class="role-card reveal">
+          <div class="role-emoji">👔</div>
+          <h3>Jefe de Departamento</h3>
+          <p>Supervisa el rendimiento de su equipo, accede a expedientes autorizados y genera reportes.</p>
+        </div>
+        <div class="role-card reveal">
+          <div class="role-emoji">🩺</div>
+          <h3>Doctor</h3>
+          <p>Su agenda, expedientes de pacientes, consultas y recetas PDF en un clic.</p>
+        </div>
+        <div class="role-card reveal">
+          <div class="role-emoji">👤</div>
+          <h3>Paciente</h3>
+          <p>Portal privado con historial de consultas, recetas descargables y citas futuras.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing" id="precios">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag"><span class="tag">✦ Planes y Precios</span></div>
+        <h2>Planes que <span class="gradient-text">crecen contigo.</span></h2>
+        <p>Sin contratos de largo plazo. Cancela cuando quieras. Facturación mensual o anual con descuento.</p>
+      </div>
+      <div class="pricing-grid">
+
+        <!-- Solo Doctor -->
+        <div class="pricing-card reveal">
+          <div class="pricing-plan">Starter</div>
+          <div class="pricing-name">Doctor Solo</div>
+          <div class="pricing-desc">Ideal para médicos independientes que quieren digitalizarse.</div>
+          <div class="pricing-price">
+            <span class="price-currency">$</span>
+            <span class="price-amount">399</span>
+            <span class="price-period">/ mes MXN</span>
+          </div>
+          <hr class="pricing-divider" />
+          <ul class="pricing-features">
+            <li class="included"><span class="icon">✓</span> 1 Doctor</li>
+            <li class="included"><span class="icon">✓</span> Hasta 500 pacientes</li>
+            <li class="included"><span class="icon">✓</span> Expediente clínico dinámico</li>
+            <li class="included"><span class="icon">✓</span> Agenda y citas</li>
+            <li class="included"><span class="icon">✓</span> Recetas PDF con branding</li>
+            <li class="included"><span class="icon">✓</span> Portal del paciente</li>
+            <li><span class="icon">—</span> Multi-departamentos</li>
+            <li><span class="icon">—</span> Reportes avanzados</li>
+            <li><span class="icon">—</span> WhatsApp Reminders</li>
+          </ul>
+          <a href="register.html?plan=starter" class="btn btn-outline"
+            style="width:100%;justify-content:center;">Comenzar gratis →</a>
+        </div>
+
+        <!-- Clínica (Featured) -->
+        <div class="pricing-card featured reveal">
+          <div class="pricing-badge">MÁS POPULAR</div>
+          <div class="pricing-plan">Clínica</div>
+          <div class="pricing-name">Clínica Pro</div>
+          <div class="pricing-desc">Para clínicas con múltiples doctores y asistentes.</div>
+          <div class="pricing-price">
+            <span class="price-currency">$</span>
+            <span class="price-amount">1,499</span>
+            <span class="price-period">/ mes MXN · hasta 10 doctores</span>
+          </div>
+          <hr class="pricing-divider" />
+          <ul class="pricing-features">
+            <li class="included"><span class="icon">✓</span> Hasta 10 doctores</li>
+            <li class="included"><span class="icon">✓</span> Pacientes ilimitados</li>
+            <li class="included"><span class="icon">✓</span> Expediente dinámico + adjuntos</li>
+            <li class="included"><span class="icon">✓</span> Agenda con recordatorios</li>
+            <li class="included"><span class="icon">✓</span> Recetas con branding del hospital</li>
+            <li class="included"><span class="icon">✓</span> Portal del paciente</li>
+            <li class="included"><span class="icon">✓</span> WhatsApp + Email reminders</li>
+            <li class="included"><span class="icon">✓</span> Reportes de rendimiento</li>
+            <li><span class="icon">—</span> Multi-hospitales</li>
+          </ul>
+          <a href="register.html?plan=clinica" class="btn btn-primary"
+            style="width:100%;justify-content:center;">Comenzar prueba →</a>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="pricing-card reveal">
+          <div class="pricing-plan">Enterprise</div>
+          <div class="pricing-name">Hospital</div>
+          <div class="pricing-desc">Para hospitales grandes con estructura jerárquica compleja.</div>
+          <div class="pricing-price">
+            <span class="price-currency"></span>
+            <span class="price-amount" style="font-size:2rem;">A medida</span>
+          </div>
+          <hr class="pricing-divider" />
+          <ul class="pricing-features">
+            <li class="included"><span class="icon">✓</span> Doctores ilimitados</li>
+            <li class="included"><span class="icon">✓</span> Pacientes ilimitados</li>
+            <li class="included"><span class="icon">✓</span> Todo de Clínica Pro</li>
+            <li class="included"><span class="icon">✓</span> Multi-tenant por hospital</li>
+            <li class="included"><span class="icon">✓</span> Jefes de departamento</li>
+            <li class="included"><span class="icon">✓</span> Importador CSV masivo</li>
+            <li class="included"><span class="icon">✓</span> Logs de auditoría médica</li>
+            <li class="included"><span class="icon">✓</span> Soporte dedicado 24/7</li>
+            <li class="included"><span class="icon">✓</span> SLA personalizado</li>
+          </ul>
+          <a href="#contacto" class="btn btn-outline" style="width:100%;justify-content:center;">Contactar ventas →</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section" id="contacto">
+    <div class="container">
+      <div class="cta-box reveal">
+        <h2>¿Listo para modernizar <span class="gradient-text">tu práctica médica?</span></h2>
+        <p>Únete a más de 2,400 doctores que ya gestionan su clínica con NERVE Health Systems. 30 días gratuitos sin
+          tarjeta de crédito.</p>
+        <div class="cta-actions">
+          <a href="register.html" class="btn btn-primary btn-lg">Empezar ahora — Es gratis →</a>
+          <a href="register.html" class="btn btn-outline btn-lg">Ver demo en vivo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="logos/logo_nerve.svg" alt="NERVE Health Systems" />
+          <p>La plataforma médica SaaS más avanzada de Latinoamérica. Diseñada para el médico moderno, escalable para el
+            hospital del futuro.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Producto</h4>
+          <ul>
+            <li><a href="#funcionalidades">Funcionalidades</a></li>
+            <li><a href="#precios">Precios</a></li>
+            <li><a href="app.html">Demo en vivo</a></li>
+            <li><a href="#">Actualizaciones</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Empresa</h4>
+          <ul>
+            <li><a href="#">Acerca de</a></li>
+            <li><a href="#">Blog médico</a></li>
+            <li><a href="#">Carreras</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacidad</a></li>
+            <li><a href="#">Términos de uso</a></li>
+            <li><a href="#">Seguridad</a></li>
+            <li><a href="#">Cumplimiento</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 NERVE Health Systems. Todos los derechos reservados.</span>
+        <span>Hecho con ❤️ para transformar la medicina en Latinoamérica</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // Mobile menu
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileClose = document.getElementById('mobileClose');
+    hamburger.addEventListener('click', () => mobileMenu.classList.add('open'));
+    mobileClose.addEventListener('click', () => mobileMenu.classList.remove('open'));
+    function closeMobileMenu() { mobileMenu.classList.remove('open'); }
+
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 60);
+          revealObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(el => revealObserver.observe(el));
+
+    // Hero mockup bars
+    const heights = [35, 55, 40, 70, 60, 85, 50];
+    const barsEl = document.getElementById('mockupBars');
+    if (barsEl) {
+      heights.forEach(h => {
+        const bar = document.createElement('div');
+        bar.className = 'mockup-bar';
+        bar.style.cssText = `--h:${h}%; height:${h}%`;
+        barsEl.appendChild(bar);
+      });
+    }
+  </script>
+</body>
+
+</html>
