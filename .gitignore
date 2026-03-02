@@ -31,3 +31,9 @@ ecosystem.config.js.bak
 
 # Private credentials
 vps_credentials*
+
+# App Downloads
+client/downloads/
+Nerve_Desktop_App/
+desktop-app/built/
+node_modules/

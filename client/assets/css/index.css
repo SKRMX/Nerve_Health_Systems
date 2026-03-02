@@ -900,6 +900,61 @@ section {
     color: var(--text-dim);
 }
 
+/* ---- Desktop App Section ---- */
+.desktop-app {
+    padding: 100px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.download-cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 48px;
+    flex-wrap: wrap;
+}
+
+.download-card {
+    background: var(--dark-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.download-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--cyan-mid);
+    box-shadow: var(--shadow-cyan);
+}
+
+.download-card .os-icon {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+}
+
+.download-card h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.download-card p {
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    font-size: 0.95rem;
+}
+
+.download-card .btn {
+    width: 100%;
+    justify-content: center;
+}
+
 /* ---- CTA Section ---- */
 .cta-section {
     padding: 120px 0;
