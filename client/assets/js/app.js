@@ -9,12 +9,15 @@ var APP = {
     org_owner: { name: 'Dr. Roberto Sánchez', initials: 'RS', org: 'Hospital Ángeles Metropolitano', role: 'Dueño / Administrador' },
     dept_head: { name: 'Dra. Carmen Ruiz', initials: 'CR', org: 'Hospital Ángeles Metropolitano', role: 'Jefa de Cardiología' },
     doctor: { name: 'Dr. Eduardo González', initials: 'EG', org: 'Hospital Ángeles Metropolitano', role: 'Médico General' },
+    asistente: { name: 'Laura Méndez', initials: 'LM', org: 'Hospital Ángeles Metropolitano', role: 'Asistente / Recepcionista' },
     patient: { name: 'Ana Lucía Martínez', initials: 'AM', org: 'Hospital Ángeles Metropolitano', role: 'Paciente' },
   },
   // — Super Admin credentials (platform owner only) —
   superAdminCreds: { username: 'MauricioCV', password: 'palmera22022800' },
   currentModule: 'dashboard',
   sidebarCollapsed: false,
+  // Live user data from API (set after login)
+  liveUser: null,
 
   navByRole: {
     superadmin: [
@@ -60,6 +63,14 @@ var APP = {
       { id: 'reports', icon: '📈', label: 'Mis Reportes', fn: 'renderReports' },
       { id: 'settings', icon: '⚙️', label: 'Mi Perfil', fn: 'renderDoctorSettings' },
     ],
+    asistente: [
+      { section: 'Principal' },
+      { id: 'dashboard', icon: '🏠', label: 'Inicio', fn: 'renderAsistenteDash' },
+      { id: 'appointments', icon: '📅', label: 'Agenda', fn: 'renderAppointments' },
+      { section: 'Gestión' },
+      { id: 'patients', icon: '🫀', label: 'Pacientes', fn: 'renderPatients' },
+      { id: 'prescriptions', icon: '💊', label: 'Recetas', fn: 'renderPrescriptions' },
+    ],
     patient: [
       { section: 'Mi Portal' },
       { id: 'dashboard', icon: '🏠', label: 'Inicio', fn: 'renderPatientPortal' },
@@ -98,55 +109,90 @@ window.addEventListener('load', () => {
 });
 
 function doLogin() {
-  // Safety guard — if APP somehow isn't ready, show a helpful error
-  if (typeof APP === 'undefined' || !APP.superAdminCreds) {
-    alert('⚠️ Error al cargar la aplicación.\nPor favor abre la consola del navegador (F12) y escribe:\n\n  location.reload(true)\n\nPara forzar una recarga completa.');
-    return;
-  }
-
-  // ---- Check superadmin credentials first ----
   const emailInput = document.getElementById('loginEmail');
   const passInput = document.getElementById('loginPass');
   const typedUser = emailInput ? emailInput.value.trim() : '';
   const typedPass = passInput ? passInput.value.trim() : '';
-  const sa = APP.superAdminCreds;
 
+  // ---- Try API login first (if backend is available) ----
+  if (typedUser && typedPass && typeof API !== 'undefined') {
+    const loginBtn = document.querySelector('.login-card .btn-primary');
+    if (loginBtn) { loginBtn.textContent = 'Conectando...'; loginBtn.disabled = true; }
+
+    API.login(typedUser, typedPass)
+      .then(user => {
+        // ✅ API login success
+        APP.liveUser = user;
+        _selectedRole = user.role;
+        APP.currentRole = user.role;
+        // Update user data from API
+        APP.currentUser[user.role] = {
+          name: user.name,
+          initials: user.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase(),
+          org: user.orgName || 'NERVE Platform',
+          role: getRoleLabel(user.role),
+        };
+        enterApp();
+      })
+      .catch(err => {
+        // API failed — try offline/seed fallback
+        console.warn('API login failed:', err.message, '— trying offline mode');
+        if (loginBtn) { loginBtn.textContent = 'Ingresar al sistema →'; loginBtn.disabled = false; }
+        doOfflineLogin(typedUser, typedPass);
+      });
+    return;
+  }
+
+  // No credentials typed — try offline/seed login
+  doOfflineLogin(typedUser, typedPass);
+}
+
+function doOfflineLogin(typedUser, typedPass) {
+  // Check superadmin credentials
+  const sa = APP.superAdminCreds;
   if (typedUser === sa.username && typedPass === sa.password) {
-    // ✅ Superadmin login
     _selectedRole = 'superadmin';
     localStorage.setItem('nerve_role', 'superadmin');
   } else {
-    // Check if coming from register.html (auto-login via localStorage)
+    // Check stored role (from register or auto-login)
     const storedRole = localStorage.getItem('nerve_role');
     if (storedRole && APP.currentUser[storedRole]) {
       _selectedRole = storedRole;
-    }
-    // If typed something but didn't match superadmin, show hint
-    if (typedUser && typedUser !== '' && !APP.currentUser[_selectedRole]) {
-      alert('Usuario o contraseña incorrectos.');
-      return;
     }
   }
 
   APP.currentRole = _selectedRole;
   const user = APP.currentUser[_selectedRole];
   if (!user) { alert('Rol no válido. Selecciona un rol e intenta de nuevo.'); return; }
+  enterApp();
+}
+
+function getRoleLabel(role) {
+  const labels = {
+    superadmin: 'Súper Administrador',
+    org_owner: 'Dueño / Administrador',
+    dept_head: 'Jefe de Departamento',
+    doctor: 'Médico',
+    asistente: 'Asistente / Recepcionista',
+    patient: 'Paciente',
+  };
+  return labels[role] || role;
+}
+
+function enterApp() {
+  const user = APP.currentUser[APP.currentRole];
+  if (!user) return;
 
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-layout').style.display = 'flex';
 
-  // Personalization
-  const storedName = localStorage.getItem('nerve_name');
-  const isSuperAdmin = _selectedRole === 'superadmin';
+  const isSuperAdmin = APP.currentRole === 'superadmin';
   const displayOrg = isSuperAdmin ? 'NERVE Platform' : user.org;
-  const displayInitials = isSuperAdmin ? 'MC'
-    : storedName
-      ? storedName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
-      : user.initials;
+  const displayInitials = user.initials || user.name.charAt(0);
 
-  document.getElementById('sidebarOrgName').textContent = isSuperAdmin ? 'MauricioCV' : displayOrg;
+  document.getElementById('sidebarOrgName').textContent = isSuperAdmin ? user.name : displayOrg;
   document.getElementById('sidebarOrgRole').textContent = user.role;
-  document.getElementById('sidebarOrgAvatar').textContent = isSuperAdmin ? 'M' : displayOrg.charAt(0);
+  document.getElementById('sidebarOrgAvatar').textContent = displayOrg.charAt(0);
   document.getElementById('userAvatarTopbar').textContent = displayInitials;
 
   if (window.innerWidth <= 900) document.getElementById('mobileMenuBtn').style.display = 'block';
@@ -160,19 +206,17 @@ function doLogin() {
 
 function doLogout() {
   if (!confirm('¿Cerrar sesión?')) return;
-  // Keep email for convenience re-login, clear session
+  // Clear API tokens
+  if (typeof API !== 'undefined') API.clearTokens();
+  APP.liveUser = null;
   localStorage.removeItem('nerve_firsttime');
   localStorage.removeItem('nerve_role');
   localStorage.removeItem('nerve_name');
-  // Keep nerve_email so the login field stays pre-filled
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app-layout').style.display = 'none';
-  // Re-fill email after showing login
-  const savedEmail = localStorage.getItem('nerve_email');
-  if (savedEmail) {
-    const emailInput = document.getElementById('loginEmail');
-    if (emailInput) emailInput.value = savedEmail;
-  }
+  // Clear password field
+  const passInput = document.getElementById('loginPass');
+  if (passInput) passInput.value = '';
 }
 
 // ---- Navigation ----
@@ -202,7 +246,7 @@ function navigate(moduleId) {
   document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.id === moduleId));
   const item = (APP.navByRole[APP.currentRole] || []).find(i => i.id === moduleId);
   if (item) {
-    document.getElementById('breadcrumbSection').textContent = APP.currentUser[APP.currentRole].org;
+    document.getElementById('breadcrumbSection').textContent = APP.liveUser ? (APP.liveUser.orgName || 'NERVE') : (APP.currentUser[APP.currentRole] || {}).org || '';
     document.getElementById('breadcrumbPage').textContent = item.label;
     // Resolve fn string → global function at runtime
     var fn = item.fn;
@@ -281,6 +325,7 @@ function renderPatientAppointments() { renderAppointments(); }
 function renderPatientExpediente() { renderPatients(); }
 function renderPatientPrescriptions() { renderPrescriptions(); }
 function renderTenants() { renderSuperAdminDash(); }
+function renderAsistenteDash() { renderDoctorDash(); }
 
 function renderGenericSettings() {
   document.getElementById('pageContent').innerHTML = `
