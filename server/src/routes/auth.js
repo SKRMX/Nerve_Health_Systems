@@ -128,6 +128,74 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// ---- POST /api/auth/register-invite ----
+// Completes registration using a JWT invite token
+router.post('/register-invite', async (req, res) => {
+    try {
+        const { token, name, password, specialty, phone } = req.body;
+
+        if (!token || !name || !password) {
+            return res.status(400).json({ error: 'Token, nombre y contraseña son requeridos' });
+        }
+
+        const jwt = require('jsonwebtoken');
+        let payload;
+        try {
+            payload = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            return res.status(401).json({ error: 'Invitación inválida o expirada' });
+        }
+
+        if (payload.type !== 'invite') {
+            return res.status(400).json({ error: 'Token inválido' });
+        }
+
+        // Check duplicate email
+        const existing = await prisma.user.findUnique({ where: { email: payload.email } });
+        if (existing) {
+            return res.status(409).json({ error: 'Esta invitación ya fue utilizada o el correo ya está registrado' });
+        }
+
+        // Hash password
+        const passwordHash = await bcrypt.hash(password, 12);
+
+        // Create user
+        const user = await prisma.user.create({
+            data: {
+                name,
+                email: payload.email,
+                passwordHash,
+                role: payload.role,
+                phone: phone || null,
+                specialty: specialty || null,
+                orgId: payload.orgId,
+                departmentId: payload.departmentId || null,
+            },
+            include: { org: { select: { id: true, name: true, plan: true } } }
+        });
+
+        const tokens = generateTokens(user);
+
+        await logAudit(user.id, 'CREATE', 'user', user.id, `Usuario aceptó invitación a la org ${payload.orgName}`, req.ip);
+
+        res.status(201).json({
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                specialty: user.specialty,
+                orgId: user.org?.id || null,
+                orgName: user.org?.name || null,
+            },
+            ...tokens,
+        });
+    } catch (err) {
+        console.error('Register invite error:', err);
+        res.status(500).json({ error: 'Error al completar el registro por invitación' });
+    }
+});
+
 // ---- POST /api/auth/refresh ----
 router.post('/refresh', async (req, res) => {
     try {

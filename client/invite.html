@@ -159,6 +159,7 @@
 
     </div>
 
+    <script src="assets/js/api.js"></script>
     <script>
         // ---- Specialty toggle ----
         function toggleOtherSpecialty(select, inputId) {
@@ -171,70 +172,116 @@
 
         // Read URL params to customize the invite page
         const params = new URLSearchParams(window.location.search);
-        const role = params.get('role') || 'doctor';      // doctor | dept_head | patient
-        const org = params.get('org') || 'Hospital Ángeles';
-        const email = params.get('email') || 'usuario@hospital.mx';
-        const token = params.get('token') || '';
+        const token = params.get('token');
+        let role = 'doctor';
+        let org = '';
+        let email = '';
 
-        // Simulate: invalid if no token
-        if (!token && !['demo', 'test'].includes(params.get('mode'))) {
-            // For demo purposes keep it visible
+        if (!token) {
+            document.getElementById('inviteContainer').style.display = 'none';
+            document.getElementById('inviteError').style.display = 'flex';
+        } else {
+            try {
+                // Decode JWT Payload without verifying signature (verification happens on backend)
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                const payload = JSON.parse(jsonPayload);
+                role = payload.role;
+                org = payload.orgName;
+                email = payload.email;
+
+                if (payload.exp * 1000 < Date.now()) {
+                    throw new Error('Token expirado');
+                }
+
+                document.getElementById('inviteOrgName').textContent = org;
+                document.getElementById('inviteOrgBadge').querySelector('.inv-org-icon').textContent = org.charAt(0).toUpperCase();
+                document.getElementById('inviteEmail').textContent = email;
+
+                const roleConfig = {
+                    doctor: { icon: '🩺', title: 'Eres invitado como Doctor', desc: 'Tendrás acceso a tu agenda, expedientes de pacientes y generación de recetas.', fields: 'doctorFields' },
+                    dept_head: { icon: '👔', title: 'Eres invitado como Jefe de Departamento', desc: 'Podrás supervisar el rendimiento de tu equipo y ver reportes del departamento.', fields: 'doctorFields' },
+                    patient: { icon: '👤', title: 'Te han invitado como Paciente', desc: 'Accede a tu historial de consultas, recetas y citas futuras desde tu portal.', fields: 'patientFields' },
+                    asistente: { icon: '📋', title: 'Eres invitada como Asistente', desc: 'Gestionarás la agenda de los doctores, verás y agregarás pacientes rápidamente.', fields: 'patientFields' }
+                };
+                const rc = roleConfig[role] || { icon: '🫂', title: `Invitado como ${role}`, desc: '', fields: 'patientFields' };
+
+                document.getElementById('inviteRoleIcon').textContent = rc.icon;
+                document.getElementById('inviteRoleTitle').textContent = rc.title;
+                document.getElementById('inviteRoleDesc').textContent = rc.desc;
+
+                if (rc.fields === 'patientFields') {
+                    document.getElementById('doctorFields').style.display = 'none';
+                    document.getElementById('patientFields').style.display = 'block';
+                }
+                document.getElementById('inviteOrgNameSuccess').textContent = org;
+
+                window.addEventListener('DOMContentLoaded', () => {
+                    const emailInput = document.getElementById('invEmail');
+                    if (emailInput && email) {
+                        emailInput.value = email;
+                        emailInput.disabled = true; // Prevents changing the email
+                    }
+                });
+
+            } catch (err) {
+                console.error("Token error", err);
+                document.getElementById('inviteContainer').style.display = 'none';
+                document.getElementById('inviteError').style.display = 'flex';
+            }
         }
 
-        document.getElementById('inviteOrgName').textContent = org;
-        document.getElementById('inviteOrgBadge').querySelector('.inv-org-icon').textContent = org.charAt(0).toUpperCase();
-        document.getElementById('inviteEmail').textContent = email;
-
-        const roleConfig = {
-            doctor: { icon: '🩺', title: 'Eres invitado como Doctor', desc: 'Tendrás acceso a tu agenda, expedientes de pacientes y generación de recetas.', fields: 'doctorFields' },
-            dept_head: { icon: '👔', title: 'Eres invitado como Jefe de Departamento', desc: 'Podrás supervisar el rendimiento de tu equipo y ver reportes del departamento.', fields: 'doctorFields' },
-            patient: { icon: '👤', title: 'Te han invitado como Paciente', desc: 'Accede a tu historial de consultas, recetas y citas futuras desde tu portal.', fields: 'patientFields' },
-        };
-        const rc = roleConfig[role] || roleConfig.doctor;
-        document.getElementById('inviteRoleIcon').textContent = rc.icon;
-        document.getElementById('inviteRoleTitle').textContent = rc.title;
-        document.getElementById('inviteRoleDesc').textContent = rc.desc;
-        if (rc.fields === 'patientFields') {
-            document.getElementById('doctorFields').style.display = 'none';
-            document.getElementById('patientFields').style.display = 'block';
-        }
-        document.getElementById('inviteOrgNameSuccess').textContent = org;
-        // Pre-fill email field from URL param
-        window.addEventListener('DOMContentLoaded', () => {
-            const emailInput = document.getElementById('invEmail');
-            if (emailInput && email !== 'usuario@hospital.mx') emailInput.value = email;
-        });
-
-        function submitInvite() {
+        async function submitInvite() {
             const pass = document.getElementById('invPass').value;
             const conf = document.getElementById('invPassConf').value;
-            const userEmail = document.getElementById('invEmail').value.trim();
             const first = document.getElementById('invFirst').value.trim();
             const last = document.getElementById('invLast').value.trim();
-            if (!userEmail.match(/^[^@]+@[^@]+\.[^@]+$/)) { alert('Ingresa un correo válido.'); return; }
+
+            if (!first || !last) { alert('Ingresa tu nombre completo.'); return; }
             if (!pass || pass.length < 8) { alert('La contraseña debe tener al menos 8 caracteres.'); return; }
             if (pass !== conf) { alert('Las contraseñas no coinciden.'); return; }
             if (!document.getElementById('invTerms').checked) { alert('Debes aceptar los términos.'); return; }
 
-            // Simulate API call
             const btn = event.target;
             btn.disabled = true;
             btn.textContent = 'Creando cuenta...';
-            setTimeout(() => {
-                // Store session data for app.html
-                localStorage.setItem('nerve_role', role);
-                localStorage.setItem('nerve_org', org);
-                localStorage.setItem('nerve_email', userEmail);
-                localStorage.setItem('nerve_name', `${first} ${last}`.trim());
-                localStorage.setItem('nerve_firsttime', '1');
+
+            let specialty = null;
+            let phone = null;
+
+            if (role === 'doctor' || role === 'dept_head') {
+                const s = document.getElementById('invSpecialty').value;
+                specialty = (s === 'Otra especialidad...') ? document.getElementById('invSpecialtyOther').value : s;
+                // Cedula is ignored on backend for now, but UI asks it.
+            } else {
+                phone = document.getElementById('invPhone').value;
+            }
+
+            try {
+                await API.registerInvite({
+                    token,
+                    name: `${first} ${last}`,
+                    password: pass,
+                    specialty,
+                    phone
+                });
+
+                // Success
                 document.getElementById('invStepA').classList.remove('active');
                 document.getElementById('invStepB').classList.add('active');
-            }, 1800);
+            } catch (err) {
+                alert(err.message || 'Hubo un error al activar tu cuenta');
+                btn.disabled = false;
+                btn.textContent = 'Activar mi cuenta →';
+            }
         }
 
         function setInviteUser() {
-            localStorage.setItem('nerve_role', role);
-            localStorage.setItem('nerve_firsttime', '1');
+            // State is handled by API.registerInvite already
         }
     </script>
 </body>

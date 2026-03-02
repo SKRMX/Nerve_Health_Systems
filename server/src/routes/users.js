@@ -58,16 +58,16 @@ router.get('/',
 );
 
 // ---- POST /api/users/invite ----
-// Invite a new user to the organization
+// Invite a new user to the organization via JWT link
 router.post('/invite',
     authorize('superadmin', 'org_owner'),
     auditMiddleware('user'),
     async (req, res) => {
         try {
-            const { name, email, password, role, specialty, phone, departmentId } = req.body;
+            const { email, role, departmentId } = req.body;
 
-            if (!name || !email || !password || !role) {
-                return res.status(400).json({ error: 'Nombre, email, contraseña y rol son requeridos' });
+            if (!email || !role) {
+                return res.status(400).json({ error: 'Email y rol son requeridos' });
             }
 
             // Validate role
@@ -79,32 +79,43 @@ router.post('/invite',
             // Check duplicate
             const existing = await prisma.user.findUnique({ where: { email } });
             if (existing) {
-                return res.status(409).json({ error: 'Ya existe un usuario con ese correo' });
+                return res.status(409).json({ error: 'Ya existe un usuario con ese correo registrado en el sistema' });
             }
 
-            const passwordHash = await bcrypt.hash(password, 12);
+            // We need the org name to embed in the token
+            const org = await prisma.organization.findUnique({ where: { id: req.user.orgId } });
+            if (!org) {
+                return res.status(404).json({ error: 'Organización no encontrada' });
+            }
 
-            const user = await prisma.user.create({
-                data: {
-                    name,
-                    email,
-                    passwordHash,
-                    role,
-                    specialty: specialty || null,
-                    phone: phone || null,
-                    orgId: req.user.orgId,
-                    departmentId: departmentId || null,
-                },
-                select: {
-                    id: true, name: true, email: true, role: true,
-                    specialty: true, active: true,
-                },
+            // Import jwt (require inside or globally, let's just use jsonwebtoken)
+            const jwt = require('jsonwebtoken');
+
+            const payload = {
+                email,
+                role,
+                orgId: req.user.orgId,
+                orgName: org.name,
+                departmentId: departmentId || null,
+                inviterName: req.user.name,
+                type: 'invite'
+            };
+
+            const inviteToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '48h' });
+
+            // In a real app we would send an email here using a mailer service.
+            // For now, we return the token and the link to the frontend so it can display it.
+            const inviteUrl = `${req.protocol}://${req.get('host')}/invite.html?token=${inviteToken}`;
+
+            res.status(201).json({
+                message: 'Invitación generada con éxito',
+                inviteToken,
+                inviteUrl,
+                expiresIn: '48 horas'
             });
-
-            res.status(201).json(user);
         } catch (err) {
             console.error('Invite user error:', err);
-            res.status(500).json({ error: 'Error al invitar usuario' });
+            res.status(500).json({ error: 'Error al generar la invitación' });
         }
     }
 );

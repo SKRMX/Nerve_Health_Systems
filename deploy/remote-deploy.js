@@ -21,12 +21,29 @@ if (!VPS.password) {
 
 // Commands to execute in sequence
 const commands = [
-    { label: '📦 Updating system', cmd: 'apt-get update -y -qq' },
+    {
+        label: '�️ Clearing apt locks & updating',
+        cmd: `export DEBIAN_FRONTEND=noninteractive;
+          kill -9 1238966 2>/dev/null || true;
+          killall -9 apt apt-get dpkg 2>/dev/null || true;
+          rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock;
+          dpkg --configure -a;
+          apt-get update -y -qq`,
+    },
+    {
+        label: '📦 Installing curl & build tools',
+        cmd: `export DEBIAN_FRONTEND=noninteractive; apt-get install -y -qq curl build-essential`,
+    },
     {
         label: '📦 Installing Node.js 20',
-        cmd: `if ! command -v node &>/dev/null; then
-      curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
-    fi && node --version`,
+        cmd: `NODE_MAJOR=$(node -v 2>/dev/null | cut -d 'v' -f 2 | cut -d '.' -f 1 || echo "0")
+          if [ "$NODE_MAJOR" -lt 20 ]; then
+            export DEBIAN_FRONTEND=noninteractive;
+            apt-get install -y -qq nodejs npm;
+            npm install -g n;
+            n 20;
+            hash -r;
+          fi && node --version`,
     },
     {
         label: '📦 Installing PostgreSQL',

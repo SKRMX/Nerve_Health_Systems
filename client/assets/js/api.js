@@ -121,6 +121,16 @@ const API = (() => {
         return data.user;
     }
 
+    async function registerInvite(data) {
+        const resData = await request('/auth/register-invite', {
+            method: 'POST',
+            body: data,
+        });
+        setTokens(resData.accessToken, resData.refreshToken);
+        setUser(resData.user);
+        return resData.user;
+    }
+
     async function getMe() {
         return request('/auth/me');
     }
@@ -259,7 +269,7 @@ const API = (() => {
     // ---- Public Interface ----
     return {
         // Auth
-        login, register, logout, getMe, isLoggedIn, getUser, setUser,
+        login, register, registerInvite, logout, getMe, isLoggedIn, getUser, setUser,
         // Patients
         getPatients, getPatient, createPatient, updatePatient, updatePatientInfo, deletePatient,
         // Appointments
