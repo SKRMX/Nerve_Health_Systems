@@ -16,7 +16,8 @@ echo "📦 Installing dependencies (skipping if already present)..."
 apt-get update -y -qq
 
 # Node.js 20
-if ! command -v node &> /dev/null; then
+NODE_MAJOR=$(node -v 2>/dev/null | cut -d 'v' -f 2 | cut -d '.' -f 1 || echo "0")
+if ! command -v npm &> /dev/null || [ "$NODE_MAJOR" -lt 20 ]; then
   echo "  → Installing Node.js 20..."
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
   apt-get install -y nodejs
