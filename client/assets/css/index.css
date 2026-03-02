@@ -933,8 +933,17 @@ section {
 }
 
 .download-card .os-icon {
-    font-size: 3.5rem;
-    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 24px;
+    color: var(--cyan);
+    transition: var(--transition);
+}
+
+.download-card:hover .os-icon {
+    transform: scale(1.1);
+    color: var(--mint);
 }
 
 .download-card h3 {
