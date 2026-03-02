@@ -131,10 +131,9 @@ echo "PM2 config OK"`,
         label: '🌐 Configuring Nginx',
         cmd: `cat > /etc/nginx/sites-available/nervehealthsystems.com << 'EOF'
 server {
-    listen 80;
     server_name nervehealthsystems.com www.nervehealthsystems.com;
     root /var/www/nerve/client;
-    index index.html;
+    index index.html app.html;
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml;
     gzip_min_length 1000;
@@ -143,7 +142,7 @@ server {
         add_header Cache-Control "public, immutable";
     }
     location / {
-        try_files \\$uri \\$uri/ /index.html;
+        try_files \\$uri \\$uri/ /app.html;
     }
     location /api {
         proxy_pass http://127.0.0.1:3001;
@@ -158,6 +157,26 @@ server {
     }
     add_header X-Frame-Options "DENY" always;
     add_header X-Content-Type-Options "nosniff" always;
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/nervehealthsystems.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/nervehealthsystems.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+
+server {
+    if (\\$host = www.nervehealthsystems.com) {
+        return 301 https://\\$host\\$request_uri;
+    } # managed by Certbot
+
+    if (\\$host = nervehealthsystems.com) {
+        return 301 https://\\$host\\$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    server_name nervehealthsystems.com www.nervehealthsystems.com;
+    return 404; # managed by Certbot
 }
 EOF
 ln -sf /etc/nginx/sites-available/nervehealthsystems.com /etc/nginx/sites-enabled/
