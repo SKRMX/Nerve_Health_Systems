@@ -47,8 +47,22 @@ if (config.nodeEnv === 'development') {
 
 // ---- Routes ----
 const authRoutes = require('./routes/auth');
+const patientRoutes = require('./routes/patients');
+const appointmentRoutes = require('./routes/appointments');
+const prescriptionRoutes = require('./routes/prescriptions');
+const userRoutes = require('./routes/users');
+const orgRoutes = require('./routes/organizations');
+const deptRoutes = require('./routes/departments');
+const adminRoutes = require('./routes/admin');
 
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/organizations', orgRoutes);
+app.use('/api/departments', deptRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
