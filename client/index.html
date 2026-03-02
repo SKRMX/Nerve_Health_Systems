@@ -99,8 +99,8 @@
           </div>
           <div class="hero-mockup-body">
             <div class="mockup-header">
-              <div class="mockup-title">Buenos días, Dr. González 👋</div>
-              <div class="mockup-date">Sábado 28 Feb 2026 · 14 citas hoy</div>
+              <div class="mockup-title">Buenos días, Dr. Nerve 👋</div>
+              <div class="mockup-date" id="mockupDate">Sábado 28 Feb 2026 · 14 citas hoy</div>
             </div>
             <div class="mockup-stats">
               <div class="mockup-stat">
@@ -500,6 +500,15 @@
         bar.style.cssText = `--h:${h}%; height:${h}%`;
         barsEl.appendChild(bar);
       });
+    }
+
+    // Dynamic date in mockup
+    const dateEl = document.getElementById('mockupDate');
+    if (dateEl) {
+      const now = new Date();
+      const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      dateEl.textContent = `${dias[now.getDay()]} ${now.getDate()} ${meses[now.getMonth()]} ${now.getFullYear()} · 14 citas hoy`;
     }
   </script>
 </body>
