@@ -87,6 +87,11 @@ function selectRole(el) {
   document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
   _selectedRole = el.dataset.role;
+  // Clear autofill inputs if user explicitly chooses a demo role
+  const emailInput = document.getElementById('loginEmail');
+  const passInput = document.getElementById('loginPass');
+  if (emailInput) emailInput.value = '';
+  if (passInput) passInput.value = '';
 }
 // On load: highlight default role OR auto-login if coming from register/invite
 window.addEventListener('load', () => {
@@ -148,18 +153,14 @@ function doLogin() {
 }
 
 function doOfflineLogin(typedUser, typedPass) {
-  // Check superadmin credentials
+  // Check superadmin credentials ONLY if they were actually typed/autofilled
   const sa = APP.superAdminCreds;
   if (typedUser === sa.username && typedPass === sa.password) {
     _selectedRole = 'superadmin';
-    localStorage.setItem('nerve_role', 'superadmin');
-  } else {
-    // Check stored role (from register or auto-login)
-    const storedRole = localStorage.getItem('nerve_role');
-    if (storedRole && APP.currentUser[storedRole]) {
-      _selectedRole = storedRole;
-    }
   }
+
+  // Save the currently selected role to cache for next auto-login
+  localStorage.setItem('nerve_role', _selectedRole);
 
   APP.currentRole = _selectedRole;
   const user = APP.currentUser[_selectedRole];
