@@ -30,4 +30,5 @@
 
 ## 5. Peticiones Pendientes (Backlog de Usuario) 📋
 - *(Cualquier cosa fuera del orden inmediato que el usuario pida, se anota aquí)*.
+- **[Alta Prioridad (Siguiente sesión)]** Continuar la auditoría visual exhaustiva de todas las pantallas, modales y flujos para asegurar que no haya botones "muertos" ni alertas genéricas en ningún perfil antes de montar el backend real.
 - Definir qué pasará con el botón de descarga de Mac en el Landing Page en lo que tardan los notarios de Apple.
