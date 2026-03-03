@@ -534,7 +534,7 @@ function renderSubscriptions() {
             <td>01 Feb 2026</td>
             <td style="color:var(--cyan)">01 Mar 2026</td>
             <td><span class="badge badge-success">Pago Automático</span></td>
-            <td><button class="btn btn-secondary btn-sm">Ver Factura</button></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="openInvoiceModal('${h.id}')">Ver Factura</button></td>
           </tr>`).join('')}
         </tbody>
       </table></div>
@@ -566,6 +566,35 @@ function renderSubscriptions() {
       </table></div>
     </div>`;
   }
+}
+
+function openInvoiceModal(orgId) {
+  openModal('🧾 Factura / CFDI', `
+    <div style="padding:10px;background:var(--dark-4);border-radius:8px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span class="text-muted">Folio:</span> <span class="fw-700">FAC-2026-02-145</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span class="text-muted">Uso CFDI:</span> <span>G03 - Gastos en general</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span class="text-muted">Régimen:</span> <span>601 - General de Ley Personas Morales</span>
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-bottom:16px;">
+      <table>
+        <thead><tr><th>Concepto</th><th>Importe</th></tr></thead>
+        <tbody>
+          <tr><td>Suscripción Anual - NERVE Platform</td><td>$49,990.00 MXN</td></tr>
+          <tr><td align="right" class="text-muted">IVA (16%)</td><td>$7,998.40 MXN</td></tr>
+          <tr><td align="right" class="fw-700">Total</td><td class="fw-700" style="color:var(--success)">$57,988.40 MXN</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `, `
+    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+    <button class="btn btn-primary" onclick="closeModal();showNotification('Iniciando descarga de factura (PDF/XML)...', 'cyan')">⬇ Descargar ZIP</button>
+  `);
 }
 
 /* --- Global Doctors View (Super Admin) --- */

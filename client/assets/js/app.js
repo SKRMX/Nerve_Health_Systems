@@ -461,7 +461,7 @@ function renderTenants() {
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `
   <div class="page-header"><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro de Hospitales inscritos</div></div>
-  <div class="page-actions"><button class="btn btn-primary" onclick="showNotification('Abriendo creador de tenants...','cyan')">+ Nuevo Hospital</button></div></div>
+  <div class="page-actions"><button class="btn btn-primary" onclick="openNewTenantModal()">+ Nuevo Hospital</button></div></div>
   <div class="card">
     <div class="table-wrap">
       <table>
@@ -473,12 +473,62 @@ function renderTenants() {
             <td><span class="badge ${h.plan === 'hospital' ? 'badge-cyan' : 'badge-mint'}">${h.plan}</span></td>
             <td>${h.owner ? h.owner : (h.id === 'h1' ? 'Dr. Roberto Sánchez' : 'Director Médico')}</td>
             <td>${D.getDoctorsByHospital(h.id).length}</td>
-            <td><button class="btn btn-sm btn-secondary" onclick="showNotification('Abriendo panel de límites...','warning')">Modificar Límites</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Cuenta suspendida temporalmente','error')">Suspender</button></td>
+            <td><button class="btn btn-sm btn-secondary" onclick="openEditLimitsModal('${h.name}', '${h.plan}', ${D.getDoctorsByHospital(h.id).length})">Modificar Límites</button> <button class="btn btn-sm btn-danger" onclick="openSuspendTenantModal('${h.name}')">Suspender</button></td>
           </tr>`).join('')}
         </tbody>
       </table>
     </div>
   </div>`;
+}
+
+function openNewTenantModal() {
+  openModal('🏥 Nuevo Hospital / Clínica', `
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Nombre de la organización</label><input class="form-control" placeholder="Ej. Clínica Las Condes" /></div>
+      <div class="form-group"><label class="form-label">Plan de suscripción</label>
+        <select class="form-control"><option>Starter</option><option>Clínica Pro</option><option>Enterprise</option></select>
+      </div>
+    </div>
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Nombre del administrador</label><input class="form-control" placeholder="Ej. Dr. Juan Pérez" /></div>
+      <div class="form-group"><label class="form-label">Correo del administrador</label><input type="email" class="form-control" placeholder="admin@clinica.com" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Límite de doctores</label><input type="number" class="form-control" value="10" /></div>
+  `, `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="closeModal();showNotification('Organización creada y correo enviado al administrador con éxito','success')">Crear Organización</button>
+  `);
+}
+
+function openEditLimitsModal(orgName, plan, docs) {
+  openModal('⚙️ Modificar Límites: ' + orgName, `
+    <div class="form-group"><label class="form-label">Plan Actual</label>
+      <select class="form-control"><option ${plan === 'hospital' ? 'selected' : ''}>Enterprise (Hospital)</option><option ${plan === 'clinica' ? 'selected' : ''}>Clínica Pro</option><option ${plan === 'starter' ? 'selected' : ''}>Starter</option></select>
+    </div>
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Límite de Doctores</label><input type="number" class="form-control" value="${docs}" /></div>
+      <div class="form-group"><label class="form-label">Límite de Almacenamiento (GB)</label><input type="number" class="form-control" value="50" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Características adicionales</label>
+      <label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--cyan-mid)"> Facturación automática</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--cyan-mid)"> Módulo de analítica avanzada</label>
+    </div>
+  `, `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="closeModal();showNotification('Límites de la organización actualizados','success')">Guardar Cambios</button>
+  `);
+}
+
+function openSuspendTenantModal(orgName) {
+  openModal('⚠️ Suspender Organización', `
+    <div style="padding:4px 0;">
+      ¿Estás seguro de que deseas suspender el acceso a <strong style="color:var(--text)">${orgName}</strong>?<br><br>
+      <span style="color:var(--text-muted);font-size:0.85rem">Los usuarios de esta organización no podrán acceder al sistema hasta que se reactive la cuenta desde este panel. Sus datos clínicos permanecerán intactos en la base de datos y no serán eliminados.</span>
+    </div>
+  `, `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-danger" onclick="closeModal();showNotification('Organización suspendida temporalmente','warning')">Sí, Suspender</button>
+  `);
 }
 
 function renderDoctorSettings() { renderGenericSettings(); }

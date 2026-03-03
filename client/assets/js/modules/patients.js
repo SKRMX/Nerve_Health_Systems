@@ -189,7 +189,7 @@ function openPatientDetail(id) {
             </div>
           </div>
           <div style="margin-top:6px;display:flex;gap:6px">
-            <button class="btn btn-secondary btn-sm" onclick="showNotification('Abriendo nota clínica completa...','cyan')">Ver completo</button>
+            <button class="btn btn-secondary btn-sm" onclick="openClinicalNoteModal('${c.tipo}', '${c.d}', '${escape(c.s)}', '${escape(c.o)}', '${escape(c.a)}', '${escape(c.p_ || c.p || '')}')">Ver completo</button>
             <button class="btn btn-secondary btn-sm" onclick="navigate('prescriptions')">💊 Ver receta</button>
           </div>
         </div>
@@ -224,8 +224,8 @@ function openPatientDetail(id) {
         `<div style="font-size:0.84rem;color:var(--text)">${f.val}</div>` :
         `<div style="font-size:0.84rem;color:var(--text)">${f.val}</div>`}
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="showNotification('Abriendo editor de campo...','cyan')">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="showNotification('Campo eliminado del expediente','warning')">🗑</button>
+          <button class="btn btn-secondary btn-sm" onclick="openEditFieldModal('${f.label}', '${f.type}', '${escape(f.val)}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="openDeleteFieldModal('${f.label}')">🗑</button>
         </div>`).join('')}
       </div>
     </div>
@@ -313,4 +313,40 @@ function openNewConsultModal(patId) {
     `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button class="btn btn-secondary" onclick="closeModal();navigate('prescriptions')">💊 Guardar y generar receta</button>
    <button class="btn btn-primary" onclick="closeModal()">Guardar consulta →</button>`, 'lg');
+}
+
+function openClinicalNoteModal(tipo, date, s, o, a, p) {
+  openModal('📄 Nota Clínica Completa: ' + tipo, `
+    <div style="margin-bottom:12px;color:var(--text-muted);font-size:0.85rem">Realizada el ${date}</div>
+    <div class="form-group"><label class="form-label" style="color:var(--cyan-mid)">S — Subjetivo</label><textarea class="form-control" readonly style="min-height:80px">${unescape(s)}</textarea></div>
+    <div class="form-group"><label class="form-label" style="color:var(--mint)">O — Objetivo</label><textarea class="form-control" readonly style="min-height:80px">${unescape(o)}</textarea></div>
+    <div class="form-group"><label class="form-label" style="color:var(--warning)">A — Diagnóstico / Análisis</label><textarea class="form-control" readonly style="min-height:60px">${unescape(a)}</textarea></div>
+    <div class="form-group"><label class="form-label" style="color:var(--success)">P — Plan de tratamiento</label><textarea class="form-control" readonly style="min-height:80px">${unescape(p)}</textarea></div>
+  `, `
+    <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+    <button class="btn btn-primary" onclick="closeModal();navigate('prescriptions')">⚕️ Generar nueva receta</button>
+  `, 'lg');
+}
+
+function openEditFieldModal(label, type, val) {
+  openModal('✏️ Editar Campo Dinámico', `
+    <div class="form-group"><label class="form-label">Nombre del campo</label><input class="form-control" value="${label}" readonly style="background:var(--dark-4)" /></div>
+    <div class="form-group"><label class="form-label">Valor actual (${type})</label>
+      ${type === 'textarea' ? `<textarea class="form-control" style="min-height:100px">${unescape(val)}</textarea>` :
+      (type === 'checkbox' ? `<select class="form-control"><option ${unescape(val) === 'Sí' ? 'selected' : ''}>Sí</option><option ${unescape(val) === 'No' ? 'selected' : ''}>No</option></select>` :
+        `<input class="form-control" value="${unescape(val)}" />`)}
+    </div>
+  `, `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="closeModal();showNotification('Campo actualizado','success')">Guardar Cambios</button>
+  `);
+}
+
+function openDeleteFieldModal(label) {
+  openModal('🗑 Eliminar Campo', `
+    ¿Estás seguro que deseas eliminar permanentemente el campo <strong>${label}</strong> de este expediente?
+  `, `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-danger" onclick="closeModal();showNotification('Campo eliminado','warning')">Eliminar Campo</button>
+  `);
 }
