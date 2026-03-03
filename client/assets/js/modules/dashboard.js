@@ -29,11 +29,11 @@ function renderSuperAdminDash() {
 
   <div class="stats-grid stats-grid-4" style="margin-bottom:24px">
     ${[
-      { icon: '🏥', label: 'Organizaciones activas', val: _fmt(totalOrg), chg: '+0 este mes', up: true, color: 'rgba(17,113,139,0.2)' },
-      { icon: '🩺', label: 'Doctores activos', val: _fmt(totalDr), chg: `+${totalDr} registrados`, up: true, color: 'rgba(6,207,215,0.1)' },
-      { icon: '👤', label: 'Pacientes registrados', val: _fmt(totalPat), chg: `+${Math.round(totalPat * 0.04)} este mes`, up: true, color: 'rgba(73,190,174,0.1)' },
-      { icon: '💰', label: 'MRR (MXN)', val: `$${_fmt(mrr)}`, chg: '+8.3% vs anterior', up: true, color: 'rgba(34,197,94,0.1)' },
-    ].map(s => `<div class="stat-card">
+      { icon: '🏥', label: 'Organizaciones activas', val: _fmt(totalOrg), chg: '+0 este mes', up: true, color: 'rgba(17,113,139,0.2)', action: "navigate('tenants')" },
+      { icon: '🩺', label: 'Doctores activos', val: _fmt(totalDr), chg: `+${totalDr} registrados`, up: true, color: 'rgba(6,207,215,0.1)', action: "renderGlobalDoctors()" },
+      { icon: '👤', label: 'Pacientes registrados', val: _fmt(totalPat), chg: `+${Math.round(totalPat * 0.04)} este mes`, up: true, color: 'rgba(73,190,174,0.1)', action: "renderGlobalPatients()" },
+      { icon: '💰', label: 'MRR (MXN)', val: `$${_fmt(mrr)}`, chg: '+8.3% vs anterior', up: true, color: 'rgba(34,197,94,0.1)', action: "navigate('subscriptions')" },
+    ].map(s => `<div class="stat-card" style="cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'" onclick="${s.action}">
       <div class="stat-icon" style="background:${s.color}">${s.icon}</div>
       <div class="stat-value">${s.val}</div>
       <div class="stat-label">${s.label}</div>
@@ -499,31 +499,151 @@ function openNewPatientModal() {
 }
 
 /* --- Subscriptions page --- */
+/* --- Subscriptions page --- */
 function renderSubscriptions() {
   const D = _d();
   const pc = document.getElementById('pageContent');
+
+  if (APP.currentRole === 'superadmin') {
+    // Global Subscriptions View
+    const orgs = D ? D.hospitals : [];
+    pc.innerHTML = `
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn btn-secondary btn-sm" onclick="navigate('dashboard')">← Volver</button>
+        <div><div class="page-title">💳 Resumen Económico Global</div><div class="page-subtitle">Suscripciones y Renovaciones de Tenants</div></div>
+      </div>
+      <div class="page-actions"><button class="btn btn-primary">Configurar Stripe / MercadoPago</button></div>
+    </div>
+    
+    <div class="stats-grid stats-grid-3" style="margin-bottom:24px">
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(34,197,94,0.1)">💰</div><div class="stat-value">$${_fmt(52400)}</div><div class="stat-label">MRR Total</div><div class="stat-change up">Ingreso Recurrente Mensual</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(17,113,139,0.2)">📅</div><div class="stat-value">4</div><div class="stat-label">Renovaciones este mes</div><div class="stat-change neutral">100% de retención</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1)">⏳</div><div class="stat-value">0</div><div class="stat-label">Pagos Atrasados</div><div class="stat-change neutral">Ningún cobro pendiente</div></div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header"><span class="card-title">Próximas renovaciones (${orgs.length})</span></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Hospital / Clínica</th><th>Plan</th><th>Costo</th><th>Ultimo cobro</th><th>Próximo cobro</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          ${orgs.map(h => `<tr>
+            <td><div style="font-weight:600">${h.name}</div><div style="font-size:0.75rem;color:var(--text-muted)">Propietario: ${h.owner}</div></td>
+            <td><span class="badge ${h.plan === 'hospital' ? 'badge-cyan' : 'badge-mint'}">${h.plan}</span></td>
+            <td class="fw-700">$${h.plan === 'hospital' ? 'Personalizado' : '4,999 MXN'}</td>
+            <td>01 Feb 2026</td>
+            <td style="color:var(--cyan)">01 Mar 2026</td>
+            <td><span class="badge badge-success">Pago Automático</span></td>
+            <td><button class="btn btn-secondary btn-sm">Ver Factura</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+  } else {
+    // Org Owner Local Subscription View
+    pc.innerHTML = `
+    <div class="page-header"><div><div class="page-title">💳 Suscripción</div><div class="page-subtitle">Plan activo y facturación</div></div></div>
+    <div class="stats-grid stats-grid-3" style="margin-bottom:24px">
+      ${[
+        { icon: '💰', label: 'Plan actual', val: D ? 'Clínica Pro' : 'Enterprise', chg: 'Activo' },
+        { icon: '📅', label: 'Próxima renovación', val: '01 Mar 2026', chg: 'Pago automático' },
+        { icon: '🩺', label: 'Médicos incluidos', val: D ? `${D.getDoctorsByHospital(D.currentUsers.org_owner || 'h1').length}/10` : '20', chg: 'del plan' },
+      ].map(s => `<div class="stat-card"><div class="stat-icon" style="background:rgba(17,113,139,0.2)">${s.icon}</div>
+        <div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div>
+        <div class="stat-change up">${s.chg}</div></div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Historial de pagos</span></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Fecha</th><th>Plan</th><th>Monto</th><th>Estado</th><th>Factura</th></tr></thead>
+        <tbody>
+          ${['Feb 2026', 'Ene 2026', 'Dic 2025', 'Nov 2025', 'Oct 2025'].map((m, i) =>
+        `<tr><td>${m}</td><td>${i === 0 ? 'Clínica Pro' : 'Clínica Pro'}</td><td class="fw-700">$1,499 MXN</td>
+             <td><span class="badge badge-success">Pagado</span></td>
+             <td><button class="btn btn-secondary btn-sm">⬇ CFDI</button></td></tr>`
+      ).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+  }
+}
+
+/* --- Global Doctors View (Super Admin) --- */
+function renderGlobalDoctors() {
+  const D = _d();
+  const pc = document.getElementById('pageContent');
+  const docs = D ? D.doctors : [];
+
   pc.innerHTML = `
-  <div class="page-header"><div><div class="page-title">💳 Suscripción</div><div class="page-subtitle">Plan activo y facturación</div></div></div>
-  <div class="stats-grid stats-grid-3" style="margin-bottom:24px">
-    ${[
-      { icon: '💰', label: 'Plan actual', val: D ? 'Clínica Pro' : 'Enterprise', chg: 'Activo' },
-      { icon: '📅', label: 'Próxima renovación', val: '01 Mar 2026', chg: 'Pago automático' },
-      { icon: '🩺', label: 'Médicos incluidos', val: D ? `${D.getDoctorsByHospital(D.currentUsers.org_owner || 'h1').length}/10` : '20', chg: 'del plan' },
-    ].map(s => `<div class="stat-card"><div class="stat-icon" style="background:rgba(17,113,139,0.2)">${s.icon}</div>
-      <div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div>
-      <div class="stat-change up">${s.chg}</div></div>`).join('')}
+  <div class="page-header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-secondary btn-sm" onclick="navigate('dashboard')">← Volver</button>
+      <div><div class="page-title">🩺 Doctores Activos (Global)</div><div class="page-subtitle">${docs.length} médicos en todas las organizaciones</div></div>
+    </div>
   </div>
+  
   <div class="card">
-    <div class="card-header"><span class="card-title">Historial de pagos</span></div>
+    <div class="card-header"><span class="card-title">Listado Global de Profesionales</span>
+    <input type="text" class="form-control" style="width:250px" placeholder="Buscar doctor, especialidad..." /></div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Fecha</th><th>Plan</th><th>Monto</th><th>Estado</th><th>Factura</th></tr></thead>
+      <thead><tr><th>Médico</th><th>Especialidad</th><th>Organización (Tenant)</th><th>Rating General</th><th>Estado</th><th>Acciones</th></tr></thead>
       <tbody>
-        ${['Feb 2026', 'Ene 2026', 'Dic 2025', 'Nov 2025', 'Oct 2025'].map((m, i) =>
-      `<tr><td>${m}</td><td>${i === 0 ? 'Clínica Pro' : 'Clínica Pro'}</td><td class="fw-700">$1,499 MXN</td>
-           <td><span class="badge badge-success">Pagado</span></td>
-           <td><button class="btn btn-secondary btn-sm">⬇ CFDI</button></td></tr>`
-    ).join('')}
+        ${docs.map(dr => {
+    const org = D.getHospital(dr.hospitalId);
+    return `<tr>
+            <td>
+              <div class="avatar-row"><div class="avatar">${_initials(dr.name)}</div>
+              <div><div class="cell-primary">${dr.name}</div><div class="cell-secondary">ID: ${dr.id}</div></div>
+              </div>
+            </td>
+            <td>${dr.specialty}</td>
+            <td><div style="font-weight:600;font-size:0.85rem">${org ? org.name : 'N/A'}</div></td>
+            <td><span class="badge badge-success">⭐ ${dr.rating}</span></td>
+            <td><span class="badge badge-success">Licencia Activa</span></td>
+            <td><button class="btn btn-secondary btn-sm">Auditar</button></td>
+          </tr>`;
+  }).join('')}
       </tbody>
     </table></div>
+  </div>`;
+}
+
+/* --- Global Patients View (Super Admin) --- */
+function renderGlobalPatients() {
+  const D = _d();
+  const pc = document.getElementById('pageContent');
+  const pats = D ? D.patients.slice(0, 100) : []; // Slice to avoid rendering too many
+
+  pc.innerHTML = `
+  <div class="page-header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-secondary btn-sm" onclick="navigate('dashboard')">← Volver</button>
+      <div><div class="page-title">👤 Pacientes Registrados (Global)</div><div class="page-subtitle">${D ? D.patients.length : 0} pacientes en la base de datos</div></div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Muestra de Base de Datos Global (Top 100)</span>
+    <input type="text" class="form-control" style="width:250px" placeholder="Buscar por ID anonimizado..." /></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID Plataforma</th><th>Paciente</th><th>Edad/Sexo</th><th>Organización Asignada</th><th>Médico Trarante</th><th>Datos Clinicos</th></tr></thead>
+      <tbody>
+        ${pats.map(p => {
+    const doc = D.getDoctor(p.doctorId);
+    const org = doc ? D.getHospital(doc.hospitalId) : null;
+    return `<tr>
+            <td style="font-family:monospace;font-size:0.75rem;color:var(--text-muted)">pat_${p.id}</td>
+            <td><div style="font-weight:600">${p.name.substring(0, 3)}*** (Anonimizado)</div><div style="font-size:0.75rem">Privacidad de datos activa</div></td>
+            <td>${p.age} · ${p.gender === 'f' ? 'F' : 'M'}</td>
+            <td>${org ? org.name : 'N/A'}</td>
+            <td>${doc ? doc.name : 'N/A'}</td>
+            <td><span class="badge badge-warning">Acceso Restringido</span></td>
+          </tr>`;
+  }).join('')}
+      </tbody>
+    </table></div>
+    <div style="padding:15px;text-align:center;color:var(--text-muted);font-size:0.85rem;border-top:1px solid var(--border)">
+      ⚠️ Los Super Administradores NO tienen acceso a historiales clínicos detallados por políticas de privacidad médicas internacionales.
+    </div>
   </div>`;
 }

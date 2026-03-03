@@ -315,32 +315,163 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ---- Fallback stubs for modules that may not exist ----
-function renderConsultations() { navigate('patients'); }
+// ================================================
+// MODULE IMPLEMENTATIONS (Role-Specific Logic)
+// ================================================
+
+function renderConsultations() {
+  const D = window.NERVE_DATA;
+  const myPts = D ? D.getPatientsByDoctor(D.currentUsers.doctor || 'dr_01') : [];
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `
+  <div class="page-header"><div><div class="page-title">💬 Mis Consultas de Hoy</div></div></div>
+  <div class="card"><div class="card-header"><span class="card-title">Pacientes en sala de espera</span></div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    ${myPts.slice(0, 3).map(p => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--border);border-radius:8px">
+      <div>
+        <div style="font-weight:600">${p.name}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">Llegó hace 10 min · ${p.diagnosis}</div>
+      </div>
+      <button class="btn btn-primary" onclick="openNewConsultModal('${p.id}')">Iniciar consulta ▶</button>
+    </div>`).join('')}
+  </div></div>`;
+}
+
+function renderAsistenteDash() {
+  const D = window.NERVE_DATA;
+  const apts = D ? D.getApptsByHospital(D.currentUsers.org_owner || 'h1') : [];
+  const todayApts = apts.filter(a => a.date === '2026-02-28');
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `
+  <div class="page-header"><div><div class="page-title">📋 Recepción y Check-In</div><div class="page-subtitle">Panel de Asistente</div></div>
+  <div class="page-actions"><button class="btn btn-primary" onclick="navigate('appointments')">+ Agendar Paciente</button></div></div>
+  <div class="stats-grid stats-grid-3" style="margin-bottom:24px">
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(17,113,139,0.2)">👥</div><div class="stat-value">${todayApts.length}</div><div class="stat-label">Citas Hoy</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(34,197,94,0.1)">✅</div><div class="stat-value">4</div><div class="stat-label">Atendidos</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1)">⏳</div><div class="stat-value">${todayApts.length - 4}</div><div class="stat-label">En Espera</div></div>
+  </div>
+  <div class="card"><div class="card-header"><span class="card-title">Llegadas del día</span></div>
+  <table style="width:100%;text-align:left;border-collapse:collapse">
+    <thead><tr style="border-bottom:1px solid var(--border)"><th>Paciente</th><th>Hora</th><th>Médico</th><th>Estado / Check-In</th></tr></thead>
+    <tbody>
+      ${todayApts.map(a => `
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:12px 0"><div style="font-weight:600">${a.patientName}</div></td><td style="color:var(--cyan)">${a.time}</td>
+        <td style="font-size:0.85rem">${D ? D.getDoctor(a.doctorId).name : 'Médico'}</td>
+        <td>
+          ${a.status === 'confirmada' ? `<button class="btn btn-sm btn-success" style="background:var(--success);color:black;border:none">Recepción Completada</button>` :
+      `<button class="btn btn-sm btn-primary" onclick="alert('Check-in completado. Notificando al médico.')">Marcar Llegada</button>`}
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+function renderPatientAppointments() {
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `
+  <div class="page-header"><div><div class="page-title">📅 Mis Citas</div><div class="page-subtitle">Gestiona tus consultas futuras</div></div></div>
+  <div class="card" style="margin-bottom:20px;text-align:center;padding:40px 20px;">
+    <div style="font-size:3rem;margin-bottom:15px">📆</div>
+    <h3>Agendar Nueva Cita</h3>
+    <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px">Selecciona a tu médico de seguimiento para revisar horarios disponibles.</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <select class="form-control" style="width:250px"><option>Dr. Eduardo González - Medicina General</option><option>Dra. Ruiz - Cardiología</option></select>
+      <input type="date" class="form-control" />
+      <button class="btn btn-primary" onclick="alert('Tu solicitud será confirmada por el consultorio en breve.')">Solicitar Horario</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-header"><span class="card-title">Historial de Visitas</span></div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="padding:12px;background:var(--dark-4);border-radius:6px;display:flex;justify-content:space-between">
+      <div><div style="font-weight:600">Revisión Mensual</div><div style="font-size:0.8rem;color:var(--text-muted)">15 Ene 2026 · Dr. Eduardo González</div></div>
+      <span class="badge badge-success">Completada</span>
+    </div>
+  </div></div>`;
+}
+
+function renderPatientExpediente() {
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `
+  <div class="page-header"><div><div class="page-title">📂 Mi Expediente</div><div class="page-subtitle">Resumen clínico y datos médicos</div></div></div>
+  <div class="content-grid content-grid-2-1">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Diagnósticos Activos</span></div>
+      <div style="padding:12px;border:1px solid var(--border);border-radius:6px;margin-bottom:10px">
+        <div style="font-weight:600;font-size:1.1rem;color:var(--cyan)">Cefalea Tensional (G44.2)</div>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-top:6px">Control mensual establecido. Evitar episodios prolongados de estrés visual.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Mis Signos Vitales</span></div>
+      ${[['Última Medición', '28 Feb 2026'], ['Peso', '68 kg'], ['Presión', '120/80 mmHg']].map(x =>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">${x[0]}</span><span style="font-weight:600">${x[1]}</span></div>`
+  ).join('')}
+    </div>
+  </div>`;
+}
+
+function renderPatientPrescriptions() {
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `
+  <div class="page-header"><div><div class="page-title">💊 Mis Recetas</div><div class="page-subtitle">Descarga en PDF tus prescripciones oficiales</div></div></div>
+  <div class="card" style="margin-bottom:15px;display:flex;justify-content:space-between;align-items:center">
+    <div><div style="font-weight:700">Receta RX-2026-0312</div><div style="font-size:0.8rem;color:var(--text-muted)">Emitida: 28 Feb 2026 · Dr. González</div><div style="color:var(--cyan-mid);font-size:0.85rem;margin-top:4px">Paracetamol 500mg, Omeprazol 20mg</div></div>
+    <button class="btn btn-secondary">⬇ Descargar PDF</button>
+  </div>
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+    <div><div style="font-weight:700">Receta RX-2025-0901</div><div style="font-size:0.8rem;color:var(--text-muted)">Emitida: 10 Nov 2025 · Dr. González</div><div style="color:var(--cyan-mid);font-size:0.85rem;margin-top:4px">Loratadina 10mg</div></div>
+    <button class="btn btn-secondary">⬇ Descargar PDF</button>
+  </div>`;
+}
+
+function renderTenants() {
+  const D = window.NERVE_DATA;
+  const hc = D ? D.hospitals.length : 0;
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `
+  <div class="page-header"><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro de Hospitales inscritos</div></div>
+  <div class="page-actions"><button class="btn btn-primary">+ Nuevo Hospital</button></div></div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tenant ID</th><th>Hospital</th><th>Plan Actual</th><th>Dueño (Admin)</th><th>Doctores</th><th>Acciones de Máster</th></tr></thead>
+        <tbody>
+          ${(D ? D.hospitals : []).map(h => `<tr>
+            <td style="font-family:monospace;color:var(--text-muted)">org_${h.id}</td>
+            <td><div style="font-weight:600">${h.name}</div><div style="font-size:0.75rem">${h.city}</div></td>
+            <td><span class="badge ${h.plan === 'hospital' ? 'badge-cyan' : 'badge-mint'}">${h.plan}</span></td>
+            <td>${h.owner}</td>
+            <td>${D.getDoctorsByHospital(h.id).length}</td>
+            <td><button class="btn btn-sm btn-secondary">Modificar Límites</button> <button class="btn btn-sm btn-danger">Suspender</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
 function renderDoctorSettings() { renderGenericSettings(); }
 function renderSystemConfig() { renderGenericSettings(); }
 function renderBilling() { renderSubscriptions(); }
 function renderDepartments() { renderStaff(); }
-function renderPatientAppointments() { renderAppointments(); }
-function renderPatientExpediente() { renderPatients(); }
-function renderPatientPrescriptions() { renderPrescriptions(); }
-function renderTenants() { renderSuperAdminDash(); }
-function renderAsistenteDash() { renderDoctorDash(); }
 
 function renderGenericSettings() {
+  const role = APP.currentRole;
+  const user = APP.currentUser[role];
   document.getElementById('pageContent').innerHTML = `
-  <div class="page-header"><div><div class="page-title">⚙️ Configuración</div><div class="page-subtitle">Ajusta las preferencias del sistema</div></div></div>
-  <div class="card"><div class="card-header"><span class="card-title">Perfil</span></div>
+  <div class="page-header"><div><div class="page-title">⚙️ Configuración / Perfil</div><div class="page-subtitle">Ajusta las preferencias de tu cuenta</div></div></div>
+  <div class="card"><div class="card-header"><span class="card-title">Datos Personales</span></div>
   <div class="form-row form-row-2">
-    <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-control" value="${APP.currentUser[APP.currentRole].name}" /></div>
-    <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-control" type="email" value="dr.gonzalez@nervemed.mx" /></div>
+    <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-control" value="${user.name}" /></div>
+    <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-control" type="email" value="contacto@nerve.mx" /></div>
   </div>
-  <div class="form-group"><label class="form-label">Especialidad</label><input class="form-control" value="Medicina General" /></div>
-  <div class="form-group"><label class="form-label">Cédula Profesional</label><input class="form-control" value="12345678" /></div>
-  <button class="btn btn-primary">Guardar cambios</button></div>
-  <div class="card mt-4"><div class="card-header"><span class="card-title">Notificaciones</span></div>
+  ${role === 'doctor' || role === 'dept_head' ? `<div class="form-group"><label class="form-label">Especialidad</label><input class="form-control" value="Medicina General" /></div><div class="form-group"><label class="form-label">Cédula Profesional</label><input class="form-control" value="12345678" /></div>` : ''}
+  <button class="btn btn-primary" onclick="alert('Perfil actualizado con éxito.')">Guardar cambios</button></div>
+  <div class="card mt-4"><div class="card-header"><span class="card-title">Ajustes de Notificaciones</span></div>
   <div style="display:flex;flex-direction:column;gap:12px;">
-    ${['Recordatorios de citas por Email', 'Alertas por WhatsApp', 'Nuevos pacientes asignados', 'Reportes semanales'].map(n => `
+    ${['Notificarme de nuevas citas por Email', 'Recordatorios a mi WhatsApp personal', 'Reporte semanal de actividad'].map(n => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:0.88rem;">${n}</span>
       <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;">

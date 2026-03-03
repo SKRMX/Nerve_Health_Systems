@@ -81,7 +81,7 @@ npx prisma generate
 # ---- 6. Create production .env ----
 echo "🔧 Creating production .env..."
 cat > /var/www/nerve/server/.env << 'ENVEOF'
-DATABASE_URL="postgresql://nerve_user:NerveDB_Pr0d_2026!@localhost:5432/nerve_prod?schema=public"
+DATABASE_URL="postgresql://nerve_user:NerveDB_Pr0d_2026!@localhost:5432/nerve_prod?schema=public&connection_limit=50"
 JWT_SECRET="nerve-prod-jwt-2026-x7Kp9mQzL4wR8nBv3hTfYc2eAi6uDg0s"
 JWT_REFRESH_SECRET="nerve-prod-refresh-2026-J5tW8qN1xP3hF7vM0rK2dY9cBa4iEu6s"
 JWT_EXPIRES_IN="15m"
@@ -110,7 +110,8 @@ module.exports = {
     name: 'nerve-api',
     script: './server/src/index.js',
     cwd: '/var/www/nerve',
-    instances: 1,
+    instances: 'max',
+    exec_mode: 'cluster',
     autorestart: true,
     watch: false,
     max_memory_restart: '500M',

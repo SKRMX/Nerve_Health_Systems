@@ -20,7 +20,7 @@ app.use(cors({
 // ---- Rate Limiting ----
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,                  // 100 requests per window
+    max: 5000,                 // 5000 requests per window (Escalado para múltiples doctores en misma IP)
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: 'Demasiadas solicitudes. Intenta de nuevo en 15 minutos.' },
@@ -30,7 +30,7 @@ app.use('/api/', limiter);
 // Stricter limit for auth endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: 100, // 100 attempts per 15 mins for clinics with multiple users logging in
     message: { error: 'Demasiados intentos de login. Intenta de nuevo en 15 minutos.' },
 });
 
