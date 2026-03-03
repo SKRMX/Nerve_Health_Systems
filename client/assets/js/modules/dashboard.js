@@ -23,7 +23,7 @@ function renderSuperAdminDash() {
     <div><div class="page-title">📊 Dashboard Global</div><div class="page-subtitle">Métricas de toda la plataforma NERVE</div></div>
     <div class="page-actions">
       <button class="btn btn-secondary" onclick="showNotification('Exportando reporte global a PDF...','cyan')">📥 Exportar reporte</button>
-      <button class="btn btn-primary" onclick="showNotification('Abriendo formulario de nuevo Tenant...','cyan')">+ Nueva organización</button>
+      <button class="btn btn-primary" onclick="openNewTenantModal()">+ Nueva organización</button>
     </div>
   </div>
 
