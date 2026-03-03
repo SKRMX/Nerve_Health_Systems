@@ -11,6 +11,28 @@ function toggleOtherSpecialty(select, inputId) {
     if (isOther) input.focus();
 }
 
+// ---- Notifications ----
+window.showNotification = function (msg, type = 'success') {
+    const container = document.getElementById('notification-container') || (function () {
+        const div = document.createElement('div');
+        div.id = 'notification-container';
+        div.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+        document.body.appendChild(div);
+        return div;
+    })();
+    const notif = document.createElement('div');
+    const bg = type === 'error' ? '#ef4444' : (type === 'warning' ? '#f59e0b' : '#06cfd7');
+    const icon = type === 'error' ? '❌' : (type === 'warning' ? '⚠️' : '✅');
+    notif.style.cssText = `background:${bg};color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;font-size:0.9rem;font-weight:500;transform:translateY(20px);opacity:0;transition:all 0.3s ease;`;
+    notif.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+    container.appendChild(notif);
+    setTimeout(() => { notif.style.transform = 'translateY(0)'; notif.style.opacity = '1'; }, 10);
+    setTimeout(() => {
+        notif.style.transform = 'translateY(10px)'; notif.style.opacity = '0';
+        setTimeout(() => notif.remove(), 300);
+    }, 4000);
+}
+
 let currentStep = 1;
 let selectedPlan = null;
 let billingCycle = 'monthly';
@@ -116,7 +138,7 @@ function validateStep3() {
         passErr.style.display = 'block'; ok = false;
     } else passErr.style.display = 'none';
 
-    if (!terms) { alert('Debes aceptar los términos de uso.'); ok = false; }
+    if (!terms) { showNotification('Debes aceptar los términos de uso.', 'warning'); ok = false; }
 
     if (ok) {
         document.getElementById('confirmEmail').textContent = email;
@@ -143,7 +165,7 @@ function submitPayment() {
     const name = document.getElementById('cardName').value.trim();
 
     if (num.length < 13 || !exp.includes('/') || cvv.length < 3 || !name) {
-        alert('Por favor completa todos los datos de pago.'); return;
+        showNotification('Por favor completa todos los datos de pago.', 'warning'); return;
     }
 
     const btn = document.querySelector('.order-summary .btn');

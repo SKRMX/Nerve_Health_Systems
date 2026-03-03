@@ -163,7 +163,7 @@ function doOfflineLogin(typedUser, typedPass) {
 
   APP.currentRole = _selectedRole;
   const user = APP.currentUser[_selectedRole];
-  if (!user) { alert('Rol no válido. Selecciona un rol e intenta de nuevo.'); return; }
+  if (!user) { showNotification('Rol no válido. Selecciona un rol e intenta de nuevo.', 'error'); return; }
   enterApp();
 }
 
@@ -288,6 +288,35 @@ try {
   });
 } catch (e) { console.warn('notif click listener:', e); }
 
+window.showNotification = function (msg, type = 'success') {
+  const container = document.getElementById('notification-container') || (function () {
+    const div = document.createElement('div');
+    div.id = 'notification-container';
+    div.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+    document.body.appendChild(div);
+    return div;
+  })();
+
+  const notif = document.createElement('div');
+  const bg = type === 'error' ? 'var(--danger)' : (type === 'warning' ? 'var(--warning)' : 'var(--cyan)');
+  const icon = type === 'error' ? '❌' : (type === 'warning' ? '⚠️' : '✅');
+
+  notif.style.cssText = `background:${bg};color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;font-size:0.9rem;font-weight:500;transform:translateY(20px);opacity:0;transition:all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);`;
+  notif.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+
+  container.appendChild(notif);
+
+  // Animate in
+  setTimeout(() => { notif.style.transform = 'translateY(0)'; notif.style.opacity = '1'; }, 10);
+
+  // Animate out and remove
+  setTimeout(() => {
+    notif.style.transform = 'translateY(10px)';
+    notif.style.opacity = '0';
+    setTimeout(() => notif.remove(), 300);
+  }, 4000);
+}
+
 // ---- Modal ----
 function openModal(title, bodyHTML, footerHTML = '', size = '') {
   document.getElementById('modalTitle').textContent = title;
@@ -361,7 +390,7 @@ function renderAsistenteDash() {
         <td style="font-size:0.85rem">${D ? D.getDoctor(a.doctorId).name : 'Médico'}</td>
         <td>
           ${a.status === 'confirmada' ? `<button class="btn btn-sm btn-success" style="background:var(--success);color:black;border:none">Recepción Completada</button>` :
-      `<button class="btn btn-sm btn-primary" onclick="alert('Check-in completado. Notificando al médico.')">Marcar Llegada</button>`}
+      `<button class="btn btn-sm btn-primary" onclick="showNotification('Check-in completado. Notificando al médico.', 'success')">Marcar Llegada</button>`}
         </td>
       </tr>`).join('')}
     </tbody>
@@ -379,7 +408,7 @@ function renderPatientAppointments() {
     <div style="display:flex;gap:10px;justify-content:center">
       <select class="form-control" style="width:250px"><option>Dr. Eduardo González - Medicina General</option><option>Dra. Ruiz - Cardiología</option></select>
       <input type="date" class="form-control" />
-      <button class="btn btn-primary" onclick="alert('Tu solicitud será confirmada por el consultorio en breve.')">Solicitar Horario</button>
+      <button class="btn btn-primary" onclick="showNotification('Tu solicitud será confirmada por el consultorio en breve.', 'cyan')">Solicitar Horario</button>
     </div>
   </div>
   <div class="card"><div class="card-header"><span class="card-title">Historial de Visitas</span></div>
@@ -432,7 +461,7 @@ function renderTenants() {
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `
   <div class="page-header"><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro de Hospitales inscritos</div></div>
-  <div class="page-actions"><button class="btn btn-primary">+ Nuevo Hospital</button></div></div>
+  <div class="page-actions"><button class="btn btn-primary" onclick="showNotification('Abriendo creador de tenants...','cyan')">+ Nuevo Hospital</button></div></div>
   <div class="card">
     <div class="table-wrap">
       <table>
@@ -442,9 +471,9 @@ function renderTenants() {
             <td style="font-family:monospace;color:var(--text-muted)">org_${h.id}</td>
             <td><div style="font-weight:600">${h.name}</div><div style="font-size:0.75rem">${h.city}</div></td>
             <td><span class="badge ${h.plan === 'hospital' ? 'badge-cyan' : 'badge-mint'}">${h.plan}</span></td>
-            <td>${h.owner}</td>
+            <td>${h.owner ? h.owner : (h.id === 'h1' ? 'Dr. Roberto Sánchez' : 'Director Médico')}</td>
             <td>${D.getDoctorsByHospital(h.id).length}</td>
-            <td><button class="btn btn-sm btn-secondary">Modificar Límites</button> <button class="btn btn-sm btn-danger">Suspender</button></td>
+            <td><button class="btn btn-sm btn-secondary" onclick="showNotification('Abriendo panel de límites...','warning')">Modificar Límites</button> <button class="btn btn-sm btn-danger" onclick="showNotification('Cuenta suspendida temporalmente','error')">Suspender</button></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -468,7 +497,7 @@ function renderGenericSettings() {
     <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-control" type="email" value="contacto@nerve.mx" /></div>
   </div>
   ${role === 'doctor' || role === 'dept_head' ? `<div class="form-group"><label class="form-label">Especialidad</label><input class="form-control" value="Medicina General" /></div><div class="form-group"><label class="form-label">Cédula Profesional</label><input class="form-control" value="12345678" /></div>` : ''}
-  <button class="btn btn-primary" onclick="alert('Perfil actualizado con éxito.')">Guardar cambios</button></div>
+  <button class="btn btn-primary" onclick="showNotification('Perfil actualizado con éxito.', 'success')">Guardar cambios</button></div>
   <div class="card mt-4"><div class="card-header"><span class="card-title">Ajustes de Notificaciones</span></div>
   <div style="display:flex;flex-direction:column;gap:12px;">
     ${['Notificarme de nuevas citas por Email', 'Recordatorios a mi WhatsApp personal', 'Reporte semanal de actividad'].map(n => `

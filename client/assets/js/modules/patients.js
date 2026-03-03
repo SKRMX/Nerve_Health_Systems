@@ -189,7 +189,7 @@ function openPatientDetail(id) {
             </div>
           </div>
           <div style="margin-top:6px;display:flex;gap:6px">
-            <button class="btn btn-secondary btn-sm">Ver completo</button>
+            <button class="btn btn-secondary btn-sm" onclick="showNotification('Abriendo nota clínica completa...','cyan')">Ver completo</button>
             <button class="btn btn-secondary btn-sm" onclick="navigate('prescriptions')">💊 Ver receta</button>
           </div>
         </div>
@@ -224,8 +224,8 @@ function openPatientDetail(id) {
         `<div style="font-size:0.84rem;color:var(--text)">${f.val}</div>` :
         `<div style="font-size:0.84rem;color:var(--text)">${f.val}</div>`}
           </div>
-          <button class="btn btn-secondary btn-sm">✏️</button>
-          <button class="btn btn-danger btn-sm">🗑</button>
+          <button class="btn btn-secondary btn-sm" onclick="showNotification('Abriendo editor de campo...','cyan')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="showNotification('Campo eliminado del expediente','warning')">🗑</button>
         </div>`).join('')}
       </div>
     </div>

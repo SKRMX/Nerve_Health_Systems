@@ -8,19 +8,19 @@ const DAYS_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 let _calView = { year: 2026, month: 1 }; // Feb 2026
 
 const APPOINTMENTS = [
-    { date: '2026-02-28', time: '09:00', patient: 'María García L.', type: 'Consulta General', status: 'confirmed', dr: 'Dr. González' },
-    { date: '2026-02-28', time: '09:45', patient: 'Carlos Mendoza R.', type: 'Seguimiento', status: 'confirmed', dr: 'Dr. González' },
-    { date: '2026-02-28', time: '10:30', patient: 'Ana Ruiz J.', type: 'Primera vez', status: 'pending', dr: 'Dr. González' },
-    { date: '2026-02-28', time: '11:15', patient: 'Pedro Hernández T.', type: 'Revisión', status: 'confirmed', dr: 'Dr. González' },
-    { date: '2026-03-02', time: '09:00', patient: 'Ana L. Martínez', type: 'Consulta General', status: 'confirmed', dr: 'Dr. González' },
-    { date: '2026-03-02', time: '10:00', patient: 'Roberto Soto M.', type: 'Seguimiento', status: 'pending', dr: 'Dr. González' },
-    { date: '2026-03-05', time: '11:00', patient: 'Laura Vega T.', type: 'Control', status: 'confirmed', dr: 'Dr. González' },
-    { date: '2026-03-10', time: '09:30', patient: 'José Castillo D.', type: 'Post-quirúrgico', status: 'confirmed', dr: 'Dr. González' },
+  { date: '2026-02-28', time: '09:00', patient: 'María García L.', type: 'Consulta General', status: 'confirmed', dr: 'Dr. González' },
+  { date: '2026-02-28', time: '09:45', patient: 'Carlos Mendoza R.', type: 'Seguimiento', status: 'confirmed', dr: 'Dr. González' },
+  { date: '2026-02-28', time: '10:30', patient: 'Ana Ruiz J.', type: 'Primera vez', status: 'pending', dr: 'Dr. González' },
+  { date: '2026-02-28', time: '11:15', patient: 'Pedro Hernández T.', type: 'Revisión', status: 'confirmed', dr: 'Dr. González' },
+  { date: '2026-03-02', time: '09:00', patient: 'Ana L. Martínez', type: 'Consulta General', status: 'confirmed', dr: 'Dr. González' },
+  { date: '2026-03-02', time: '10:00', patient: 'Roberto Soto M.', type: 'Seguimiento', status: 'pending', dr: 'Dr. González' },
+  { date: '2026-03-05', time: '11:00', patient: 'Laura Vega T.', type: 'Control', status: 'confirmed', dr: 'Dr. González' },
+  { date: '2026-03-10', time: '09:30', patient: 'José Castillo D.', type: 'Post-quirúrgico', status: 'confirmed', dr: 'Dr. González' },
 ];
 
 function renderAppointments() {
-    const pc = document.getElementById('pageContent');
-    pc.innerHTML = `
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `
   <div class="page-header">
     <div><div class="page-title">📅 Agenda</div><div class="page-subtitle">Gestión de citas y recordatorios</div></div>
     <div class="page-actions">
@@ -57,7 +57,7 @@ function renderAppointments() {
             <td><span class="badge ${a.status === 'confirmed' ? 'badge-success' : 'badge-warning'}">${a.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</span></td>
             <td><div style="display:flex;gap:6px">
               <button class="btn btn-primary btn-sm" onclick="navigate('patients')">Iniciar</button>
-              <button class="btn btn-danger btn-sm" onclick="this.closest('tr').style.opacity='0.4'">Cancelar</button>
+              <button class="btn btn-danger btn-sm" onclick="showNotification('Cita cancelada con éxito','warning');this.closest('tr').style.opacity='0.4'">Cancelar</button>
             </div></td>
           </tr>`).join('')}
           </tbody>
@@ -80,11 +80,11 @@ function renderAppointments() {
         <div class="card-header"><span class="card-title">🔔 Recordatorios</span></div>
         <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px">Configura recordatorios automáticos para reducir el ausentismo.</p>
         ${[
-            { label: 'Recordatorio por WhatsApp', sub: '24h antes de la cita', active: true },
-            { label: 'Recordatorio por Email', sub: '48h antes de la cita', active: true },
-            { label: 'Confirmación del paciente', sub: 'El paciente confirma vía link', active: true },
-            { label: 'Recordatorio 1 hora antes', sub: 'Mensaje final de confirmación', active: false },
-        ].map(r => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      { label: 'Recordatorio por WhatsApp', sub: '24h antes de la cita', active: true },
+      { label: 'Recordatorio por Email', sub: '48h antes de la cita', active: true },
+      { label: 'Confirmación del paciente', sub: 'El paciente confirma vía link', active: true },
+      { label: 'Recordatorio 1 hora antes', sub: 'Mensaje final de confirmación', active: false },
+    ].map(r => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
           <div style="flex:1">
             <div style="font-size:0.84rem;font-weight:600">${r.label}</div>
             <div style="font-size:0.75rem;color:var(--text-muted)">${r.sub}</div>
@@ -99,54 +99,54 @@ function renderAppointments() {
     </div>
   </div>`;
 
-    setTimeout(() => {
-        renderDonutChart('apptDonut', [
-            { label: 'Confirmadas', value: 6, color: 'var(--success)' },
-            { label: 'Pendientes', value: 2, color: 'var(--warning)' },
-            { label: 'Canceladas', value: 0, color: 'var(--text-dim)' },
-        ]);
-    }, 60);
+  setTimeout(() => {
+    renderDonutChart('apptDonut', [
+      { label: 'Confirmadas', value: 6, color: 'var(--success)' },
+      { label: 'Pendientes', value: 2, color: 'var(--warning)' },
+      { label: 'Canceladas', value: 0, color: 'var(--text-dim)' },
+    ]);
+  }, 60);
 }
 
 function buildCalendarDays() {
-    const { year, month } = _calView;
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date(); const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    let html = '';
-    for (let i = 0; i < firstDay; i++) {
-        const prevDay = new Date(year, month, -firstDay + i + 1);
-        html += `<div class="cal-day other-month"><div class="cal-date">${prevDay.getDate()}</div></div>`;
-    }
-    for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const isToday = dateStr === todayStr;
-        const dayApts = APPOINTMENTS.filter(a => a.date === dateStr);
-        html += `<div class="cal-day ${isToday ? 'today' : ''}" onclick="calDayClick('${dateStr}')">
+  const { year, month } = _calView;
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date(); const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  let html = '';
+  for (let i = 0; i < firstDay; i++) {
+    const prevDay = new Date(year, month, -firstDay + i + 1);
+    html += `<div class="cal-day other-month"><div class="cal-date">${prevDay.getDate()}</div></div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const isToday = dateStr === todayStr;
+    const dayApts = APPOINTMENTS.filter(a => a.date === dateStr);
+    html += `<div class="cal-day ${isToday ? 'today' : ''}" onclick="calDayClick('${dateStr}')">
       <div class="cal-date">${d}</div>
       ${dayApts.slice(0, 2).map(a => `<div class="cal-event ${a.status}">${a.time} ${a.patient.split(' ')[0]}</div>`).join('')}
       ${dayApts.length > 2 ? `<div style="font-size:0.6rem;color:var(--text-dim);padding:0 4px">+${dayApts.length - 2} más</div>` : ''}
     </div>`;
-    }
-    return html;
+  }
+  return html;
 }
 
 function calDayClick(dateStr) {
-    const dayApts = APPOINTMENTS.filter(a => a.date === dateStr);
-    if (dayApts.length === 0) { openNewApptModal(dateStr); return; }
-    openModal(`📅 Citas del ${dateStr.split('-').reverse().join('/')}`,
-        dayApts.map(a => `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--dark-4);border-radius:8px;margin-bottom:8px;border-left:3px solid ${a.status === 'confirmed' ? 'var(--cyan-mid)' : 'var(--warning)'}">
+  const dayApts = APPOINTMENTS.filter(a => a.date === dateStr);
+  if (dayApts.length === 0) { openNewApptModal(dateStr); return; }
+  openModal(`📅 Citas del ${dateStr.split('-').reverse().join('/')}`,
+    dayApts.map(a => `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--dark-4);border-radius:8px;margin-bottom:8px;border-left:3px solid ${a.status === 'confirmed' ? 'var(--cyan-mid)' : 'var(--warning)'}">
       <div style="font-weight:700;color:var(--cyan);width:45px">${a.time}</div>
       <div style="flex:1"><div style="font-weight:600">${a.patient}</div><div style="font-size:0.78rem;color:var(--text-muted)">${a.type}</div></div>
       <span class="badge ${a.status === 'confirmed' ? 'badge-success' : 'badge-warning'}">${a.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</span>
     </div>`).join('') + `<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="closeModal();openNewApptModal('${dateStr}')">+ Agregar cita en esta fecha</button>`,
-        `<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>`);
+    `<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>`);
 }
 
 function toggleCalView() { renderAppointments(); }
 
 function openNewApptModal(date = '') {
-    openModal('+ Nueva Cita', `
+  openModal('+ Nueva Cita', `
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-control" type="date" value="${date || new Date().toISOString().split('T')[0]}" /></div>
       <div class="form-group"><label class="form-label">Hora</label><input class="form-control" type="time" value="09:00" /></div>
@@ -173,6 +173,6 @@ function openNewApptModal(date = '') {
         ${['WhatsApp 24h antes', 'Email 48h antes', 'SMS el día de'].map(r => `<label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--cyan-mid)"> ${r}</label>`).join('')}
       </div>
     </div>`,
-        `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button class="btn btn-primary" onclick="closeModal()">Programar cita →</button>`);
 }

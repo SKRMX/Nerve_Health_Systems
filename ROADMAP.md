@@ -13,6 +13,7 @@
   - Implementados middlewares estrictos y Audit Logging.
 - **Desktop Apps (Electron):** Windows listo (~276MB empaquetado). macOS en revisión notarial por parte de Apple.
 - **Infraestructura de Servidor:** Scripts de despliegue listos para Hostinger (Ubuntu VPS, Node 20, Nginx, PM2, PostgreSQL aislado).
+  - *Nota Interna de Seguridad*: Las credenciales de acceso al VPS (root, IP, Password) se encuentran respaldadas localmente en el archivo `vps_credentials.txt`, el cual está protegido bajo `.gitignore` para nunca ser subido a la nube.
 
 ## 3. Hoja de Ruta Inmediata (Camino a Producción) 🛤️
 - [ ] **Definir Flujo de Ingresos / Mercado Pago:** Determinar si lanzamos primero de forma gratuita (beta trial genérico) o establecemos pasarela de pagos / cobro recurrente desde el día 1.
