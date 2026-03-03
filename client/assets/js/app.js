@@ -19,6 +19,15 @@ var APP = {
   // Live user data from API (set after login)
   liveUser: null,
 
+  // Throttle/Debounce helper for UI optimizations
+  debounce: function (func, wait) {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  },
+
   navByRole: {
     superadmin: [
       { section: 'Principal' },

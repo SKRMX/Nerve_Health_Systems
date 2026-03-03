@@ -38,11 +38,11 @@ function renderRxBuilder() {
             </select>
           </div>
           <div class="form-group"><label class="form-label">Fecha</label>
-            <input class="form-control" id="rxDate" type="date" value="${new Date().toISOString().split('T')[0]}" oninput="updatePreview()"/>
+            <input class="form-control" id="rxDate" type="date" value="${new Date().toISOString().split('T')[0]}" oninput="_debouncedUpdatePreview()"/>
           </div>
         </div>
         <div class="form-group"><label class="form-label">Diagnóstico</label>
-          <input class="form-control" id="rxDx" placeholder="CIE-10: Ej. J06.9 Infección respiratoria aguda" oninput="updatePreview()"/>
+          <input class="form-control" id="rxDx" placeholder="CIE-10: Ej. J06.9 Infección respiratoria aguda" oninput="_debouncedUpdatePreview()"/>
         </div>
       </div>
       <div class="card" style="margin-bottom:16px">
@@ -56,7 +56,7 @@ function renderRxBuilder() {
       </div>
       <div class="card" style="margin-bottom:16px">
         <div class="card-header"><span class="card-title">📝 Indicaciones adicionales</span></div>
-        <textarea class="form-control" id="rxNotes" rows="3" placeholder="Reposo relativo, dieta blanda, hidratación 2L/día..." oninput="updatePreview()"></textarea>
+        <textarea class="form-control" id="rxNotes" rows="3" placeholder="Reposo relativo, dieta blanda, hidratación 2L/día..." oninput="_debouncedUpdatePreview()"></textarea>
       </div>
       <div style="display:flex;gap:10px">
         <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="printPrescription()">🖨 Imprimir / Descargar PDF</button>
@@ -69,9 +69,12 @@ function renderRxBuilder() {
       <div class="card-header"><span class="card-title">👁 Vista previa de receta</span><span class="badge badge-mint">En vivo</span></div>
       <div id="rxPreview"></div>
     </div>
+    </div>
   </div>`;
   updatePreview();
 }
+
+const _debouncedUpdatePreview = APP.debounce(() => updatePreview(), 300);
 
 function renderDrugItems() {
   if (_rxDrugs.length === 0) return `<div class="empty-state" style="padding:24px"><div class="empty-state-icon">💊</div><div class="empty-state-desc">Sin medicamentos. Agrega el primero.</div></div>`;

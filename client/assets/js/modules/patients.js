@@ -44,7 +44,7 @@ function renderPatients() {
       <div class="topbar-search" style="flex:1;max-width:380px">
         <span class="search-icon">🔍</span>
         <input type="text" placeholder="Buscar por nombre, email o diagnóstico..." id="patientSearchInput"
-          oninput="_patientSearch=this.value;renderPatientTable()" />
+          oninput="_patientSearch=this.value;_debouncedRenderPatientTable()" />
       </div>
       <select class="form-control" style="width:170px" onchange="_patientStatusF=this.value;renderPatientTable()">
         <option value="">Todos los estados</option>
@@ -64,6 +64,8 @@ function renderPatients() {
 }
 
 let _patientDeptF = '';
+const _debouncedRenderPatientTable = APP.debounce(() => renderPatientTable(), 300);
+
 function renderPatientTable() {
   const D = window.NERVE_DATA;
   const pts = _getVisiblePatients();

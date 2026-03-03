@@ -47,13 +47,15 @@ function renderStaff() {
           <option value="dept_head">Jefes de Área</option>
           <option value="assistant">Asistentes</option>
         </select>
-        <input type="text" class="form-control" style="width:220px" placeholder="Buscar..." id="staffSearch" oninput="filterStaffTable('')" />
+        <input type="text" class="form-control" style="width:220px" placeholder="Buscar..." id="staffSearch" oninput="_debouncedFilterStaffTable('')" />
       </div>
     </div>
     <div class="table-wrap" id="staffTableArea"></div>
   </div>`;
   renderStaffTable(STAFF_DATA);
 }
+
+const _debouncedFilterStaffTable = APP.debounce((role) => filterStaffTable(role), 300);
 
 function filterStaffTable(role) {
   const search = document.getElementById('staffSearch')?.value.toLowerCase() || '';
