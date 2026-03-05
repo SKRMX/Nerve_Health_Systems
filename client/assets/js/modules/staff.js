@@ -130,7 +130,12 @@ function openNewStaffModal() {
       </div>
     </div>
     <div class="form-row form-row-2">
-      <div class="form-group"><label class="form-label">Especialidad</label><input class="form-control" id="newStaffSpecialty" placeholder="Ej. Cardiología" /></div>
+      <div class="form-group"><label class="form-label">Especialidad</label>
+        <select class="form-control" id="newStaffSpecialty">
+          <option value="">-- Seleccionar especialidad --</option>
+          ${typeof getSpecialtyList === 'function' ? getSpecialtyList().map(s => `<option value="${s.name}">${s.icon} ${s.name}</option>`).join('') : '<option>Medicina General</option>'}
+        </select>
+      </div>
       <div class="form-group"><label class="form-label">Cédula Profesional</label><input class="form-control" id="newStaffCedula" placeholder="12345678" /></div>
     </div>
     <div class="form-row form-row-2">
@@ -208,7 +213,12 @@ function openEditStaffModal(id) {
       </div>
     </div>
     <div class="form-row form-row-2">
-      <div class="form-group"><label class="form-label">Especialidad</label><input class="form-control" id="editStaffSpecialty" value="${s.specialty || ''}" /></div>
+      <div class="form-group"><label class="form-label">Especialidad</label>
+        <select class="form-control" id="editStaffSpecialty">
+          <option value="">-- Seleccionar --</option>
+          ${typeof getSpecialtyList === 'function' ? getSpecialtyList().map(sp => `<option value="${sp.name}" ${s.specialty === sp.name ? 'selected' : ''}>${sp.icon} ${sp.name}</option>`).join('') : ''}
+        </select>
+      </div>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-control" id="editStaffPhone" value="${s.phone || ''}" /></div>
     </div>
     <div class="form-group"><label class="form-label">Email</label><input class="form-control" value="${s.email}" disabled style="opacity:0.6" /></div>

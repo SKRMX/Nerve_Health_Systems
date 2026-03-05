@@ -112,6 +112,9 @@ async function openPatientDetail(id) {
   };
   const age = calcAge(p.dob);
 
+  // Init specialty config based on doctor's specialty
+  _initSpecialty(p);
+
   pc.innerHTML = `
   <div class="page-header">
     <div style="display:flex;align-items:center;gap:12px">
@@ -162,16 +165,26 @@ async function openPatientDetail(id) {
       </div>
     </div>
   </div>
-
   <!-- Tabs -->
   <div class="tabs" id="expedienteTabs">
-    <div class="tab active" onclick="switchExpedienteTab(this,'tabCitas')">📅 Citas</div>
-    <div class="tab" onclick="switchExpedienteTab(this,'tabRecetas')">💊 Recetas</div>
+    <div class="tab active" onclick="switchExpedienteTab(this,'tabClinico')">🩺 Expediente Clínico</div>
+    <div class="tab" onclick="switchExpedienteTab(this,'tabCitas')">📅 Citas</div>
+    <div class="tab" onclick="switchExpedienteTab(this,'tabRecetas')">${_currentSpecialty?.prescriptionMode === 'none' ? '📋 Plan Terapéutico' : '💊 Recetas'}</div>
     <div class="tab" onclick="switchExpedienteTab(this,'tabNotas')">📝 Notas médicas</div>
   </div>
 
+  <!-- Tab: Expediente Clínico (specialty-specific) -->
+  <div id="tabClinico">
+    ${_currentSpecialty ? renderVitalsFields(_doctorSpecialtyName, _parsedClinicalData) : ''}
+    ${_currentSpecialty ? renderClinicalFields(_doctorSpecialtyName, _parsedClinicalData) : ''}
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn btn-primary" onclick="saveClinicalData('${p.id}')">💾 Guardar Expediente Clínico</button>
+      <span style="font-size:0.75rem;color:var(--text-dim);display:flex;align-items:center">${_currentSpecialty ? _currentSpecialty.icon + ' ' + _doctorSpecialtyName : '🩺 General'}</span>
+    </div>
+  </div>
+
   <!-- Tab: Citas -->
-  <div id="tabCitas">
+  <div id="tabCitas" style="display:none">
     ${p.appointments && p.appointments.length > 0 ? `
     <div class="table-wrap"><table>
       <thead><tr><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Estado</th><th>Notas</th></tr></thead>
@@ -187,15 +200,25 @@ async function openPatientDetail(id) {
     </table></div>` : `<div class="empty-state" style="padding:30px"><div class="empty-state-icon">📅</div><div class="empty-state-desc">Sin citas registradas</div></div>`}
   </div>
 
-  <!-- Tab: Recetas -->
+  <!-- Tab: Recetas / Plan -->
   <div id="tabRecetas" style="display:none">
-    ${p.prescriptions && p.prescriptions.length > 0 ? p.prescriptions.map(r => `
+    ${_currentSpecialty?.prescriptionMode === 'none' ?
+      `<div class="card">
+        <div class="card-header"><span class="card-title">📋 Plan Terapéutico</span></div>
+        <div style="font-size:0.85rem;color:var(--text-light);padding:10px">
+          ${_parsedClinicalData.therapeutic_plan || _parsedClinicalData.homework ?
+        `<div style="margin-bottom:12px"><strong>Plan:</strong><br><span style="white-space:pre-wrap">${_parsedClinicalData.therapeutic_plan || '—'}</span></div>
+             <div><strong>Tareas para el paciente:</strong><br><span style="white-space:pre-wrap">${_parsedClinicalData.homework || '—'}</span></div>` :
+        'Sin plan terapéutico registrado. Completa los campos en la pestaña de Expediente Clínico.'}
+        </div>
+      </div>` :
+      (p.prescriptions && p.prescriptions.length > 0 ? p.prescriptions.map(r => `
     <div class="card" style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div><div class="fw-700">${r.medication} ${r.dosage}</div><div style="font-size:0.8rem;color:var(--text-muted)">${r.frequency} · ${r.duration} · ${new Date(r.createdAt).toLocaleDateString('es-MX')}</div></div>
         <span class="badge ${r.active ? 'badge-success' : 'badge-muted'}">${r.active ? 'Activa' : 'Finalizada'}</span>
       </div>
-    </div>`).join('') : `<div class="empty-state" style="padding:30px"><div class="empty-state-icon">💊</div><div class="empty-state-desc">Sin recetas registradas</div></div>`}
+    </div>`).join('') : `<div class="empty-state" style="padding:30px"><div class="empty-state-icon">💊</div><div class="empty-state-desc">Sin recetas registradas</div></div>`)}
   </div>
 
   <!-- Tab: Notas -->
@@ -206,10 +229,42 @@ async function openPatientDetail(id) {
   </div>`;
 }
 
+// ---- Specialty helpers for patient detail ----
+let _doctorSpecialtyName = '';
+let _currentSpecialty = null;
+let _parsedClinicalData = {};
+
+function _initSpecialty(patient) {
+  // Get the doctor's specialty
+  const user = APP.liveUser;
+  _doctorSpecialtyName = user?.specialty || patient?.doctor?.specialty || 'Medicina General';
+  _currentSpecialty = typeof getSpecialtyConfig === 'function' ? getSpecialtyConfig(_doctorSpecialtyName) : null;
+  // Parse existing clinical data from medicalNotes (JSON)
+  _parsedClinicalData = {};
+  try {
+    if (patient.medicalNotes && patient.medicalNotes.startsWith('{')) {
+      _parsedClinicalData = JSON.parse(patient.medicalNotes);
+    }
+  } catch (e) { /* not JSON — plain text notes */ }
+}
+
+async function saveClinicalData(patientId) {
+  const data = typeof collectClinicalData === 'function' ? collectClinicalData() : {};
+  // Merge with existing data
+  const merged = { ..._parsedClinicalData, ...data, _lastUpdated: new Date().toISOString() };
+  try {
+    await API.updatePatient(patientId, { medicalNotes: JSON.stringify(merged) });
+    _parsedClinicalData = merged;
+    showNotification('Expediente clínico guardado exitosamente', 'success');
+  } catch (err) {
+    showNotification(err.message || 'Error al guardar', 'error');
+  }
+}
+
 function switchExpedienteTab(tab, targetId) {
   document.querySelectorAll('#expedienteTabs .tab').forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
-  ['tabCitas', 'tabRecetas', 'tabNotas'].forEach(id => {
+  ['tabClinico', 'tabCitas', 'tabRecetas', 'tabNotas'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = id === targetId ? 'block' : 'none';
   });
