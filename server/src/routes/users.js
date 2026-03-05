@@ -12,6 +12,28 @@ const { VALID_ROLES } = require('../middleware/rbac');
 const router = express.Router();
 router.use(authenticate);
 
+// ---- PUT /api/users/me ----
+// Update own profile (any authenticated user)
+router.put('/me', async (req, res) => {
+    try {
+        const { name, specialty, phone } = req.body;
+        const data = {};
+        if (name) data.name = name;
+        if (specialty !== undefined) data.specialty = specialty;
+        if (phone !== undefined) data.phone = phone;
+
+        const updated = await prisma.user.update({
+            where: { id: req.user.id },
+            data,
+            select: { id: true, name: true, email: true, role: true, specialty: true, phone: true },
+        });
+        res.json(updated);
+    } catch (err) {
+        console.error('Update profile error:', err);
+        res.status(500).json({ error: 'Error al actualizar perfil' });
+    }
+});
+
 // ---- GET /api/users ----
 // List users in org (staff management)
 router.get('/',

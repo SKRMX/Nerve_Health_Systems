@@ -289,6 +289,6 @@ const API = (() => {
         // Admin
         getAdminStats, getAuditLogs, updateOrgPlan,
         // Utility
-        healthCheck, clearTokens,
+        healthCheck, clearTokens, request,
     };
 })();

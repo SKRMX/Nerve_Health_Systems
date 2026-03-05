@@ -63,7 +63,7 @@ var APP = {
     doctor: [
       { section: 'Principal' },
       { id: 'dashboard', icon: '🏠', label: 'Dashboard', fn: 'renderDoctorDash' },
-      { id: 'appointments', icon: '📅', label: 'Agenda', fn: 'renderAppointments', badge: 3 },
+      { id: 'appointments', icon: '📅', label: 'Agenda', fn: 'renderAppointments' },
       { section: 'Clínico' },
       { id: 'patients', icon: '🫀', label: 'Mis Pacientes', fn: 'renderPatients' },
       { id: 'consultations', icon: '💬', label: 'Consultas', fn: 'renderConsultations' },
@@ -556,16 +556,28 @@ function renderDepartments() { renderStaff(); }
 
 function renderGenericSettings() {
   const role = APP.currentRole;
-  const user = APP.currentUser[role];
+  const user = APP.liveUser || APP.currentUser[role] || {};
+  const specList = typeof getSpecialtyList === 'function' ? getSpecialtyList() : [];
+
   document.getElementById('pageContent').innerHTML = `
   <div class="page-header"><div><div class="page-title">⚙️ Configuración / Perfil</div><div class="page-subtitle">Ajusta las preferencias de tu cuenta</div></div></div>
   <div class="card"><div class="card-header"><span class="card-title">Datos Personales</span></div>
   <div class="form-row form-row-2">
-    <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-control" value="${user.name}" /></div>
-    <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-control" type="email" value="contacto@nerve.mx" /></div>
+    <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-control" id="profileName" value="${user.name || ''}" /></div>
+    <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-control" type="email" id="profileEmail" value="${user.email || ''}" disabled style="opacity:0.6" /></div>
   </div>
-  ${role === 'doctor' || role === 'dept_head' ? `<div class="form-group"><label class="form-label">Especialidad</label><input class="form-control" value="Medicina General" /></div><div class="form-group"><label class="form-label">Cédula Profesional</label><input class="form-control" value="12345678" /></div>` : ''}
-  <button class="btn btn-primary" onclick="showNotification('Perfil actualizado con éxito.', 'success')">Guardar cambios</button></div>
+  ${role === 'doctor' || role === 'dept_head' ? `
+  <div class="form-group"><label class="form-label">Especialidad</label>
+    <select class="form-control" id="profileSpecialty">
+      <option value="">-- Seleccionar --</option>
+      ${specList.map(s => `<option value="${s.name}" ${user.specialty === s.name ? 'selected' : ''}>${s.icon} ${s.name}</option>`).join('')}
+    </select>
+  </div>
+  <div class="form-row form-row-2">
+    <div class="form-group"><label class="form-label">Teléfono</label><input class="form-control" id="profilePhone" value="${user.phone || ''}" placeholder="+52 55 ..." /></div>
+    <div class="form-group"><label class="form-label">Cédula Profesional</label><input class="form-control" id="profileCedula" value="${user.cedula || ''}" placeholder="12345678" /></div>
+  </div>` : ''}
+  <button class="btn btn-primary" id="btnSaveProfile" onclick="saveProfile()">Guardar cambios</button></div>
   <div class="card mt-4"><div class="card-header"><span class="card-title">Ajustes de Notificaciones</span></div>
   <div style="display:flex;flex-direction:column;gap:12px;">
     ${['Notificarme de nuevas citas por Email', 'Recordatorios a mi WhatsApp personal', 'Reporte semanal de actividad'].map(n => `
@@ -577,6 +589,33 @@ function renderGenericSettings() {
       </label>
     </div>`).join('')}
   </div></div>`;
+}
+
+async function saveProfile() {
+  const name = document.getElementById('profileName')?.value.trim();
+  const specialty = document.getElementById('profileSpecialty')?.value;
+  const phone = document.getElementById('profilePhone')?.value.trim();
+  const btn = document.getElementById('btnSaveProfile');
+
+  if (!name) return showNotification('El nombre es obligatorio', 'error');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+  try {
+    const data = { name };
+    if (specialty !== undefined) data.specialty = specialty;
+    if (phone !== undefined) data.phone = phone;
+    await API.request('/users/me', { method: 'PUT', body: data });
+    // Update local data
+    if (APP.liveUser) {
+      APP.liveUser.name = name;
+      if (specialty) APP.liveUser.specialty = specialty;
+      if (phone) APP.liveUser.phone = phone;
+    }
+    showNotification('Perfil actualizado con éxito', 'success');
+  } catch (err) {
+    showNotification(err.message || 'Error al guardar', 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
 }
 
 // ================================================

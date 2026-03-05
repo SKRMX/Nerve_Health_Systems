@@ -130,6 +130,7 @@ router.post('/login', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 specialty: user.specialty,
+                phone: user.phone,
                 orgId: user.org?.id || null,
                 orgName: user.org?.name || null,
                 orgPlan: user.org?.plan || null,
