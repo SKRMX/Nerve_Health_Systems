@@ -52,8 +52,25 @@ async function renderRxBuilder() {
           </div>
           <div class="form-group"><label class="form-label">Tamaño de Hoja</label>
             <select class="form-control" id="rxPageSize" onchange="updatePreview()">
-              <option value="carta">Carta (8.5" x 11")</option>
-              <option value="media">Media Carta (5.5" x 8.5")</option>
+              <optgroup label="Formatos Comunes">
+                <option value="carta">Carta (8.5" x 11")</option>
+                <option value="media">Media Carta (5.5" x 8.5")</option>
+                <option value="oficio">Oficio / Legal (8.5" x 14")</option>
+                <option value="folio">Folio / Oficio (8.5" x 13")</option>
+                <option value="a4" selected>A4 (Estándar)</option>
+                <option value="a5">A5 (Pequeño)</option>
+              </optgroup>
+              <optgroup label="Serie A (ISO)">
+                <option value="a0">A0 (Póster)</option>
+                <option value="a1">A1</option>
+                <option value="a2">A2</option>
+                <option value="a3">A3 (Doble Carta)</option>
+                <option value="a6">A6 (Postal)</option>
+              </optgroup>
+              <optgroup label="Serie B / Otros">
+                <option value="b4">B4</option>
+                <option value="b5">B5</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -180,8 +197,12 @@ function updatePreview() {
   const date = document.getElementById('rxDate')?.value || new Date().toISOString().split('T')[0];
   const dx = document.getElementById('rxDx')?.value || '—';
   const notes = document.getElementById('rxNotes')?.value || '';
-  const pageSize = document.getElementById('rxPageSize')?.value || 'carta';
-  const isSmall = pageSize === 'media';
+  const pageSize = document.getElementById('rxPageSize')?.value || 'a4';
+
+  // Size classification for UI scaling
+  const isSmall = ['media', 'a5', 'a6', 'b5'].includes(pageSize);
+  const isExtraLarge = ['a0', 'a1', 'a2', 'a3', 'b4'].includes(pageSize);
+
   const orgName = APP.liveUser?.organization?.name || 'Clínica Médica';
   const rxNumBase = 'RX-' + date.replace(/-/g, '').slice(2);
 
@@ -190,12 +211,27 @@ function updatePreview() {
   _rxSheets.forEach((sheet, sheetIdx) => {
     const rxNum = `${rxNumBase}-${sheetIdx + 1}-${String(Math.floor(Math.random() * 90) + 10)}`;
 
+    // Dynamic styles based on classification
+    let basePadding = '24px';
+    let fontSize = '0.82rem';
+    let minHeight = '550px';
+
+    if (isSmall) {
+      basePadding = '16px';
+      fontSize = '0.72rem';
+      minHeight = '380px';
+    } else if (isExtraLarge) {
+      basePadding = '40px';
+      fontSize = '1.1rem';
+      minHeight = '800px';
+    }
+
     html += `
-    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${isSmall ? '16px' : '24px'};font-size:${isSmall ? '0.72rem' : '0.82rem'};min-height:${isSmall ? '380px' : '550px'};width:100%;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between">
+    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${basePadding};font-size:${fontSize};min-height:${minHeight};width:100%;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between">
       <div>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #11718B;padding-bottom:12px;margin-bottom:12px">
           <div>
-            <div style="font-size:${isSmall ? '0.9rem' : '1.1rem'};font-weight:900;color:#11718B;text-transform:uppercase">${orgName}</div>
+            <div style="font-size:${isSmall ? '0.9rem' : (isExtraLarge ? '1.5rem' : '1.1rem')};font-weight:900;color:#11718B;text-transform:uppercase">${orgName}</div>
             <div style="font-size:0.68rem;color:#666">Servicios de Salud Profesionales</div>
           </div>
           <div style="text-align:right">
@@ -317,8 +353,14 @@ async function saveRxToBackend() {
 function printPrescription() {
   const prev = document.getElementById('rxPreview');
   if (!prev) return;
-  const pageSize = document.getElementById('rxPageSize')?.value || 'carta';
-  const isSmall = pageSize === 'media';
+  const pageSize = document.getElementById('rxPageSize')?.value || 'a4';
+
+  const sizeMap = {
+    'a0': '841mm 1189mm', 'a1': '594mm 841mm', 'a2': '420mm 594mm', 'a3': '297mm 420mm',
+    'a4': '210mm 297mm', 'a5': '148mm 210mm', 'a6': '105mm 148mm',
+    'carta': 'letter', 'oficio': 'legal', 'folio': '216mm 330mm', 'media': '5.5in 8.5in',
+    'b4': '250mm 353mm', 'b5': '182mm 257mm'
+  };
 
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Imprimir Receta</title>
@@ -330,15 +372,15 @@ function printPrescription() {
       box-shadow: none !important;
     }
     @page {
-      size: ${isSmall ? '5.5in 8.5in' : 'letter'};
+      size: ${sizeMap[pageSize] || 'auto'};
       margin: 0;
     }
     @media print {
       body { background: #fff; }
       .prescription-page { 
-        padding: ${isSmall ? '10mm' : '20mm'} !important;
+        padding: 15mm !important;
         min-height: 0 !important;
-        height: ${isSmall ? '215mm' : '279mm'} !important; /* Letter or Half Letter height */
+        height: 100vh;
       }
     }
   </style>
