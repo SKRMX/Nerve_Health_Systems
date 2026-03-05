@@ -162,13 +162,15 @@ function calDayClick(dateStr) {
 
 function toggleCalView() { renderAppointments(); }
 
+let _apptPatientsList = [];
+
 async function openNewApptModal(date = '') {
-  // Load patients list for the dropdown
-  let patients = [];
+  // Load patients list for autocomplete
+  _apptPatientsList = [];
   try {
     const res = await API.getPatients();
-    patients = res.data || [];
-  } catch (e) { /* empty dropdown */ }
+    _apptPatientsList = res.data || [];
+  } catch (e) { /* empty list */ }
 
   openModal('+ Nueva Cita', `
     <div class="form-row form-row-2">
@@ -176,10 +178,12 @@ async function openNewApptModal(date = '') {
       <div class="form-group"><label class="form-label">Hora</label><input class="form-control" type="time" id="apptTime" value="09:00" /></div>
     </div>
     <div class="form-group"><label class="form-label">Paciente</label>
-      <select class="form-control" id="apptPatient">
-        <option value="">-- Seleccionar paciente --</option>
-        ${patients.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
-      </select>
+      <input class="form-control" id="apptPatientInput" list="apptPatientList" placeholder="Escribe el nombre o selecciona uno existente..." autocomplete="off" />
+      <datalist id="apptPatientList">
+        ${_apptPatientsList.map(p => `<option value="${p.name}" data-id="${p.id}">`).join('')}
+      </datalist>
+      <input type="hidden" id="apptPatientId" />
+      <div style="font-size:0.73rem;color:var(--text-dim);margin-top:4px">💡 Si el paciente no está registrado, escribe su nombre y se creará automáticamente.</div>
     </div>
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Tipo de consulta</label>
@@ -192,16 +196,26 @@ async function openNewApptModal(date = '') {
     <div class="form-group"><label class="form-label">Motivo / Notas</label><textarea class="form-control" id="apptReason" placeholder="Motivo de consulta preliminar..."></textarea></div>`,
     `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button class="btn btn-primary" id="btnCreateAppt" onclick="submitNewAppt()">Programar cita →</button>`);
+
+  // Wire up the input to resolve patient ID
+  setTimeout(() => {
+    const input = document.getElementById('apptPatientInput');
+    if (input) input.addEventListener('input', () => {
+      const match = _apptPatientsList.find(p => p.name.toLowerCase() === input.value.toLowerCase());
+      document.getElementById('apptPatientId').value = match ? match.id : '';
+    });
+  }, 50);
 }
 
 async function submitNewAppt() {
   const date = document.getElementById('apptDate')?.value;
   const time = document.getElementById('apptTime')?.value;
-  const patientId = document.getElementById('apptPatient')?.value;
+  const patientName = document.getElementById('apptPatientInput')?.value.trim();
+  let patientId = document.getElementById('apptPatientId')?.value;
   const type = document.getElementById('apptType')?.value;
   const reason = document.getElementById('apptReason')?.value;
 
-  if (!date || !time || !patientId) {
+  if (!date || !time || !patientName) {
     return showNotification('Fecha, hora y paciente son requeridos', 'error');
   }
 
@@ -209,6 +223,13 @@ async function submitNewAppt() {
   if (btn) { btn.disabled = true; btn.textContent = 'Creando...'; }
 
   try {
+    // If no existing patient matched, create one on the fly
+    if (!patientId) {
+      const newPat = await API.createPatient({ name: patientName });
+      patientId = newPat.id;
+      showNotification(`Paciente "${patientName}" registrado automáticamente`, 'success');
+    }
+
     await API.createAppointment({ date, time, type, patientId, reason });
     closeModal();
     showNotification('Cita programada exitosamente', 'success');
