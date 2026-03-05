@@ -944,15 +944,16 @@ textarea.form-control {
     top: calc(100% + 5px);
     left: 0;
     right: 0;
-    background: var(--dark-4);
+    background: var(--dark-3);
     border: 1px solid var(--border-hover);
-    border-radius: 8px;
-    max-height: 220px;
+    border-radius: var(--radius);
+    max-height: 250px;
     overflow-y: auto;
     z-index: 1100;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
     display: none;
-    animation: fadeIn 0.2s ease;
+    animation: fadeIn 0.15s ease-out;
+    backdrop-filter: blur(10px);
 }
 
 .autocomplete-dropdown.open {
@@ -960,15 +961,15 @@ textarea.form-control {
 }
 
 .autocomplete-item {
-    padding: 10px 14px;
+    padding: 12px 16px;
     cursor: pointer;
     transition: var(--transition);
-    border-bottom: 1px solid rgba(0, 242, 244, 0.04);
+    border-bottom: 1px solid rgba(0, 242, 244, 0.05);
 }
 
 .autocomplete-item:hover,
 .autocomplete-item.active {
-    background: rgba(0, 242, 244, 0.08);
+    background: rgba(0, 242, 244, 0.1);
     color: var(--cyan);
 }
 
@@ -979,18 +980,19 @@ textarea.form-control {
 .autocomplete-item-name {
     font-weight: 600;
     font-size: 0.88rem;
+    display: block;
 }
 
 .autocomplete-item-sub {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    margin-top: 1px;
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin-top: 2px;
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(-5px);
+        transform: translateY(-8px);
     }
 
     to {
@@ -1414,7 +1416,10 @@ textarea.form-control {
     border-bottom: 1px solid var(--border);
 }
 
-.field-list {}
+.field-list {
+    display: flex;
+    flex-direction: column;
+}
 
 .field-row {
     display: flex;
