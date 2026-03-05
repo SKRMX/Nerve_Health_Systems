@@ -1995,9 +1995,18 @@ textarea.form-control {
 }
 
 .flatpickr-current-month .flatpickr-monthDropdown-months {
-    background: transparent !important;
+    background: var(--dark-3) !important;
     color: var(--text) !important;
     font-weight: 700 !important;
+}
+
+.flatpickr-monthDropdown-month {
+    background: var(--dark-3) !important;
+    color: var(--text) !important;
+}
+
+.numInputWrapper input {
+    color: var(--text) !important;
 }
 
 .flatpickr-weekday {
