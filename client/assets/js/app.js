@@ -358,53 +358,60 @@ document.addEventListener('DOMContentLoaded', () => {
 // MODULE IMPLEMENTATIONS (Role-Specific Logic)
 // ================================================
 
-function renderConsultations() {
-  const D = window.NERVE_DATA;
-  const myPts = D ? D.getPatientsByDoctor(D.currentUsers.doctor || 'dr_01') : [];
+async function renderConsultations() {
   const pc = document.getElementById('pageContent');
+  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando consultas...</div>`;
+  let patients = [];
+  try { const res = await API.getPatients(); patients = res.data || []; } catch (e) { }
   pc.innerHTML = `
   <div class="page-header"><div><div class="page-title">💬 Mis Consultas de Hoy</div></div></div>
   <div class="card"><div class="card-header"><span class="card-title">Pacientes en sala de espera</span></div>
   <div style="display:flex;flex-direction:column;gap:10px;">
-    ${myPts.slice(0, 3).map(p => `
+    ${patients.length === 0 ? '<div class="empty-state" style="padding:30px"><div class="empty-state-icon">💬</div><div class="empty-state-desc">Sin pacientes en espera</div></div>' :
+      patients.slice(0, 5).map(p => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--border);border-radius:8px">
       <div>
         <div style="font-weight:600">${p.name}</div>
-        <div style="font-size:0.8rem;color:var(--text-muted)">Llegó hace 10 min · ${p.diagnosis}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">${p.diagnosis || 'Sin diagnóstico'}</div>
       </div>
-      <button class="btn btn-primary" onclick="openNewConsultModal('${p.id}')">Iniciar consulta ▶</button>
+      <button class="btn btn-primary" onclick="navigate('patients')">Ver expediente ▶</button>
     </div>`).join('')}
   </div></div>`;
 }
 
-function renderAsistenteDash() {
-  const D = window.NERVE_DATA;
-  const apts = D ? D.getApptsByHospital(D.currentUsers.org_owner || 'h1') : [];
-  const todayApts = apts.filter(a => a.date === '2026-02-28');
+async function renderAsistenteDash() {
   const pc = document.getElementById('pageContent');
+  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando panel...</div>`;
+  let appointments = [], patients = [];
+  try {
+    const [aRes, pRes] = await Promise.all([API.getAppointments(), API.getPatients()]);
+    appointments = aRes.data || [];
+    patients = pRes.data || [];
+  } catch (e) { }
+  const programadas = appointments.filter(a => a.status === 'programada');
+  const completadas = appointments.filter(a => a.status === 'completada').length;
   pc.innerHTML = `
   <div class="page-header"><div><div class="page-title">📋 Recepción y Check-In</div><div class="page-subtitle">Panel de Asistente</div></div>
   <div class="page-actions"><button class="btn btn-primary" onclick="navigate('appointments')">+ Agendar Paciente</button></div></div>
   <div class="stats-grid stats-grid-3" style="margin-bottom:24px">
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(17,113,139,0.2)">👥</div><div class="stat-value">${todayApts.length}</div><div class="stat-label">Citas Hoy</div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(34,197,94,0.1)">✅</div><div class="stat-value">4</div><div class="stat-label">Atendidos</div></div>
-    <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1)">⏳</div><div class="stat-value">${todayApts.length - 4}</div><div class="stat-label">En Espera</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(17,113,139,0.2)">👥</div><div class="stat-value">${appointments.length}</div><div class="stat-label">Citas Total</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(34,197,94,0.1)">✅</div><div class="stat-value">${completadas}</div><div class="stat-label">Completadas</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:rgba(239,68,68,0.1)">⏳</div><div class="stat-value">${programadas.length}</div><div class="stat-label">Programadas</div></div>
   </div>
-  <div class="card"><div class="card-header"><span class="card-title">Llegadas del día</span></div>
-  <table style="width:100%;text-align:left;border-collapse:collapse">
-    <thead><tr style="border-bottom:1px solid var(--border)"><th>Paciente</th><th>Hora</th><th>Médico</th><th>Estado / Check-In</th></tr></thead>
+  <div class="card"><div class="card-header"><span class="card-title">Citas programadas</span></div>
+  ${programadas.length > 0 ? `<table style="width:100%;text-align:left;border-collapse:collapse">
+    <thead><tr style="border-bottom:1px solid var(--border)"><th>Paciente</th><th>Hora</th><th>Fecha</th><th>Estado / Check-In</th></tr></thead>
     <tbody>
-      ${todayApts.map(a => `
+      ${programadas.slice(0, 10).map(a => `
       <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:12px 0"><div style="font-weight:600">${a.patientName}</div></td><td style="color:var(--cyan)">${a.time}</td>
-        <td style="font-size:0.85rem">${D ? D.getDoctor(a.doctorId).name : 'Médico'}</td>
-        <td>
-          ${a.status === 'confirmada' ? `<button class="btn btn-sm btn-success" style="background:var(--success);color:black;border:none">Recepción Completada</button>` :
-      `<button class="btn btn-sm btn-primary" onclick="showNotification('Check-in completado. Notificando al médico.', 'success')">Marcar Llegada</button>`}
-        </td>
+        <td style="padding:12px 0"><div style="font-weight:600">${a.patient?.name || '—'}</div></td>
+        <td style="color:var(--cyan)">${a.time}</td>
+        <td class="text-muted">${new Date(a.date).toLocaleDateString('es-MX')}</td>
+        <td><button class="btn btn-sm btn-primary" onclick="completeAppt('${a.id}')">Marcar Llegada / Completar</button></td>
       </tr>`).join('')}
     </tbody>
-  </table></div>`;
+  </table>` : '<div class="empty-state" style="padding:30px"><div class="empty-state-icon">📅</div><div class="empty-state-desc">Sin citas programadas</div></div>'}
+  </div>`;
 }
 
 function renderPatientAppointments() {
@@ -465,28 +472,29 @@ function renderPatientPrescriptions() {
   </div>`;
 }
 
-function renderTenants() {
-  const D = window.NERVE_DATA;
-  const hc = D ? D.hospitals.length : 0;
+async function renderTenants() {
   const pc = document.getElementById('pageContent');
+  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando organizaciones...</div>`;
+  let orgs = [];
+  try { const res = await API.getOrganizations(); orgs = res.data || res || []; } catch (e) { }
+  if (!Array.isArray(orgs)) orgs = [];
   pc.innerHTML = `
-  <div class="page-header"><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro de Hospitales inscritos</div></div>
+  <div class="page-header"><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro · ${orgs.length} organizaciones</div></div>
   <div class="page-actions"><button class="btn btn-primary" onclick="openNewTenantModal()">+ Nuevo Hospital</button></div></div>
   <div class="card">
     <div class="table-wrap">
-      <table>
-        <thead><tr><th>Tenant ID</th><th>Hospital</th><th>Plan Actual</th><th>Dueño (Admin)</th><th>Doctores</th><th>Acciones de Máster</th></tr></thead>
+    ${orgs.length > 0 ? `<table>
+        <thead><tr><th>ID</th><th>Organización</th><th>Plan</th><th>Usuarios</th><th>Acciones</th></tr></thead>
         <tbody>
-          ${(D ? D.hospitals : []).map(h => `<tr>
-            <td style="font-family:monospace;color:var(--text-muted)">org_${h.id}</td>
-            <td><div style="font-weight:600">${h.name}</div><div style="font-size:0.75rem">${h.city}</div></td>
-            <td><span class="badge ${h.plan === 'hospital' ? 'badge-cyan' : 'badge-mint'}">${h.plan}</span></td>
-            <td>${h.owner ? h.owner : (h.id === 'h1' ? 'Dr. Roberto Sánchez' : 'Director Médico')}</td>
-            <td>${D.getDoctorsByHospital(h.id).length}</td>
-            <td><button class="btn btn-sm btn-secondary" onclick="openEditLimitsModal('${h.name}', '${h.plan}', ${D.getDoctorsByHospital(h.id).length})">Modificar Límites</button> <button class="btn btn-sm btn-danger" onclick="openSuspendTenantModal('${h.name}')">Suspender</button></td>
+          ${orgs.map(h => `<tr>
+            <td style="font-family:monospace;color:var(--text-muted);font-size:0.75rem">${(h.id || '').substring(0, 8)}...</td>
+            <td><div style="font-weight:600">${h.name || '—'}</div></td>
+            <td><span class="badge badge-cyan">${h.plan || 'starter'}</span></td>
+            <td>${h._count?.users || '—'}</td>
+            <td><button class="btn btn-sm btn-secondary" onclick="openEditLimitsModal('${h.name}', '${h.plan || 'starter'}', 0)">Modificar</button> <button class="btn btn-sm btn-danger" onclick="openSuspendTenantModal('${h.name}')">Suspender</button></td>
           </tr>`).join('')}
         </tbody>
-      </table>
+      </table>` : '<div class="empty-state" style="padding:30px"><div class="empty-state-icon">🏥</div><div class="empty-state-desc">Sin organizaciones registradas</div></div>'}
     </div>
   </div>`;
 }

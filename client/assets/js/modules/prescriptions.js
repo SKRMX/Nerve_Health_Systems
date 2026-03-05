@@ -1,13 +1,13 @@
 // ================================================
-// NERVE — Prescriptions Module (with PDF Preview)
+// NERVE — Prescriptions Module (API-Connected)
 // ================================================
 
-const RX_DRUGS = [
+let _rxDrugs = [
   { id: 1, name: 'Paracetamol', dose: '500 mg', form: 'Tabletas', freq: 'Cada 8 horas', dur: '5 días', inst: 'Tomar con comida. No exceder 3g/día.' },
   { id: 2, name: 'Amoxicilina', dose: '500 mg', form: 'Cápsulas', freq: 'Cada 8 horas', dur: '7 días', inst: 'Terminar el tratamiento completo.' },
 ];
 
-let _rxDrugs = [...RX_DRUGS];
+let _rxPatients = [];
 
 function renderPrescriptions() {
   const pc = document.getElementById('pageContent');
@@ -23,18 +23,26 @@ function renderPrescriptions() {
   renderRxBuilder();
 }
 
-function renderRxBuilder() {
+async function renderRxBuilder() {
   const area = document.getElementById('rxContent');
+  area.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted)">⏳ Cargando pacientes...</div>`;
+
+  // Load patients
+  try {
+    const res = await API.getPatients();
+    _rxPatients = res.data || [];
+  } catch (e) { _rxPatients = []; }
+
   area.innerHTML = `
   <div class="content-grid content-grid-1-1">
-    <!-- Builder form -->
     <div>
       <div class="card" style="margin-bottom:16px">
         <div class="card-header"><span class="card-title">👤 Datos del Paciente</span></div>
         <div class="form-row form-row-2">
           <div class="form-group"><label class="form-label">Paciente</label>
             <select class="form-control" id="rxPatient" onchange="updatePreview()">
-              ${PATIENTS_DATA.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+              ${_rxPatients.length === 0 ? '<option>Sin pacientes</option>' :
+      _rxPatients.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
             </select>
           </div>
           <div class="form-group"><label class="form-label">Fecha</label>
@@ -60,15 +68,12 @@ function renderRxBuilder() {
       </div>
       <div style="display:flex;gap:10px">
         <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="printPrescription()">🖨 Imprimir / Descargar PDF</button>
-        <button class="btn btn-secondary" onclick="renderRxHistory()">Ver historial →</button>
+        <button class="btn btn-secondary" onclick="saveRxToBackend()">💾 Guardar receta</button>
       </div>
     </div>
-
-    <!-- Live Preview -->
     <div class="card" id="rxPreviewCard" style="font-family:'Inter',sans-serif">
       <div class="card-header"><span class="card-title">👁 Vista previa de receta</span><span class="badge badge-mint">En vivo</span></div>
       <div id="rxPreview"></div>
-    </div>
     </div>
   </div>`;
   updatePreview();
@@ -93,20 +98,20 @@ function renderDrugItems() {
 function updatePreview() {
   const prev = document.getElementById('rxPreview');
   if (!prev) return;
-  const patId = parseInt(document.getElementById('rxPatient')?.value || '1');
-  const pat = PATIENTS_DATA.find(p => p.id === patId) || PATIENTS_DATA[0];
+  const patId = document.getElementById('rxPatient')?.value;
+  const pat = _rxPatients.find(p => p.id === patId) || _rxPatients[0] || { name: '—', bloodType: '—' };
   const date = document.getElementById('rxDate')?.value || new Date().toISOString().split('T')[0];
   const dx = document.getElementById('rxDx')?.value || '—';
   const notes = document.getElementById('rxNotes')?.value || '';
   const rxNum = 'RX-' + date.replace(/-/g, '').slice(2) + '-' + String(Math.floor(Math.random() * 900) + 100);
+  const user = API.getUser();
 
   prev.innerHTML = `
   <div style="background:#fff;color:#111;border-radius:8px;padding:24px;font-size:0.82rem">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #11718B;padding-bottom:12px;margin-bottom:12px">
       <div>
-        <div style="font-size:1.1rem;font-weight:900;color:#11718B">HOSPITAL ÁNGELES</div>
-        <div style="font-size:0.72rem;color:#666">Av. Ejército Nacional 123, CDMX</div>
-        <div style="font-size:0.72rem;color:#666">Tel: (55) 5230-8161 · Cédula: 87654321</div>
+        <div style="font-size:1.1rem;font-weight:900;color:#11718B">NERVE Health Systems</div>
+        <div style="font-size:0.72rem;color:#666">Sistema de Gestión Médica</div>
       </div>
       <div style="text-align:right">
         <div style="font-size:0.75rem;color:#666">RECETA MÉDICA</div>
@@ -116,8 +121,7 @@ function updatePreview() {
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f0f8ff;border-radius:6px;padding:10px;margin-bottom:12px">
       <div><div style="font-size:0.68rem;color:#666">PACIENTE</div><div style="font-weight:700">${pat.name}</div></div>
-      <div><div style="font-size:0.68rem;color:#666">EDAD / SEXO</div><div style="font-weight:600">${pat.age} años · ${pat.sex === 'F' ? 'Femenino' : 'Masculino'}</div></div>
-      <div><div style="font-size:0.68rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600">${pat.blood}</div></div>
+      <div><div style="font-size:0.68rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600">${pat.bloodType || '—'}</div></div>
       <div><div style="font-size:0.68rem;color:#666">DIAGNÓSTICO</div><div style="font-weight:600">${dx || '—'}</div></div>
     </div>
     <div style="font-weight:700;margin-bottom:8px;color:#11718B;border-bottom:1px solid #11718B;padding-bottom:4px">℞ PRESCRIPCIÓN</div>
@@ -129,7 +133,7 @@ function updatePreview() {
     </div>`).join('')}
     ${notes ? `<div style="margin-top:10px;padding:8px;background:#f9f9f9;border-radius:4px"><strong>Indicaciones:</strong> ${notes}</div>` : ''}
     <div style="margin-top:20px;display:flex;justify-content:space-between;border-top:1px dashed #ccc;padding-top:12px">
-      <div style="font-size:0.75rem;color:#666"><strong>Dr. Eduardo González Reyes</strong><br>Cédula Prof: 12345678<br>Especialidad: Medicina General</div>
+      <div style="font-size:0.75rem;color:#666"><strong>${user?.name || 'Doctor'}</strong><br>NERVE Health Systems</div>
       <div style="width:80px;height:40px;border-bottom:1px solid #333;text-align:center;font-size:0.65rem;color:#999;padding-top:28px">Firma</div>
     </div>
     <div style="text-align:center;margin-top:10px;font-size:0.65rem;color:#aaa">Receta válida por 30 días · NERVE Health Systems · www.nervehealthsystems.com</div>
@@ -162,7 +166,7 @@ function openAddDrugModal() {
 
 function addDrug() {
   const name = document.getElementById('drugName')?.value.trim();
-  if (!name) { alert('Ingresa el nombre del medicamento'); return; }
+  if (!name) { showNotification('Ingresa el nombre del medicamento', 'error'); return; }
   _rxDrugs.push({
     id: Date.now(), name,
     dose: document.getElementById('drugDose')?.value || '',
@@ -177,6 +181,30 @@ function addDrug() {
   updatePreview();
 }
 
+async function saveRxToBackend() {
+  const patId = document.getElementById('rxPatient')?.value;
+  if (!patId || _rxDrugs.length === 0) {
+    return showNotification('Selecciona un paciente y agrega al menos un medicamento', 'error');
+  }
+
+  // Save each drug as a separate prescription
+  try {
+    for (const d of _rxDrugs) {
+      await API.createPrescription({
+        patientId: patId,
+        medication: `${d.name} ${d.dose}`,
+        dosage: d.dose,
+        frequency: d.freq,
+        duration: d.dur,
+        notes: d.inst,
+      });
+    }
+    showNotification(`${_rxDrugs.length} medicamento(s) guardados exitosamente`, 'success');
+  } catch (err) {
+    showNotification(err.message || 'Error al guardar receta', 'error');
+  }
+}
+
 function printPrescription() {
   const prev = document.getElementById('rxPreview');
   if (!prev) return;
@@ -187,33 +215,36 @@ function printPrescription() {
   win.document.close();
 }
 
-function renderRxHistory() {
+async function renderRxHistory() {
   const area = document.getElementById('rxContent');
+  area.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted)">⏳ Cargando historial...</div>`;
+
+  let rxData = [];
+  try {
+    const res = await API.getPrescriptions();
+    rxData = res.data || [];
+  } catch (e) { rxData = []; }
+
   area.innerHTML = `
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <h3 class="card-title">📋 Historial de Recetas</h3>
     <button class="btn btn-primary btn-sm" onclick="renderRxBuilder()">+ Nueva receta</button>
   </div>
   <div class="card">
-  <div class="table-wrap"><table>
-    <thead><tr><th>Folio</th><th>Paciente</th><th>Medicamentos</th><th>Diagnóstico</th><th>Fecha</th><th>Acciones</th></tr></thead>
+  ${rxData.length === 0 ?
+      `<div class="empty-state" style="padding:40px"><div class="empty-state-icon">💊</div><div class="empty-state-title">Sin recetas</div><div class="empty-state-desc">Aún no hay recetas generadas.</div></div>` :
+      `<div class="table-wrap"><table>
+    <thead><tr><th>Medicamento</th><th>Paciente</th><th>Dosis</th><th>Frecuencia</th><th>Fecha</th><th>Estado</th></tr></thead>
     <tbody>
-    ${[
-      { id: 'RX-2026-312', pat: 'María García L.', meds: 'Paracetamol 500mg', dx: 'Cefalea tensional', date: '28 Feb 2026' },
-      { id: 'RX-2026-298', pat: 'Carlos Mendoza R.', meds: 'Metformina 850mg', dx: 'DM2', date: '26 Feb 2026' },
-      { id: 'RX-2026-271', pat: 'Ana Ruiz J.', meds: 'Omeprazol 20mg', dx: 'GERD', date: '22 Feb 2026' },
-      { id: 'RX-2026-240', pat: 'Pedro Hernández T.', meds: 'Amlodipino 5mg + Atenolol 50mg', dx: 'HTA', date: '18 Feb 2026' },
-    ].map(r => `<tr>
-      <td><span class="badge badge-cyan">${r.id}</span></td>
-      <td><div class="avatar-row"><div class="avatar sm">${r.pat.split(' ').map(x => x[0]).slice(0, 2).join('')}</div>${r.pat}</div></td>
-      <td class="text-muted">${r.meds}</td>
-      <td class="text-muted">${r.dx}</td>
-      <td class="text-muted">${r.date}</td>
-      <td><div style="display:flex;gap:6px">
-        <button class="btn btn-secondary btn-sm" onclick="showNotification('Cargando previsualización en PDF...','cyan')">👁 Ver</button>
-        <button class="btn btn-primary btn-sm" onclick="printPrescription()">⬇ PDF</button>
-      </div></td>
+    ${rxData.map(r => `<tr>
+      <td class="fw-700">${r.medication}</td>
+      <td><div class="avatar-row"><div class="avatar sm">${(r.patient?.name || 'RX').split(' ').map(x => x[0]).slice(0, 2).join('')}</div>${r.patient?.name || '—'}</div></td>
+      <td class="text-muted">${r.dosage}</td>
+      <td class="text-muted">${r.frequency}</td>
+      <td class="text-muted">${new Date(r.createdAt).toLocaleDateString('es-MX')}</td>
+      <td><span class="badge ${r.active ? 'badge-success' : 'badge-muted'}">${r.active ? 'Activa' : 'Finalizada'}</span></td>
     </tr>`).join('')}
     </tbody>
-  </table></div></div>`;
+  </table></div>`}
+  </div>`;
 }
