@@ -2,11 +2,10 @@
 // NERVE — Prescriptions Module (API-Connected)
 // ================================================
 
-let _rxDrugs = [
-  { id: 1, name: 'Paracetamol', dose: '500 mg', form: 'Tabletas', freq: 'Cada 8 horas', dur: '5 días', inst: 'Tomar con comida. No exceder 3g/día.' },
-  { id: 2, name: 'Amoxicilina', dose: '500 mg', form: 'Cápsulas', freq: 'Cada 8 horas', dur: '7 días', inst: 'Terminar el tratamiento completo.' },
+let _rxSheets = [
+  [{ id: Date.now(), name: 'Paracetamol', dose: '500 mg', form: 'Tabletas', freq: 'Cada 8 horas', dur: '5 días', inst: 'Tomar con comida. No exceder 3g/día.' }]
 ];
-
+let _activeSheetIdx = 0;
 let _rxPatients = [];
 
 function renderPrescriptions() {
@@ -59,27 +58,44 @@ async function renderRxBuilder() {
           </div>
         </div>
       </div>
+
       <div class="card" style="margin-bottom:16px">
         <div class="card-header">
-          <span class="card-title">💊 Medicamentos</span>
-          <button class="btn btn-primary btn-sm" onclick="openAddDrugModal()">+ Agregar</button>
+          <span class="card-title">💊 Medicamentos (Hoja ${_activeSheetIdx + 1})</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" onclick="addRxSheet()">+ Añadir Hoja</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddDrugModal()">+ Agregar Medicamento</button>
+          </div>
         </div>
-        <div id="rxDrugList">
+        
+        <div id="rxSheetTabs" style="display:flex;gap:5px;padding:10px 15px;background:var(--dark-4);border-bottom:1px solid var(--border)">
+          ${_rxSheets.map((_, i) => `
+            <button class="btn btn-sm ${i === _activeSheetIdx ? 'btn-primary' : 'btn-secondary'}" onclick="setActiveSheet(${i})">Hoja ${i + 1}</button>
+          `).join('')}
+        </div>
+
+        <div id="rxDrugList" style="padding:15px">
           ${renderDrugItems()}
         </div>
       </div>
+
       <div class="card" style="margin-bottom:16px">
         <div class="card-header"><span class="card-title">📝 Indicaciones adicionales</span></div>
         <textarea class="form-control" id="rxNotes" rows="3" placeholder="Reposo relativo, dieta blanda, hidratación 2L/día..." oninput="_debouncedUpdatePreview()"></textarea>
       </div>
+
       <div style="display:flex;gap:10px">
-        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="printPrescription()">🖨 Imprimir / Descargar PDF</button>
-        <button class="btn btn-secondary" onclick="saveRxToBackend()">💾 Guardar receta</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="printPrescription()">🖨 Imprimir Todas las Hojas</button>
+        <button class="btn btn-secondary" onclick="saveRxToBackend()">💾 Guardar Todo</button>
       </div>
     </div>
-    <div class="card" id="rxPreviewCard" style="font-family:'Inter',sans-serif">
-      <div class="card-header"><span class="card-title">👁 Vista previa de receta</span><span class="badge badge-mint">En vivo</span></div>
-      <div id="rxPreview"></div>
+
+    <div class="card" id="rxPreviewCard" style="font-family:'Inter',sans-serif;background:var(--dark-4)">
+      <div class="card-header" style="position:sticky;top:0;z-index:10;background:var(--dark-3)">
+        <span class="card-title">👁 Vista previa de receta</span>
+        <span class="badge badge-mint">En vivo</span>
+      </div>
+      <div id="rxPreview" style="padding:20px;max-height:800px;overflow-y:auto;display:flex;flex-direction:column;gap:20px"></div>
     </div>
   </div>`;
 
@@ -104,11 +120,40 @@ async function renderRxBuilder() {
   updatePreview();
 }
 
+function setActiveSheet(idx) {
+  _activeSheetIdx = idx;
+  const area = document.getElementById('rxContent');
+  // Re-render only the drug list and tabs for better performance
+  const tabs = document.getElementById('rxSheetTabs');
+  const list = document.getElementById('rxDrugList');
+  const title = document.querySelector('.card-title');
+
+  if (tabs) tabs.innerHTML = _rxSheets.map((_, i) => `
+    <button class="btn btn-sm ${i === _activeSheetIdx ? 'btn-primary' : 'btn-secondary'}" onclick="setActiveSheet(${i})">Hoja ${i + 1}</button>
+  `).join('');
+
+  if (list) list.innerHTML = renderDrugItems();
+  // Update title in medical card
+  const titleEl = document.querySelectorAll('.card-header .card-title')[1];
+  if (titleEl) titleEl.innerText = `💊 Medicamentos (Hoja ${_activeSheetIdx + 1})`;
+
+  updatePreview();
+}
+
+function addRxSheet() {
+  _rxSheets.push([]);
+  _activeSheetIdx = _rxSheets.length - 1;
+  renderRxBuilder();
+  showNotification('Nueva hoja de prescripción añadida', 'info');
+}
+
 const _debouncedUpdatePreview = APP.debounce(() => updatePreview(), 300);
 
 function renderDrugItems() {
-  if (_rxDrugs.length === 0) return `<div class="empty-state" style="padding:24px"><div class="empty-state-icon">💊</div><div class="empty-state-desc">Sin medicamentos. Agrega el primero.</div></div>`;
-  return _rxDrugs.map((d, i) => `
+  const currentDrugs = _rxSheets[_activeSheetIdx];
+  if (currentDrugs.length === 0) return `<div class="empty-state" style="padding:24px"><div class="empty-state-icon">💊</div><div class="empty-state-desc">Sin medicamentos en esta hoja.</div></div>`;
+
+  return currentDrugs.map((d, i) => `
   <div class="rx-drug-item">
     <div class="rx-drug-num">${i + 1}</div>
     <div style="flex:1">
@@ -116,13 +161,20 @@ function renderDrugItems() {
       <div style="font-size:0.8rem;color:var(--text-muted)">🔁 ${d.freq} · ⏱ ${d.dur}</div>
       <div style="font-size:0.78rem;color:var(--text-dim);margin-top:3px">💬 ${d.inst}</div>
     </div>
-    <button class="btn btn-danger btn-sm" onclick="_rxDrugs.splice(${i},1);document.getElementById('rxDrugList').innerHTML=renderDrugItems();updatePreview()">✕</button>
+    <button class="btn btn-danger btn-sm" onclick="removeDrug(${i})">✕</button>
   </div>`).join('');
+}
+
+function removeDrug(idx) {
+  _rxSheets[_activeSheetIdx].splice(idx, 1);
+  document.getElementById('rxDrugList').innerHTML = renderDrugItems();
+  updatePreview();
 }
 
 function updatePreview() {
   const prev = document.getElementById('rxPreview');
   if (!prev) return;
+
   const patId = document.getElementById('rxPatientId')?.value;
   const pat = _rxPatients.find(p => p.id === patId) || _rxPatients[0] || { name: '—', bloodType: '—' };
   const date = document.getElementById('rxDate')?.value || new Date().toISOString().split('T')[0];
@@ -131,50 +183,64 @@ function updatePreview() {
   const pageSize = document.getElementById('rxPageSize')?.value || 'carta';
   const isSmall = pageSize === 'media';
   const orgName = APP.liveUser?.organization?.name || 'Clínica Médica';
+  const rxNumBase = 'RX-' + date.replace(/-/g, '').slice(2);
 
-  prev.innerHTML = `
-  <div style="background:#fff;color:#111;border-radius:8px;padding:${isSmall ? '16px' : '24px'};font-size:${isSmall ? '0.75rem' : '0.82rem'};min-height:${isSmall ? '400px' : '600px'};display:flex;flex-direction:column;justify-content:space-between">
-    <div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #11718B;padding-bottom:12px;margin-bottom:12px">
-        <div>
-          <div style="font-size:${isSmall ? '0.95rem' : '1.1rem'};font-weight:900;color:#11718B;text-transform:uppercase">${orgName}</div>
-          <div style="font-size:0.72rem;color:#666">Servicios de Salud Profesionales</div>
+  let html = '';
+
+  _rxSheets.forEach((sheet, sheetIdx) => {
+    const rxNum = `${rxNumBase}-${sheetIdx + 1}-${String(Math.floor(Math.random() * 90) + 10)}`;
+
+    html += `
+    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${isSmall ? '16px' : '24px'};font-size:${isSmall ? '0.72rem' : '0.82rem'};min-height:${isSmall ? '380px' : '550px'};width:100%;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #11718B;padding-bottom:12px;margin-bottom:12px">
+          <div>
+            <div style="font-size:${isSmall ? '0.9rem' : '1.1rem'};font-weight:900;color:#11718B;text-transform:uppercase">${orgName}</div>
+            <div style="font-size:0.68rem;color:#666">Servicios de Salud Profesionales</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:0.72rem;color:#666;font-weight:600">HOJA ${sheetIdx + 1} DE ${_rxSheets.length}</div>
+            <div style="font-weight:700;color:#11718B;font-size:0.75rem">${rxNum}</div>
+            <div style="font-size:0.68rem;color:#666">${new Date(date + 'T12:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+          </div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:0.75rem;color:#666">RECETA MÉDICA</div>
-          <div style="font-weight:700;color:#11718B">${rxNum}</div>
-          <div style="font-size:0.72rem;color:#666">${new Date(date + 'T12:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f0f8ff;border-radius:6px;padding:8px;margin-bottom:12px">
+          <div><div style="font-size:0.6rem;color:#666">PACIENTE</div><div style="font-weight:700">${pat.name}</div></div>
+          <div><div style="font-size:0.6rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600">${pat.bloodType || '—'}</div></div>
+          <div style="grid-column: span 2"><div style="font-size:0.6rem;color:#666">DIAGNÓSTICO</div><div style="font-weight:600">${dx || '—'}</div></div>
+        </div>
+        
+        <div style="font-weight:700;margin-bottom:8px;color:#11718B;border-bottom:1px solid #11718B;padding-bottom:2px;font-size:0.75rem">℞ PRESCRIPCIÓN</div>
+        
+        ${sheet.length === 0 ? '<div style="color:#999;font-style:italic;padding:8px 0;text-align:center">Sin medicamentos en esta hoja.</div>' :
+        sheet.map((d, i) => `
+          <div style="margin-bottom:8px;padding:6px;border-left:3px solid #06CFD7;background:#fcfcfc">
+            <div style="font-weight:700;font-size:0.8rem">${i + 1}. ${d.name} ${d.dose} — ${d.form}</div>
+            <div style="color:#555;font-size:0.72rem">Frecuencia: ${d.freq} por ${d.dur}</div>
+            <div style="color:#777;font-size:0.68rem">${d.inst}</div>
+          </div>`).join('')}
+          
+        ${notes && sheetIdx === _rxSheets.length - 1 ? `<div style="margin-top:10px;padding:8px;background:#f9f9f9;border-radius:4px;font-size:0.7rem"><strong>Indicaciones:</strong> ${notes}</div>` : ''}
+      </div>
+      
+      <div>
+        <div style="margin-top:10px;display:flex;justify-content:space-between;border-top:1px dashed #ccc;padding-top:10px">
+          <div style="font-size:0.68rem;color:#666">
+            <strong style="color:#111">${APP.liveUser?.name || 'Dr. Médico'}</strong><br>
+            ${orgName}
+          </div>
+          <div style="width:100px;height:40px;border-bottom:1px solid #333;text-align:center;font-size:0.6rem;color:#999;padding-top:28px">Firma y Sello</div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:0.58rem;color:#aaa">
+          Receta generada mediante el Sistema de Gestión Médica NERVE.<br>
+          Válida por 30 días a partir de la fecha de emisión.
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f0f8ff;border-radius:6px;padding:10px;margin-bottom:12px">
-        <div><div style="font-size:0.68rem;color:#666">PACIENTE</div><div style="font-weight:700">${pat.name}</div></div>
-        <div><div style="font-size:0.68rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600">${pat.bloodType || '—'}</div></div>
-        <div style="grid-column: span 2"><div style="font-size:0.68rem;color:#666">DIAGNÓSTICO</div><div style="font-weight:600">${dx || '—'}</div></div>
-      </div>
-      <div style="font-weight:700;margin-bottom:8px;color:#11718B;border-bottom:1px solid #11718B;padding-bottom:4px">℞ PRESCRIPCIÓN</div>
-      ${_rxDrugs.length === 0 ? '<div style="color:#999;font-style:italic;padding:8px 0">Sin medicamentos.</div>' :
-      _rxDrugs.map((d, i) => `<div style="margin-bottom:10px;padding:8px;border-left:3px solid #06CFD7">
-        <div style="font-weight:700">${i + 1}. ${d.name} ${d.dose} — ${d.form}</div>
-        <div style="color:#555">Frecuencia: ${d.freq} por ${d.dur}</div>
-        <div style="color:#777;font-size:0.75rem">${d.inst}</div>
-      </div>`).join('')}
-      ${notes ? `<div style="margin-top:10px;padding:8px;background:#f9f9f9;border-radius:4px"><strong>Indicaciones:</strong> ${notes}</div>` : ''}
-    </div>
-    
-    <div>
-      <div style="margin-top:20px;display:flex;justify-content:space-between;border-top:1px dashed #ccc;padding-top:12px">
-        <div style="font-size:0.75rem;color:#666">
-          <strong style="color:#111">${APP.liveUser?.name || 'Dr. Médico'}</strong><br>
-          ${orgName}
-        </div>
-        <div style="width:120px;height:50px;border-bottom:1px solid #333;text-align:center;font-size:0.65rem;color:#999;padding-top:35px">Firma y Sello</div>
-      </div>
-      <div style="text-align:center;margin-top:10px;font-size:0.62rem;color:#aaa">
-        Receta generada mediante el Sistema de Gestión Médica NERVE.<br>
-        Válida por 30 días a partir de la fecha de emisión.
-      </div>
-    </div>
-  </div>`;
+    </div>`;
+  });
+
+  prev.innerHTML = html;
 }
 
 function openAddDrugModal() {
@@ -204,7 +270,8 @@ function openAddDrugModal() {
 function addDrug() {
   const name = document.getElementById('drugName')?.value.trim();
   if (!name) { showNotification('Ingresa el nombre del medicamento', 'error'); return; }
-  _rxDrugs.push({
+
+  _rxSheets[_activeSheetIdx].push({
     id: Date.now(), name,
     dose: document.getElementById('drugDose')?.value || '',
     form: document.getElementById('drugForm')?.value || 'Tabletas',
@@ -212,6 +279,7 @@ function addDrug() {
     dur: document.getElementById('drugDur')?.value || '7 días',
     inst: document.getElementById('drugInst')?.value || '—',
   });
+
   closeModal();
   const dl = document.getElementById('rxDrugList');
   if (dl) dl.innerHTML = renderDrugItems();
@@ -220,23 +288,27 @@ function addDrug() {
 
 async function saveRxToBackend() {
   const patId = document.getElementById('rxPatientId')?.value;
-  if (!patId || _rxDrugs.length === 0) {
-    return showNotification('Selecciona un paciente y agrega al menos un medicamento', 'error');
+  let totalDrugs = 0;
+  _rxSheets.forEach(s => totalDrugs += s.length);
+
+  if (!patId || totalDrugs === 0) {
+    return showNotification('Selecciona un paciente y agrega medicamentos', 'error');
   }
 
-  // Save each drug as a separate prescription
   try {
-    for (const d of _rxDrugs) {
-      await API.createPrescription({
-        patientId: patId,
-        medication: `${d.name} ${d.dose}`,
-        dosage: d.dose,
-        frequency: d.freq,
-        duration: d.dur,
-        notes: d.inst,
-      });
+    for (let i = 0; i < _rxSheets.length; i++) {
+      for (const d of _rxSheets[i]) {
+        await API.createPrescription({
+          patientId: patId,
+          medication: `${d.name} ${d.dose} (Hoja ${i + 1})`,
+          dosage: d.dose,
+          frequency: d.freq,
+          duration: d.dur,
+          notes: d.inst,
+        });
+      }
     }
-    showNotification(`${_rxDrugs.length} medicamento(s) guardados exitosamente`, 'success');
+    showNotification(`${totalDrugs} medicamento(s) en ${_rxSheets.length} hojas guardados correctamente`, 'success');
   } catch (err) {
     showNotification(err.message || 'Error al guardar receta', 'error');
   }
@@ -251,16 +323,26 @@ function printPrescription() {
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Imprimir Receta</title>
   <style>
-    body{font-family:Inter,sans-serif;margin:0;padding:${isSmall ? '20px' : '40px'};background:#fff;color:#111}
+    body{font-family:Inter,sans-serif;margin:0;padding:0;background:#f5f5f5;color:#111}
+    .prescription-page { 
+      page-break-after: always; 
+      margin: auto;
+      box-shadow: none !important;
+    }
     @page {
       size: ${isSmall ? '5.5in 8.5in' : 'letter'};
       margin: 0;
     }
     @media print {
-      body { margin: 0; padding: ${isSmall ? '15mm' : '20mm'}; }
+      body { background: #fff; }
+      .prescription-page { 
+        padding: ${isSmall ? '10mm' : '20mm'} !important;
+        min-height: 0 !important;
+        height: ${isSmall ? '215mm' : '279mm'} !important; /* Letter or Half Letter height */
+      }
     }
   </style>
-  </head><body>${prev.innerHTML}<script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
+  </head><body><div id="print-content">${prev.innerHTML}</div><script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
   win.document.close();
 }
 
@@ -285,7 +367,7 @@ async function renderRxHistory() {
       `<div class="table-wrap"><table>
     <thead><tr><th>Medicamento</th><th>Paciente</th><th>Dosis</th><th>Frecuencia</th><th>Fecha</th><th>Estado</th></tr></thead>
     <tbody>
-    ${rxData.map(r => `<tr>
+    ${rxData.slice(0, 30).map(r => `<tr>
       <td class="fw-700">${r.medication}</td>
       <td><div class="avatar-row"><div class="avatar sm">${(r.patient?.name || 'RX').split(' ').map(x => x[0]).slice(0, 2).join('')}</div>${r.patient?.name || '—'}</div></td>
       <td class="text-muted">${r.dosage}</td>
@@ -297,3 +379,4 @@ async function renderRxHistory() {
   </table></div>`}
   </div>`;
 }
+
