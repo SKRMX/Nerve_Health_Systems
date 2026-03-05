@@ -128,11 +128,20 @@ function doLogin() {
 
     API.login(typedUser, typedPass)
       .then(user => {
-        // ✅ API login success - Role is detected from server response
+        // ✅ API login success
         APP.liveUser = user;
         APP.currentRole = user.role;
-        localStorage.setItem('nerve_role', user.role);
-        localStorage.setItem('nerve_email', user.email);
+
+        const remember = document.getElementById('rememberMe')?.checked;
+        if (remember) {
+          localStorage.setItem('nerve_role', user.role);
+          localStorage.setItem('nerve_email', user.email);
+          localStorage.setItem('nerve_name', user.name);
+        } else {
+          localStorage.removeItem('nerve_role');
+          localStorage.removeItem('nerve_email');
+          localStorage.removeItem('nerve_name');
+        }
 
         // Update user data from API
         APP.currentUser[user.role] = {

@@ -157,36 +157,58 @@ function formatExp(el) {
     el.value = v;
 }
 
-// ---- Submit payment ----
-function submitPayment() {
+// ---- Submit registration (Step 4) ----
+async function submitPayment() {
+    const email = document.getElementById('userEmail')?.value?.trim();
+    const password = document.getElementById('userPass')?.value;
+    const name = (document.getElementById('userFirst')?.value?.trim() + ' ' + document.getElementById('userLast')?.value?.trim()).trim();
+    const orgName = document.getElementById('orgName')?.value?.trim();
+    const phone = document.getElementById('orgPhone')?.value?.trim();
+    const specialty = document.getElementById('orgSpecialty')?.value;
+
+    // We don't strictly validate CC for the demo trial in this version, 
+    // but we check if the user filled something to keep the "feeling" of a real signup.
     const num = document.getElementById('cardNumber').value.replace(/\s/g, '');
     const exp = document.getElementById('cardExp').value;
     const cvv = document.getElementById('cardCvv').value;
-    const name = document.getElementById('cardName').value.trim();
+    const cardName = document.getElementById('cardName').value.trim();
 
-    if (num.length < 13 || !exp.includes('/') || cvv.length < 3 || !name) {
-        showNotification('Por favor completa todos los datos de pago.', 'warning'); return;
+    if (num.length < 13 || !exp.includes('/') || cvv.length < 3 || !cardName) {
+        showNotification('Por favor completa todos los datos de pago para activar tu prueba.', 'warning'); return;
     }
 
     const btn = document.querySelector('.order-summary .btn');
     btn.disabled = true;
-    btn.textContent = 'Procesando...';
+    btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></span> Procesando...';
 
-    // Simulate payment processing
-    setTimeout(() => {
-        // Store session data for app.html
-        const email = document.getElementById('userEmail')?.value?.trim() || '';
-        const first = document.getElementById('userFirst')?.value?.trim() || '';
-        const last = document.getElementById('userLast')?.value?.trim() || '';
-        localStorage.setItem('nerve_firsttime', '1');
-        localStorage.setItem('nerve_role', 'org_owner');
-        localStorage.setItem('nerve_plan', selectedPlan?.plan || 'clinica');
-        localStorage.setItem('nerve_email', email);
-        localStorage.setItem('nerve_name', `${first} ${last}`.trim());
-        goToStep(5);
+    // Add spinner style if it doesn't exist
+    if (!document.getElementById('spinner-style')) {
+        const style = document.createElement('style');
+        style.id = 'spinner-style';
+        style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+    }
+
+    try {
+        // CALL REAL API
+        if (typeof API !== 'undefined') {
+            await API.register(name, email, password, orgName, phone, specialty);
+
+            // Store some UI state for the app
+            localStorage.setItem('nerve_firsttime', '1');
+            localStorage.setItem('nerve_email', email);
+            localStorage.setItem('nerve_name', name);
+
+            document.getElementById('confirmEmail').textContent = email;
+            goToStep(5);
+        } else {
+            throw new Error('API no disponible. Intenta de nuevo más tarde.');
+        }
+    } catch (err) {
+        showNotification(err.message || 'Error al crear la cuenta', 'error');
         btn.disabled = false;
         btn.textContent = 'Activar prueba gratuita →';
-    }, 2000);
+    }
 }
 
 function setFirstTimeUser() {

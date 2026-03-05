@@ -32,11 +32,18 @@
                 <label class="form-label">Contraseña</label>
                 <input type="password" class="form-control" id="loginPass" placeholder="••••••••" />
             </div>
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-size:0.78rem;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text-dim);">
+                    <input type="checkbox" id="rememberMe" style="accent-color:var(--cyan);" checked /> Recordarme
+                </label>
+                <a href="#" style="color:var(--cyan);text-decoration:none;">¿Olvidaste tu contraseña?</a>
+            </div>
             <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="doLogin()">
                 Ingresar al sistema →
             </button>
             <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-dim);">
-                ¿Primera vez? <a href="index.html" style="color:var(--cyan);">Solicitar demo gratuita</a>
+                ¿Primera vez? <a href="register.html" style="color:var(--cyan);">Solicitar demo gratuita</a>
             </p>
         </div>
     </div>

@@ -159,19 +159,15 @@
                         <label class="form-label">Especialidad principal</label>
                         <select class="form-control" id="orgSpecialty"
                             onchange="toggleOtherSpecialty(this,'orgSpecialtyOther')">
-                            <option>Medicina General</option>
-                            <option>Cardiología</option>
-                            <option>Pediatría</option>
-                            <option>Ginecología</option>
-                            <option>Cirugía</option>
-                            <option>Neurología</option>
-                            <option>Ortopedia</option>
-                            <option>Dermatología</option>
-                            <option>Psiquiatría</option>
-                            <option>Oncología</option>
-                            <option>Endocrinología</option>
-                            <option>Multidisciplinario</option>
-                            <option>Otra especialidad...</option>
+                            <option value="Medicina General">Medicina General</option>
+                            <option value="Cardiología">Cardiología</option>
+                            <option value="Pediatría">Pediatría</option>
+                            <option value="Ginecología">Ginecología</option>
+                            <option value="Dermatología">Dermatología</option>
+                            <option value="Odontología">Odontología</option>
+                            <option value="Psiquiatría">Psiquiatría</option>
+                            <option value="Psicología">Psicología</option>
+                            <option value="Otra especialidad...">Otra especialidad...</option>
                         </select>
                         <input type="text" class="form-control" id="orgSpecialtyOther"
                             placeholder="Escribe la especialidad" style="display:none;margin-top:8px;" />
@@ -401,6 +397,7 @@
 
     </div><!-- /reg-wrapper -->
 
+    <script src="assets/js/api.js"></script>
     <script src="assets/js/register.js?v=2"></script>
 </body>
 
