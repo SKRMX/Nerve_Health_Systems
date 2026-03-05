@@ -208,6 +208,10 @@ const API = (() => {
         return request('/users/invite', { method: 'POST', body: data });
     }
 
+    async function createUser(data) {
+        return request('/users/create', { method: 'POST', body: data });
+    }
+
     async function updateUser(id, data) {
         return request(`/users/${id}`, { method: 'PUT', body: data });
     }
@@ -277,7 +281,7 @@ const API = (() => {
         // Prescriptions
         getPrescriptions, createPrescription, updatePrescription,
         // Users
-        getUsers, inviteUser, updateUser, deleteUser,
+        getUsers, inviteUser, createUser, updateUser, deleteUser,
         // Organizations
         getOrganizations, getOrganization, updateOrganization,
         // Departments

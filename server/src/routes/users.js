@@ -120,6 +120,65 @@ router.post('/invite',
     }
 );
 
+// ---- POST /api/users/create ----
+// Directly create a user in the org (no invitation needed)
+router.post('/create',
+    authorize('superadmin', 'org_owner'),
+    auditMiddleware('user'),
+    async (req, res) => {
+        try {
+            const { name, email, password, role, specialty, phone, departmentId } = req.body;
+
+            if (!name || !email || !password || !role) {
+                return res.status(400).json({ error: 'Nombre, email, contraseña y rol son requeridos' });
+            }
+
+            // Validate role
+            const allowedRoles = ['org_owner', 'dept_head', 'doctor', 'asistente'];
+            if (!allowedRoles.includes(role)) {
+                return res.status(400).json({ error: `Rol inválido. Permitidos: ${allowedRoles.join(', ')}` });
+            }
+
+            if (password.length < 6) {
+                return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+            }
+
+            // Check duplicate
+            const existing = await prisma.user.findUnique({ where: { email } });
+            if (existing) {
+                return res.status(409).json({ error: 'Ya existe un usuario con ese correo registrado en el sistema' });
+            }
+
+            const passwordHash = await bcrypt.hash(password, 12);
+
+            const user = await prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    passwordHash,
+                    role,
+                    phone: phone || null,
+                    specialty: specialty || null,
+                    orgId: req.user.orgId,
+                    departmentId: departmentId || null,
+                },
+                select: {
+                    id: true, name: true, email: true, role: true,
+                    specialty: true, phone: true, active: true,
+                },
+            });
+
+            res.status(201).json({
+                message: 'Usuario creado exitosamente',
+                user,
+            });
+        } catch (err) {
+            console.error('Create user error:', err);
+            res.status(500).json({ error: 'Error al crear el usuario' });
+        }
+    }
+);
+
 // ---- PUT /api/users/:id ----
 router.put('/:id',
     authorize('superadmin', 'org_owner'),
