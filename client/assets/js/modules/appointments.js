@@ -178,10 +178,7 @@ async function openNewApptModal(date = '') {
       <div class="form-group"><label class="form-label">Hora</label><input class="form-control" type="time" id="apptTime" value="09:00" /></div>
     </div>
     <div class="form-group"><label class="form-label">Paciente</label>
-      <input class="form-control" id="apptPatientInput" list="apptPatientList" placeholder="Escribe el nombre o selecciona uno existente..." autocomplete="off" />
-      <datalist id="apptPatientList">
-        ${_apptPatientsList.map(p => `<option value="${p.name}" data-id="${p.id}">`).join('')}
-      </datalist>
+      <input class="form-control" id="apptPatientInput" placeholder="Escribe el nombre o selecciona uno existente..." autocomplete="off" />
       <input type="hidden" id="apptPatientId" />
       <div style="font-size:0.73rem;color:var(--text-dim);margin-top:4px">💡 Si el paciente no está registrado, escribe su nombre y se creará automáticamente.</div>
     </div>
@@ -197,13 +194,18 @@ async function openNewApptModal(date = '') {
     `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button class="btn btn-primary" id="btnCreateAppt" onclick="submitNewAppt()">Programar cita →</button>`);
 
-  // Wire up the input to resolve patient ID
+  // Wire up the custom autocomplete
   setTimeout(() => {
     const input = document.getElementById('apptPatientInput');
-    if (input) input.addEventListener('input', () => {
-      const match = _apptPatientsList.find(p => p.name.toLowerCase() === input.value.toLowerCase());
-      document.getElementById('apptPatientId').value = match ? match.id : '';
-    });
+    if (input) {
+      APP.initAutocomplete(input, {
+        data: _apptPatientsList,
+        searchKeys: ['name', 'email'],
+        onSelect: (p) => {
+          document.getElementById('apptPatientId').value = p.id;
+        }
+      });
+    }
   }, 50);
 }
 

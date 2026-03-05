@@ -40,10 +40,8 @@ async function renderRxBuilder() {
         <div class="card-header"><span class="card-title">👤 Datos del Paciente</span></div>
         <div class="form-row form-row-2">
           <div class="form-group"><label class="form-label">Paciente</label>
-            <select class="form-control" id="rxPatient" onchange="updatePreview()">
-              ${_rxPatients.length === 0 ? '<option>Sin pacientes</option>' :
-      _rxPatients.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
-            </select>
+            <input class="form-control" id="rxPatientInput" placeholder="Buscar paciente..." autocomplete="off" />
+            <input type="hidden" id="rxPatientId" />
           </div>
           <div class="form-group"><label class="form-label">Fecha</label>
             <input class="form-control" id="rxDate" type="date" value="${new Date().toISOString().split('T')[0]}" oninput="_debouncedUpdatePreview()"/>
@@ -76,6 +74,20 @@ async function renderRxBuilder() {
       <div id="rxPreview"></div>
     </div>
   </div>`;
+
+  // Init Autocomplete
+  const input = document.getElementById('rxPatientInput');
+  if (input) {
+    APP.initAutocomplete(input, {
+      data: _rxPatients,
+      searchKeys: ['name', 'email'],
+      onSelect: (p) => {
+        document.getElementById('rxPatientId').value = p.id;
+        updatePreview();
+      }
+    });
+  }
+
   updatePreview();
 }
 
@@ -98,7 +110,7 @@ function renderDrugItems() {
 function updatePreview() {
   const prev = document.getElementById('rxPreview');
   if (!prev) return;
-  const patId = document.getElementById('rxPatient')?.value;
+  const patId = document.getElementById('rxPatientId')?.value;
   const pat = _rxPatients.find(p => p.id === patId) || _rxPatients[0] || { name: '—', bloodType: '—' };
   const date = document.getElementById('rxDate')?.value || new Date().toISOString().split('T')[0];
   const dx = document.getElementById('rxDx')?.value || '—';
@@ -182,7 +194,7 @@ function addDrug() {
 }
 
 async function saveRxToBackend() {
-  const patId = document.getElementById('rxPatient')?.value;
+  const patId = document.getElementById('rxPatientId')?.value;
   if (!patId || _rxDrugs.length === 0) {
     return showNotification('Selecciona un paciente y agrega al menos un medicamento', 'error');
   }

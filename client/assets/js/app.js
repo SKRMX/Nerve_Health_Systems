@@ -769,3 +769,118 @@ function closeOnboarding() {
   const ov = document.getElementById('obOverlay');
   if (ov) ov.remove();
 }
+
+/**
+ * Reusable Autocomplete Component
+ * @param {HTMLInputElement} input 
+ * @param {Object} options { data, onSelect, searchKeys, renderItem }
+ */
+APP.initAutocomplete = function (input, options = {}) {
+  const {
+    data = [],
+    onSelect = () => { },
+    searchKeys = ['name'],
+    renderItem = (item) => `<div class="autocomplete-item-name">${item.name}</div>${item.email ? `<div class="autocomplete-item-sub">${item.email}</div>` : ''}`
+  } = options;
+
+  if (!input) return;
+
+  // Cleanup existing
+  const existingWrapper = input.closest('.autocomplete-wrapper');
+  if (existingWrapper) {
+    const parent = existingWrapper.parentNode;
+    parent.insertBefore(input, existingWrapper);
+    existingWrapper.remove();
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'autocomplete-wrapper';
+  input.parentNode.insertBefore(wrapper, input);
+  wrapper.appendChild(input);
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'autocomplete-dropdown';
+  wrapper.appendChild(dropdown);
+
+  let selectedIndex = -1;
+  let filteredData = [];
+
+  const showDropdown = () => dropdown.classList.add('open');
+  const hideDropdown = () => {
+    dropdown.classList.remove('open');
+    selectedIndex = -1;
+  };
+
+  const renderSuggestions = (list) => {
+    filteredData = list;
+    if (list.length === 0) {
+      hideDropdown();
+      return;
+    }
+    dropdown.innerHTML = list.map((item, i) => `
+      <div class="autocomplete-item" data-index="${i}">
+        ${renderItem(item)}
+      </div>
+    `).join('');
+    showDropdown();
+  };
+
+  input.addEventListener('input', () => {
+    const val = input.value.trim().toLowerCase();
+    if (!val) {
+      hideDropdown();
+      return;
+    }
+    const matches = data.filter(item =>
+      searchKeys.some(key => String(item[key] || '').toLowerCase().includes(val))
+    ).slice(0, 8);
+    renderSuggestions(matches);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.autocomplete-item');
+    if (!dropdown.classList.contains('open')) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex + 1) % filteredData.length;
+      updateActive(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex - 1 + filteredData.length) % filteredData.length;
+      updateActive(items);
+    } else if (e.key === 'Enter') {
+      if (selectedIndex > -1) {
+        e.preventDefault();
+        selectItem(filteredData[selectedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      hideDropdown();
+    }
+  });
+
+  const updateActive = (items) => {
+    items.forEach((item, i) => {
+      item.classList.toggle('active', i === selectedIndex);
+      if (i === selectedIndex) item.scrollIntoView({ block: 'nearest' });
+    });
+  };
+
+  const selectItem = (item) => {
+    input.value = item.name;
+    onSelect(item);
+    hideDropdown();
+  };
+
+  dropdown.addEventListener('click', (e) => {
+    const itemEl = e.target.closest('.autocomplete-item');
+    if (itemEl) {
+      const idx = parseInt(itemEl.dataset.index);
+      selectItem(filteredData[idx]);
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target)) hideDropdown();
+  });
+};
