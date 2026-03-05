@@ -199,6 +199,16 @@ function updatePreview() {
   const notes = document.getElementById('rxNotes')?.value || '';
   const pageSize = document.getElementById('rxPageSize')?.value || 'a4';
 
+  const sizeDims = {
+    'a0': { w: 841, h: 1189 }, 'a1': { w: 594, h: 841 }, 'a2': { w: 420, h: 594 }, 'a3': { w: 297, h: 420 },
+    'a4': { w: 210, h: 297 }, 'a5': { w: 148, h: 210 }, 'a6': { w: 105, h: 148 },
+    'carta': { w: 216, h: 279 }, 'oficio': { w: 216, h: 356 }, 'folio': { w: 216, h: 330 }, 'media': { w: 140, h: 216 },
+    'b4': { w: 250, h: 353 }, 'b5': { w: 182, h: 257 }
+  };
+
+  const dim = sizeDims[pageSize] || sizeDims['a4'];
+  const aspectRatio = dim.h / dim.w;
+
   // Size classification for UI scaling
   const isSmall = ['media', 'a5', 'a6', 'b5'].includes(pageSize);
   const isExtraLarge = ['a0', 'a1', 'a2', 'a3', 'b4'].includes(pageSize);
@@ -214,20 +224,18 @@ function updatePreview() {
     // Dynamic styles based on classification
     let basePadding = '24px';
     let fontSize = '0.82rem';
-    let minHeight = '550px';
+    let minWidth = '100%';
 
     if (isSmall) {
       basePadding = '16px';
       fontSize = '0.72rem';
-      minHeight = '380px';
     } else if (isExtraLarge) {
       basePadding = '40px';
       fontSize = '1.1rem';
-      minHeight = '800px';
     }
 
     html += `
-    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${basePadding};font-size:${fontSize};min-height:${minHeight};width:100%;box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between">
+    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${basePadding};font-size:${fontSize};width:${minWidth};aspect-ratio:1/${aspectRatio};box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;margin-bottom:20px">
       <div>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #11718B;padding-bottom:12px;margin-bottom:12px">
           <div>
