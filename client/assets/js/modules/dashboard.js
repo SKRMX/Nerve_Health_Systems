@@ -299,7 +299,7 @@ function openNewPatientModal() {
     <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="newPatEmail" placeholder="paciente@email.com" /></div>
   </div>
   <div class="form-row form-row-2">
-    <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input class="form-control" type="date" id="newPatDob" /></div>
+    <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input class="form-control" type="text" id="newPatDob" placeholder="Seleccionar fecha..." /></div>
     <div class="form-group"><label class="form-label">Sexo</label>
       <select class="form-control" id="newPatGender"><option value="Femenino">Femenino</option><option value="Masculino">Masculino</option><option value="Otro">Otro</option></select>
     </div>
@@ -313,6 +313,11 @@ function openNewPatientModal() {
   <div class="form-group"><label class="form-label">Alergias</label><input class="form-control" id="newPatAllergies" placeholder="Ej: Penicilina, ibuprofeno..." /></div>`,
     `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button class="btn btn-primary" id="btnCreatePatient" onclick="submitNewPatient()">Guardar paciente →</button>`);
+
+  // Init Flatpickr
+  setTimeout(() => {
+    APP.initDatePicker("#newPatDob");
+  }, 50);
 }
 
 async function submitNewPatient() {

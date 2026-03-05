@@ -202,7 +202,7 @@ function renderClinicalFields(specialty, existingData = {}) {
           ${f.options.map(o => `<option ${val === o ? 'selected' : ''}>${o}</option>`).join('')}
         </select></div>`;
         } else if (f.type === 'date') {
-            return `<div class="form-group"><label class="form-label">${f.label}</label><input class="form-control clinical-field" data-key="${f.key}" type="date" value="${val}" /></div>`;
+            return `<div class="form-group"><label class="form-label">${f.label}</label><input class="form-control clinical-field flatpickr-date" data-key="${f.key}" type="text" value="${val}" placeholder="DD/MM/AAAA" /></div>`;
         } else {
             return `<div class="form-group"><label class="form-label">${f.label}</label><input class="form-control clinical-field" data-key="${f.key}" type="${f.type || 'text'}" placeholder="${f.placeholder}" value="${val}" /></div>`;
         }

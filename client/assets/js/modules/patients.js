@@ -227,6 +227,11 @@ async function openPatientDetail(id) {
       <div style="font-size:0.85rem;color:var(--text-light);white-space:pre-wrap;padding:10px">${p.medicalNotes || 'Sin notas médicas registradas.'}</div>
     </div>
   </div>`;
+
+  // Init any dynamic date pickers in clinical fields
+  setTimeout(() => {
+    document.querySelectorAll('.flatpickr-date').forEach(el => APP.initDatePicker(el));
+  }, 50);
 }
 
 // ---- Specialty helpers for patient detail ----
@@ -273,8 +278,8 @@ function switchExpedienteTab(tab, targetId) {
 function openNewApptModalForPatient(patientId, patientName) {
   openModal('+ Nueva Cita: ' + patientName, `
     <div class="form-row form-row-2">
-      <div class="form-group"><label class="form-label">Fecha</label><input class="form-control" type="date" id="apptDate" value="${new Date().toISOString().split('T')[0]}" /></div>
-      <div class="form-group"><label class="form-label">Hora</label><input class="form-control" type="time" id="apptTime" value="09:00" /></div>
+      <div class="form-group"><label class="form-label">Fecha</label><input class="form-control" type="text" id="apptDate" placeholder="Seleccionar fecha..." /></div>
+      <div class="form-group"><label class="form-label">Hora</label><input class="form-control" type="text" id="apptTime" placeholder="Seleccionar hora..." /></div>
     </div>
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Tipo</label>
@@ -284,6 +289,12 @@ function openNewApptModalForPatient(patientId, patientName) {
     </div>`,
     `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button class="btn btn-primary" onclick="submitApptForPatient('${patientId}')">Programar cita →</button>`);
+
+  // Init Flatpickr
+  setTimeout(() => {
+    APP.initDatePicker("#apptDate", { defaultDate: "today" });
+    APP.initTimePicker("#apptTime", { defaultDate: "09:00" });
+  }, 50);
 }
 
 async function submitApptForPatient(patientId) {

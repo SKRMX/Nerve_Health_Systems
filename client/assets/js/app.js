@@ -424,44 +424,47 @@ function renderPatientAppointments() {
     <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px">Selecciona a tu médico de seguimiento para revisar horarios disponibles.</p>
     <div style="display:flex;gap:10px;justify-content:center">
       <select class="form-control" style="width:250px"><option>Dr. Eduardo González - Medicina General</option><option>Dra. Ruiz - Cardiología</option></select>
-      <input type="date" class="form-control" />
+      <input type="text" id="patientApptDate" class="form-control" placeholder="Seleccionar fecha" style="width:180px" />
       <button class="btn btn-primary" onclick="showNotification('Tu solicitud será confirmada por el consultorio en breve.', 'cyan')">Solicitar Horario</button>
     </div>
-  </div>
-  <div class="card"><div class="card-header"><span class="card-title">Historial de Visitas</span></div>
-  <div style="display:flex;flex-direction:column;gap:10px">
-    <div style="padding:12px;background:var(--dark-4);border-radius:6px;display:flex;justify-content:space-between">
-      <div><div style="font-weight:600">Revisión Mensual</div><div style="font-size:0.8rem;color:var(--text-muted)">15 Ene 2026 · Dr. Eduardo González</div></div>
-      <span class="badge badge-success">Completada</span>
-    </div>
-  </div></div>`;
+    <div class="card"><div class="card-header"><span class="card-title">Historial de Visitas</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="padding:12px;background:var(--dark-4);border-radius:6px;display:flex;justify-content:space-between">
+        <div><div style="font-weight:600">Revisión Mensual</div><div style="font-size:0.8rem;color:var(--text-muted)">15 Ene 2026 · Dr. Eduardo González</div></div>
+        <span class="badge badge-success">Completada</span>
+      </div>
+    </div></div>`;
+
+  setTimeout(() => {
+    APP.initDatePicker("#patientApptDate", { defaultDate: "today" });
+  }, 50);
 }
 
 function renderPatientExpediente() {
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `
-  <div class="page-header"><div><div class="page-title">📂 Mi Expediente</div><div class="page-subtitle">Resumen clínico y datos médicos</div></div></div>
-  <div class="content-grid content-grid-2-1">
-    <div class="card">
-      <div class="card-header"><span class="card-title">Diagnósticos Activos</span></div>
-      <div style="padding:12px;border:1px solid var(--border);border-radius:6px;margin-bottom:10px">
-        <div style="font-weight:600;font-size:1.1rem;color:var(--cyan)">Cefalea Tensional (G44.2)</div>
-        <p style="font-size:0.85rem;color:var(--text-muted);margin-top:6px">Control mensual establecido. Evitar episodios prolongados de estrés visual.</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="card-title">Mis Signos Vitales</span></div>
-      ${[['Última Medición', '28 Feb 2026'], ['Peso', '68 kg'], ['Presión', '120/80 mmHg']].map(x =>
+    < div class="page-header" > <div><div class="page-title">📂 Mi Expediente</div><div class="page-subtitle">Resumen clínico y datos médicos</div></div></div >
+      <div class="content-grid content-grid-2-1">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Diagnósticos Activos</span></div>
+          <div style="padding:12px;border:1px solid var(--border);border-radius:6px;margin-bottom:10px">
+            <div style="font-weight:600;font-size:1.1rem;color:var(--cyan)">Cefalea Tensional (G44.2)</div>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-top:6px">Control mensual establecido. Evitar episodios prolongados de estrés visual.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Mis Signos Vitales</span></div>
+          ${[['Última Medición', '28 Feb 2026'], ['Peso', '68 kg'], ['Presión', '120/80 mmHg']].map(x =>
     `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">${x[0]}</span><span style="font-weight:600">${x[1]}</span></div>`
   ).join('')}
-    </div>
-  </div>`;
+        </div>
+      </div>`;
 }
 
 function renderPatientPrescriptions() {
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `
-  <div class="page-header"><div><div class="page-title">💊 Mis Recetas</div><div class="page-subtitle">Descarga en PDF tus prescripciones oficiales</div></div></div>
+        < div class="page-header" > <div><div class="page-title">💊 Mis Recetas</div><div class="page-subtitle">Descarga en PDF tus prescripciones oficiales</div></div></div >
   <div class="card" style="margin-bottom:15px;display:flex;justify-content:space-between;align-items:center">
     <div><div style="font-weight:700">Receta RX-2026-0312</div><div style="font-size:0.8rem;color:var(--text-muted)">Emitida: 28 Feb 2026 · Dr. González</div><div style="color:var(--cyan-mid);font-size:0.85rem;margin-top:4px">Paracetamol 500mg, Omeprazol 20mg</div></div>
     <button class="btn btn-secondary">⬇ Descargar PDF</button>
@@ -474,16 +477,16 @@ function renderPatientPrescriptions() {
 
 async function renderTenants() {
   const pc = document.getElementById('pageContent');
-  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando organizaciones...</div>`;
+  pc.innerHTML = `< div style = "padding:40px;text-align:center;color:var(--text-muted)" >⏳ Cargando organizaciones...</div > `;
   let orgs = [];
   try { const res = await API.getOrganizations(); orgs = res.data || res || []; } catch (e) { }
   if (!Array.isArray(orgs)) orgs = [];
   pc.innerHTML = `
-  <div class="page-header"><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro · ${orgs.length} organizaciones</div></div>
-  <div class="page-actions"><button class="btn btn-primary" onclick="openNewTenantModal()">+ Nuevo Hospital</button></div></div>
+  < div class="page-header" ><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro · ${orgs.length} organizaciones</div></div>
+  <div class="page-actions"><button class="btn btn-primary" onclick="openNewTenantModal()">+ Nuevo Hospital</button></div></div >
   <div class="card">
     <div class="table-wrap">
-    ${orgs.length > 0 ? `<table>
+      ${orgs.length > 0 ? `<table>
         <thead><tr><th>ID</th><th>Organización</th><th>Plan</th><th>Usuarios</th><th>Acciones</th></tr></thead>
         <tbody>
           ${orgs.map(h => `<tr>
@@ -501,28 +504,28 @@ async function renderTenants() {
 
 function openNewTenantModal() {
   openModal('🏥 Nuevo Hospital / Clínica', `
-    <div class="form-row form-row-2">
+    < div class="form-row form-row-2" >
       <div class="form-group"><label class="form-label">Nombre de la organización</label><input class="form-control" placeholder="Ej. Clínica Las Condes" /></div>
       <div class="form-group"><label class="form-label">Plan de suscripción</label>
         <select class="form-control"><option>Starter</option><option>Clínica Pro</option><option>Enterprise</option></select>
       </div>
-    </div>
+    </div >
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Nombre del administrador</label><input class="form-control" placeholder="Ej. Dr. Juan Pérez" /></div>
       <div class="form-group"><label class="form-label">Correo del administrador</label><input type="email" class="form-control" placeholder="admin@clinica.com" /></div>
     </div>
     <div class="form-group"><label class="form-label">Límite de doctores</label><input type="number" class="form-control" value="10" /></div>
-  `, `
-    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+`, `
+  < button class="btn btn-secondary" onclick = "closeModal()" > Cancelar</button >
     <button class="btn btn-primary" onclick="closeModal();showNotification('Organización creada y correo enviado al administrador con éxito','success')">Crear Organización</button>
-  `);
+`);
 }
 
 function openEditLimitsModal(orgName, plan, docs) {
   openModal('⚙️ Modificar Límites: ' + orgName, `
-    <div class="form-group"><label class="form-label">Plan Actual</label>
+  < div class="form-group" ><label class="form-label">Plan Actual</label>
       <select class="form-control"><option ${plan === 'hospital' ? 'selected' : ''}>Enterprise (Hospital)</option><option ${plan === 'clinica' ? 'selected' : ''}>Clínica Pro</option><option ${plan === 'starter' ? 'selected' : ''}>Starter</option></select>
-    </div>
+    </div >
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Límite de Doctores</label><input type="number" class="form-control" value="${docs}" /></div>
       <div class="form-group"><label class="form-label">Límite de Almacenamiento (GB)</label><input type="number" class="form-control" value="50" /></div>
@@ -531,21 +534,21 @@ function openEditLimitsModal(orgName, plan, docs) {
       <label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--cyan-mid)"> Facturación automática</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--cyan-mid)"> Módulo de analítica avanzada</label>
     </div>
-  `, `
-    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+`, `
+  < button class="btn btn-secondary" onclick = "closeModal()" > Cancelar</button >
     <button class="btn btn-primary" onclick="closeModal();showNotification('Límites de la organización actualizados','success')">Guardar Cambios</button>
-  `);
+`);
 }
 
 function openSuspendTenantModal(orgName) {
   openModal('⚠️ Suspender Organización', `
-    <div style="padding:4px 0;">
-      ¿Estás seguro de que deseas suspender el acceso a <strong style="color:var(--text)">${orgName}</strong>?<br><br>
-      <span style="color:var(--text-muted);font-size:0.85rem">Los usuarios de esta organización no podrán acceder al sistema hasta que se reactive la cuenta desde este panel. Sus datos clínicos permanecerán intactos en la base de datos y no serán eliminados.</span>
-    </div>
+  < div style = "padding:4px 0;" >
+      ¿Estás seguro de que deseas suspender el acceso a < strong style = "color:var(--text)" > ${orgName}</strong >? <br><br>
+  <span style="color:var(--text-muted);font-size:0.85rem">Los usuarios de esta organización no podrán acceder al sistema hasta que se reactive la cuenta desde este panel. Sus datos clínicos permanecerán intactos en la base de datos y no serán eliminados.</span>
+</div>
   `, `
-    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-    <button class="btn btn-danger" onclick="closeModal();showNotification('Organización suspendida temporalmente','warning')">Sí, Suspender</button>
+  <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+  <button class="btn btn-danger" onclick="closeModal();showNotification('Organización suspendida temporalmente','warning')">Sí, Suspender</button>
   `);
 }
 
@@ -562,11 +565,11 @@ function renderGenericSettings() {
   document.getElementById('pageContent').innerHTML = `
   <div class="page-header"><div><div class="page-title">⚙️ Configuración / Perfil</div><div class="page-subtitle">Ajusta las preferencias de tu cuenta</div></div></div>
   <div class="card"><div class="card-header"><span class="card-title">Datos Personales</span></div>
-  <div class="form-row form-row-2">
-    <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-control" id="profileName" value="${user.name || ''}" /></div>
-    <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-control" type="email" id="profileEmail" value="${user.email || ''}" disabled style="opacity:0.6" /></div>
-  </div>
-  ${role === 'doctor' || role === 'dept_head' ? `
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-control" id="profileName" value="${user.name || ''}" /></div>
+      <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-control" type="email" id="profileEmail" value="${user.email || ''}" disabled style="opacity:0.6" /></div>
+    </div>
+    ${role === 'doctor' || role === 'dept_head' ? `
   <div class="form-group"><label class="form-label">Especialidad</label>
     <select class="form-control" id="profileSpecialty">
       <option value="">-- Seleccionar --</option>
@@ -577,10 +580,10 @@ function renderGenericSettings() {
     <div class="form-group"><label class="form-label">Teléfono</label><input class="form-control" id="profilePhone" value="${user.phone || ''}" placeholder="+52 55 ..." /></div>
     <div class="form-group"><label class="form-label">Cédula Profesional</label><input class="form-control" id="profileCedula" value="${user.cedula || ''}" placeholder="12345678" /></div>
   </div>` : ''}
-  <button class="btn btn-primary" id="btnSaveProfile" onclick="saveProfile()">Guardar cambios</button></div>
+    <button class="btn btn-primary" id="btnSaveProfile" onclick="saveProfile()">Guardar cambios</button></div>
   <div class="card mt-4"><div class="card-header"><span class="card-title">Ajustes de Notificaciones</span></div>
-  <div style="display:flex;flex-direction:column;gap:12px;">
-    ${['Notificarme de nuevas citas por Email', 'Recordatorios a mi WhatsApp personal', 'Reporte semanal de actividad'].map(n => `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${['Notificarme de nuevas citas por Email', 'Recordatorios a mi WhatsApp personal', 'Reporte semanal de actividad'].map(n => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:0.88rem;">${n}</span>
       <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;">
@@ -588,7 +591,7 @@ function renderGenericSettings() {
         <span style="position:absolute;inset:0;background:var(--cyan-mid);border-radius:11px;cursor:pointer;transition:.3s;"></span>
       </label>
     </div>`).join('')}
-  </div></div>`;
+    </div></div>`;
 }
 
 async function saveProfile() {
@@ -720,10 +723,10 @@ function renderOnboardingStep() {
 
   // Build checklist
   const items = s.checklist.map(c => `
-    <div class="ob-check-item ${c.done ? 'done' : ''}" id="${c.id}" onclick="toggleObCheck(this)">
-      <div class="ob-check-mark">${c.done ? '✓' : ''}</div>
-      <div>${c.label}</div>
-    </div>
+  <div class="ob-check-item ${c.done ? 'done' : ''}" id="${c.id}" onclick="toggleObCheck(this)">
+    <div class="ob-check-mark">${c.done ? '✓' : ''}</div>
+    <div>${c.label}</div>
+  </div>
   `).join('');
 
   const html = `
@@ -772,9 +775,9 @@ function closeOnboarding() {
 
 /**
  * Reusable Autocomplete Component
- * @param {HTMLInputElement} input 
- * @param {Object} options { data, onSelect, searchKeys, renderItem }
- */
+ * @param {HTMLInputElement} input
+  * @param {Object} options {data, onSelect, searchKeys, renderItem}
+  */
 APP.initAutocomplete = function (input, options = {}) {
   const {
     data = [],
@@ -818,10 +821,10 @@ APP.initAutocomplete = function (input, options = {}) {
       return;
     }
     dropdown.innerHTML = list.map((item, i) => `
-      <div class="autocomplete-item" data-index="${i}">
-        ${renderItem(item)}
-      </div>
-    `).join('');
+  <div class="autocomplete-item" data-index="${i}">
+    ${renderItem(item)}
+  </div>
+  `).join('');
     showDropdown();
   };
 
@@ -882,5 +885,37 @@ APP.initAutocomplete = function (input, options = {}) {
 
   document.addEventListener('click', (e) => {
     if (!wrapper.contains(e.target)) hideDropdown();
+  });
+};
+
+/**
+ * Reusable Date Picker (Flatpickr wrapper)
+ * @param {string | HTMLElement} selector
+  * @param {Object} opts Flatpickr options
+  */
+APP.initDatePicker = function (selector, opts = {}) {
+  if (typeof flatpickr === 'undefined') return;
+  return flatpickr(selector, {
+    locale: "es",
+    dateFormat: "Y-m-d",
+    disableMobile: true,
+    ...opts
+  });
+};
+
+/**
+ * Reusable Time Picker (Flatpickr wrapper)
+ * @param {string | HTMLElement} selector
+  * @param {Object} opts Flatpickr options
+  */
+APP.initTimePicker = function (selector, opts = {}) {
+  if (typeof flatpickr === 'undefined') return;
+  return flatpickr(selector, {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i",
+    time_24hr: true,
+    disableMobile: true,
+    ...opts
   });
 };

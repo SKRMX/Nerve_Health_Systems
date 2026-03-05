@@ -44,7 +44,7 @@ async function renderRxBuilder() {
             <input type="hidden" id="rxPatientId" />
           </div>
           <div class="form-group"><label class="form-label">Fecha</label>
-            <input class="form-control" id="rxDate" type="date" value="${new Date().toISOString().split('T')[0]}" oninput="_debouncedUpdatePreview()"/>
+            <input class="form-control" id="rxDate" type="text" placeholder="Seleccionar fecha..." onchange="_debouncedUpdatePreview()"/>
           </div>
         </div>
         <div class="form-group"><label class="form-label">Diagnóstico</label>
@@ -87,6 +87,11 @@ async function renderRxBuilder() {
       }
     });
   }
+
+  APP.initDatePicker("#rxDate", {
+    defaultDate: "today",
+    onChange: () => _debouncedUpdatePreview()
+  });
 
   updatePreview();
 }

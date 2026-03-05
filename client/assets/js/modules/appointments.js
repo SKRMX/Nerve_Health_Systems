@@ -174,8 +174,8 @@ async function openNewApptModal(date = '') {
 
   openModal('+ Nueva Cita', `
     <div class="form-row form-row-2">
-      <div class="form-group"><label class="form-label">Fecha</label><input class="form-control" type="date" id="apptDate" value="${date || new Date().toISOString().split('T')[0]}" /></div>
-      <div class="form-group"><label class="form-label">Hora</label><input class="form-control" type="time" id="apptTime" value="09:00" /></div>
+      <div class="form-group"><label class="form-label">Fecha</label><input class="form-control" type="text" id="apptDate" placeholder="Seleccionar fecha..." /></div>
+      <div class="form-group"><label class="form-label">Hora</label><input class="form-control" type="text" id="apptTime" placeholder="Seleccionar hora..." /></div>
     </div>
     <div class="form-group"><label class="form-label">Paciente</label>
       <input class="form-control" id="apptPatientInput" placeholder="Escribe el nombre o selecciona uno existente..." autocomplete="off" />
@@ -194,11 +194,12 @@ async function openNewApptModal(date = '') {
     `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
    <button class="btn btn-primary" id="btnCreateAppt" onclick="submitNewAppt()">Programar cita →</button>`);
 
-  // Wire up the custom autocomplete
+  // Wire up the custom autocomplete & Flatpickr
   setTimeout(() => {
-    const input = document.getElementById('apptPatientInput');
-    if (input) {
-      APP.initAutocomplete(input, {
+    // 1. Patient Autocomplete
+    const ptInput = document.getElementById('apptPatientInput');
+    if (ptInput) {
+      APP.initAutocomplete(ptInput, {
         data: _apptPatientsList,
         searchKeys: ['name', 'email'],
         onSelect: (p) => {
@@ -206,6 +207,12 @@ async function openNewApptModal(date = '') {
         }
       });
     }
+
+    // 2. Date Picker
+    APP.initDatePicker("#apptDate", { defaultDate: date || "today" });
+
+    // 3. Time Picker
+    APP.initTimePicker("#apptTime", { defaultDate: "09:00" });
   }, 50);
 }
 

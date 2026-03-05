@@ -30,7 +30,7 @@ function renderAuditLog() {
       <span class="card-title">Registro de eventos</span>
       <div style="display:flex;gap:8px">
         <input type="text" class="form-control" style="width:220px" placeholder="Buscar usuario o acción..." />
-        <input type="date" class="form-control" value="${new Date().toISOString().split('T')[0]}" style="width:160px"/>
+        <input type="text" id="auditDate" class="form-control" placeholder="Seleccionar fecha" style="width:160px"/>
       </div>
     </div>
     <div class="table-wrap"><table>
@@ -65,5 +65,10 @@ function renderAuditLog() {
         <button class="btn btn-secondary btn-sm" onclick="showNotification('Cargando siguiente página...','cyan')">Siguiente ▶</button>
       </div>
     </div>
+    </div>
   </div>`;
+
+  setTimeout(() => {
+    APP.initDatePicker("#auditDate", { defaultDate: "today" });
+  }, 50);
 }
