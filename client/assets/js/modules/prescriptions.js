@@ -47,8 +47,16 @@ async function renderRxBuilder() {
             <input class="form-control" id="rxDate" type="text" placeholder="Seleccionar fecha..." onchange="_debouncedUpdatePreview()"/>
           </div>
         </div>
-        <div class="form-group"><label class="form-label">Diagnóstico</label>
-          <input class="form-control" id="rxDx" placeholder="CIE-10: Ej. J06.9 Infección respiratoria aguda" oninput="_debouncedUpdatePreview()"/>
+        <div class="form-row form-row-2">
+          <div class="form-group"><label class="form-label">Diagnóstico</label>
+            <input class="form-control" id="rxDx" placeholder="CIE-10 o descripción..." oninput="_debouncedUpdatePreview()"/>
+          </div>
+          <div class="form-group"><label class="form-label">Tamaño de Hoja</label>
+            <select class="form-control" id="rxPageSize" onchange="updatePreview()">
+              <option value="carta">Carta (8.5" x 11")</option>
+              <option value="media">Media Carta (5.5" x 8.5")</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="card" style="margin-bottom:16px">
@@ -120,40 +128,52 @@ function updatePreview() {
   const date = document.getElementById('rxDate')?.value || new Date().toISOString().split('T')[0];
   const dx = document.getElementById('rxDx')?.value || '—';
   const notes = document.getElementById('rxNotes')?.value || '';
-  const rxNum = 'RX-' + date.replace(/-/g, '').slice(2) + '-' + String(Math.floor(Math.random() * 900) + 100);
-  const user = API.getUser();
+  const pageSize = document.getElementById('rxPageSize')?.value || 'carta';
+  const isSmall = pageSize === 'media';
+  const orgName = APP.liveUser?.organization?.name || 'Clínica Médica';
 
   prev.innerHTML = `
-  <div style="background:#fff;color:#111;border-radius:8px;padding:24px;font-size:0.82rem">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #11718B;padding-bottom:12px;margin-bottom:12px">
-      <div>
-        <div style="font-size:1.1rem;font-weight:900;color:#11718B">NERVE Health Systems</div>
-        <div style="font-size:0.72rem;color:#666">Sistema de Gestión Médica</div>
+  <div style="background:#fff;color:#111;border-radius:8px;padding:${isSmall ? '16px' : '24px'};font-size:${isSmall ? '0.75rem' : '0.82rem'};min-height:${isSmall ? '400px' : '600px'};display:flex;flex-direction:column;justify-content:space-between">
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #11718B;padding-bottom:12px;margin-bottom:12px">
+        <div>
+          <div style="font-size:${isSmall ? '0.95rem' : '1.1rem'};font-weight:900;color:#11718B;text-transform:uppercase">${orgName}</div>
+          <div style="font-size:0.72rem;color:#666">Servicios de Salud Profesionales</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:0.75rem;color:#666">RECETA MÉDICA</div>
+          <div style="font-weight:700;color:#11718B">${rxNum}</div>
+          <div style="font-size:0.72rem;color:#666">${new Date(date + 'T12:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+        </div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:0.75rem;color:#666">RECETA MÉDICA</div>
-        <div style="font-weight:700;color:#11718B">${rxNum}</div>
-        <div style="font-size:0.72rem;color:#666">${new Date(date + 'T12:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f0f8ff;border-radius:6px;padding:10px;margin-bottom:12px">
+        <div><div style="font-size:0.68rem;color:#666">PACIENTE</div><div style="font-weight:700">${pat.name}</div></div>
+        <div><div style="font-size:0.68rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600">${pat.bloodType || '—'}</div></div>
+        <div style="grid-column: span 2"><div style="font-size:0.68rem;color:#666">DIAGNÓSTICO</div><div style="font-weight:600">${dx || '—'}</div></div>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f0f8ff;border-radius:6px;padding:10px;margin-bottom:12px">
-      <div><div style="font-size:0.68rem;color:#666">PACIENTE</div><div style="font-weight:700">${pat.name}</div></div>
-      <div><div style="font-size:0.68rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600">${pat.bloodType || '—'}</div></div>
-      <div><div style="font-size:0.68rem;color:#666">DIAGNÓSTICO</div><div style="font-weight:600">${dx || '—'}</div></div>
-    </div>
-    <div style="font-weight:700;margin-bottom:8px;color:#11718B;border-bottom:1px solid #11718B;padding-bottom:4px">℞ PRESCRIPCIÓN</div>
-    ${_rxDrugs.length === 0 ? '<div style="color:#999;font-style:italic;padding:8px 0">Sin medicamentos.</div>' :
+      <div style="font-weight:700;margin-bottom:8px;color:#11718B;border-bottom:1px solid #11718B;padding-bottom:4px">℞ PRESCRIPCIÓN</div>
+      ${_rxDrugs.length === 0 ? '<div style="color:#999;font-style:italic;padding:8px 0">Sin medicamentos.</div>' :
       _rxDrugs.map((d, i) => `<div style="margin-bottom:10px;padding:8px;border-left:3px solid #06CFD7">
-      <div style="font-weight:700">${i + 1}. ${d.name} ${d.dose} — ${d.form}</div>
-      <div style="color:#555">Frecuencia: ${d.freq} por ${d.dur}</div>
-      <div style="color:#777;font-size:0.75rem">${d.inst}</div>
-    </div>`).join('')}
-    ${notes ? `<div style="margin-top:10px;padding:8px;background:#f9f9f9;border-radius:4px"><strong>Indicaciones:</strong> ${notes}</div>` : ''}
-    <div style="margin-top:20px;display:flex;justify-content:space-between;border-top:1px dashed #ccc;padding-top:12px">
-      <div style="font-size:0.75rem;color:#666"><strong>${user?.name || 'Doctor'}</strong><br>NERVE Health Systems</div>
-      <div style="width:80px;height:40px;border-bottom:1px solid #333;text-align:center;font-size:0.65rem;color:#999;padding-top:28px">Firma</div>
+        <div style="font-weight:700">${i + 1}. ${d.name} ${d.dose} — ${d.form}</div>
+        <div style="color:#555">Frecuencia: ${d.freq} por ${d.dur}</div>
+        <div style="color:#777;font-size:0.75rem">${d.inst}</div>
+      </div>`).join('')}
+      ${notes ? `<div style="margin-top:10px;padding:8px;background:#f9f9f9;border-radius:4px"><strong>Indicaciones:</strong> ${notes}</div>` : ''}
     </div>
-    <div style="text-align:center;margin-top:10px;font-size:0.65rem;color:#aaa">Receta válida por 30 días · NERVE Health Systems · www.nervehealthsystems.com</div>
+    
+    <div>
+      <div style="margin-top:20px;display:flex;justify-content:space-between;border-top:1px dashed #ccc;padding-top:12px">
+        <div style="font-size:0.75rem;color:#666">
+          <strong style="color:#111">${APP.liveUser?.name || 'Dr. Médico'}</strong><br>
+          ${orgName}
+        </div>
+        <div style="width:120px;height:50px;border-bottom:1px solid #333;text-align:center;font-size:0.65rem;color:#999;padding-top:35px">Firma y Sello</div>
+      </div>
+      <div style="text-align:center;margin-top:10px;font-size:0.62rem;color:#aaa">
+        Receta generada mediante el Sistema de Gestión Médica NERVE.<br>
+        Válida por 30 días a partir de la fecha de emisión.
+      </div>
+    </div>
   </div>`;
 }
 
@@ -225,9 +245,21 @@ async function saveRxToBackend() {
 function printPrescription() {
   const prev = document.getElementById('rxPreview');
   if (!prev) return;
+  const pageSize = document.getElementById('rxPageSize')?.value || 'carta';
+  const isSmall = pageSize === 'media';
+
   const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Receta NERVE</title>
-  <style>body{font-family:Inter,sans-serif;margin:32px;background:#fff;color:#111}@media print{body{margin:0}}</style>
+  win.document.write(`<!DOCTYPE html><html><head><title>Imprimir Receta</title>
+  <style>
+    body{font-family:Inter,sans-serif;margin:0;padding:${isSmall ? '20px' : '40px'};background:#fff;color:#111}
+    @page {
+      size: ${isSmall ? '5.5in 8.5in' : 'letter'};
+      margin: 0;
+    }
+    @media print {
+      body { margin: 0; padding: ${isSmall ? '15mm' : '20mm'}; }
+    }
+  </style>
   </head><body>${prev.innerHTML}<script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
   win.document.close();
 }
