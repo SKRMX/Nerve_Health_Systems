@@ -235,10 +235,15 @@ function updatePreview() {
   _rxSheets.forEach((sheet, sheetIdx) => {
     const rxNum = `${rxNumBase}-${sheetIdx + 1}-${String(Math.floor(Math.random() * 90) + 10)}`;
 
+    // Density factor: shrink items as the list grows to fit the page
+    // If more than 3 drugs, start shrinking
+    const densityScale = Math.max(0.65, 1 - (Math.max(0, sheet.length - 3) * 0.08));
+    const itemFSize = fSize * densityScale;
+
     html += `
-    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${padding}%;font-size:${fSize}rem;width:100%;max-width:${maxWidthPx}px;margin:0 auto 20px auto;aspect-ratio: ${dim.w} / ${dim.h};box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden;line-height:1.3">
+    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${padding}%;font-size:${fSize}rem;width:100%;max-width:${maxWidthPx}px;margin:0 auto 20px auto;aspect-ratio: ${dim.w} / ${dim.h};box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden;line-height:1.25">
       <div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:${1.5 * scale}px solid #11718B;padding-bottom:${8 * scale}px;margin-bottom:${10 * scale}px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:${1.5 * scale}px solid #11718B;padding-bottom:${8 * scale}px;margin-bottom:${10 * scale * densityScale}px">
           <div>
             <div style="font-size:${1.1 * scale}rem;font-weight:900;color:#11718B;text-transform:uppercase;line-height:1">${orgName}</div>
             <div style="font-size:${0.6 * scale}rem;color:#666">Servicios de Salud Profesionales</div>
@@ -250,25 +255,25 @@ function updatePreview() {
           </div>
         </div>
         
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:${6 * scale}px;background:#f0f8ff;border-radius:4px;padding:${6 * scale}px;margin-bottom:${10 * scale}px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:${6 * scale}px;background:#f0f8ff;border-radius:4px;padding:${6 * scale * densityScale}px;margin-bottom:${10 * scale * densityScale}px">
           <div><div style="font-size:${0.5 * scale}rem;color:#666">PACIENTE</div><div style="font-weight:700;font-size:${0.75 * scale}rem">${pat.name}</div></div>
           <div><div style="font-size:${0.5 * scale}rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600;font-size:${0.75 * scale}rem">${pat.bloodType || '—'}</div></div>
           <div style="grid-column: span 2"><div style="font-size:${0.5 * scale}rem;color:#666">DIAGNÓSTICO</div><div style="font-weight:600;font-size:${0.75 * scale}rem">${dx || '—'}</div></div>
         </div>
         
-        <div style="font-weight:700;margin-bottom:${6 * scale}px;color:#11718B;border-bottom:${1 * scale}px solid #11718B;padding-bottom:1px;font-size:${0.65 * scale}rem">℞ PRESCRIPCIÓN</div>
+        <div style="font-weight:700;margin-bottom:${6 * scale * densityScale}px;color:#11718B;border-bottom:${1 * scale}px solid #11718B;padding-bottom:1px;font-size:${0.65 * scale}rem">℞ PRESCRIPCIÓN</div>
         
         <div style="flex:1">
           ${sheet.length === 0 ? `<div style="color:#999;font-style:italic;padding:8px 0;text-align:center;font-size:${0.65 * scale}rem">Sin medicamentos en esta hoja.</div>` :
         sheet.map((d, i) => `
-            <div style="margin-bottom:${4 * scale}px;padding:${4 * scale}px;border-left:${2 * scale}px solid #06CFD7;background:#fafafa">
-              <div style="font-weight:700;font-size:${0.75 * scale}rem">${i + 1}. ${d.name} ${d.dose}</div>
-              <div style="color:#555;font-size:${0.65 * scale}rem">${d.freq} por ${d.dur} · ${d.form}</div>
-              <div style="color:#777;font-size:${0.6 * scale}rem;line-height:1.1">${d.inst}</div>
+            <div style="margin-bottom:${4 * scale * densityScale}px;padding:${4 * scale * densityScale}px;border-left:${2 * scale}px solid #06CFD7;background:#fafafa">
+              <div style="font-weight:700;font-size:${0.75 * scale * densityScale}rem">${i + 1}. ${d.name} ${d.dose}</div>
+              <div style="color:#555;font-size:${0.65 * scale * densityScale}rem">${d.freq} por ${d.dur} · ${d.form}</div>
+              <div style="color:#777;font-size:${0.6 * scale * densityScale}rem;line-height:1.1">${d.inst}</div>
             </div>`).join('')}
         </div>
           
-        ${notes && sheetIdx === _rxSheets.length - 1 ? `<div style="margin-top:${4 * scale}px;padding:${4 * scale}px;background:#f9f9f9;border-radius:2px;font-size:${0.55 * scale}rem;border:1px solid #eee"><strong>Inc:</strong> ${notes}</div>` : ''}
+        ${notes && sheetIdx === _rxSheets.length - 1 ? `<div style="margin-top:${4 * scale}px;padding:${4 * scale}px;background:#f9f9f9;border-radius:2px;font-size:${0.55 * scale * densityScale}rem;border:1px solid #eee"><strong>Inc:</strong> ${notes}</div>` : ''}
       </div>
       
       <div style="margin-top:auto">
