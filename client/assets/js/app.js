@@ -91,34 +91,22 @@ var APP = {
 };
 
 // ---- Login ----
-var _selectedRole = 'org_owner';
 function selectRole(el) {
-  document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  _selectedRole = el.dataset.role;
-  // Clear autofill inputs if user explicitly chooses a demo role
-  const emailInput = document.getElementById('loginEmail');
-  const passInput = document.getElementById('loginPass');
-  if (emailInput) emailInput.value = '';
-  if (passInput) passInput.value = '';
+  // Legacy function - role selection is now automated via API login
 }
 // On load: highlight default role OR auto-login if coming from register/invite
 window.addEventListener('load', () => {
   const storedRole = localStorage.getItem('nerve_role');
   const storedEmail = localStorage.getItem('nerve_email');
-  if (storedRole && APP.currentUser[storedRole]) {
-    // Auto-login: skip login screen entirely
-    _selectedRole = storedRole;
-    doLogin();
-  } else {
-    // Normal: pre-select first visible role
-    const d = document.querySelector('[data-role="org_owner"]');
-    if (d) { d.classList.add('selected'); _selectedRole = 'org_owner'; }
+
+  if (storedRole && APP.currentUser[storedRole] && localStorage.getItem('nerve_token')) {
+    // Auto-login if we have a token and a saved role
+    APP.currentRole = storedRole;
+    enterApp();
+  } else if (storedEmail) {
     // Pre-fill email if we have one saved
-    if (storedEmail) {
-      const emailInput = document.getElementById('loginEmail');
-      if (emailInput) emailInput.value = storedEmail;
-    }
+    const emailInput = document.getElementById('loginEmail');
+    if (emailInput) emailInput.value = storedEmail;
   }
 });
 
@@ -128,17 +116,24 @@ function doLogin() {
   const typedUser = emailInput ? emailInput.value.trim() : '';
   const typedPass = passInput ? passInput.value.trim() : '';
 
+  if (!typedUser || !typedPass) {
+    showNotification('Ingresa tu correo y contraseña', 'warning');
+    return;
+  }
+
   // ---- Try API login first (if backend is available) ----
-  if (typedUser && typedPass && typeof API !== 'undefined') {
+  if (typeof API !== 'undefined') {
     const loginBtn = document.querySelector('.login-card .btn-primary');
     if (loginBtn) { loginBtn.textContent = 'Conectando...'; loginBtn.disabled = true; }
 
     API.login(typedUser, typedPass)
       .then(user => {
-        // ✅ API login success
+        // ✅ API login success - Role is detected from server response
         APP.liveUser = user;
-        _selectedRole = user.role;
         APP.currentRole = user.role;
+        localStorage.setItem('nerve_role', user.role);
+        localStorage.setItem('nerve_email', user.email);
+
         // Update user data from API
         APP.currentUser[user.role] = {
           name: user.name,
@@ -149,32 +144,28 @@ function doLogin() {
         enterApp();
       })
       .catch(err => {
-        // API failed — try offline/seed fallback
+        // API failed — try offline fallback if it's superadmin or specific seed
         console.warn('API login failed:', err.message, '— trying offline mode');
         if (loginBtn) { loginBtn.textContent = 'Ingresar al sistema →'; loginBtn.disabled = false; }
         doOfflineLogin(typedUser, typedPass);
       });
-    return;
+  } else {
+    doOfflineLogin(typedUser, typedPass);
   }
-
-  // No credentials typed — try offline/seed login
-  doOfflineLogin(typedUser, typedPass);
 }
 
 function doOfflineLogin(typedUser, typedPass) {
-  // Check superadmin credentials ONLY if they were actually typed/autofilled
+  // Check superadmin credentials
   const sa = APP.superAdminCreds;
   if (typedUser === sa.username && typedPass === sa.password) {
-    _selectedRole = 'superadmin';
+    APP.currentRole = 'superadmin';
+    localStorage.setItem('nerve_role', 'superadmin');
+    enterApp();
+    return;
   }
 
-  // Save the currently selected role to cache for next auto-login
-  localStorage.setItem('nerve_role', _selectedRole);
-
-  APP.currentRole = _selectedRole;
-  const user = APP.currentUser[_selectedRole];
-  if (!user) { showNotification('Rol no válido. Selecciona un rol e intenta de nuevo.', 'error'); return; }
-  enterApp();
+  // If no API and no superadmin, we can't guess the role anymore
+  showNotification('Credenciales incorrectas o servidor no disponible.', 'error');
 }
 
 function getRoleLabel(role) {

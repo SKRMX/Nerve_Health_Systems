@@ -21,25 +21,8 @@
                 <img src="logos/logo_nerve.svg" alt="NERVE Health Systems" />
             </div>
             <h1 class="login-title">Bienvenido de vuelta</h1>
-            <p class="login-sub">Selecciona tu rol para acceder al sistema</p>
-            <div class="role-selector" id="roleSelector">
-                <div class="role-option" data-role="org_owner" onclick="selectRole(this)">
-                    <div class="r-icon">🏥</div>
-                    <div class="r-name">Hospital / Clínica</div>
-                </div>
-                <div class="role-option" data-role="dept_head" onclick="selectRole(this)">
-                    <div class="r-icon">👔</div>
-                    <div class="r-name">Jefe de Depto.</div>
-                </div>
-                <div class="role-option" data-role="doctor" onclick="selectRole(this)">
-                    <div class="r-icon">🩺</div>
-                    <div class="r-name">Doctor</div>
-                </div>
-                <div class="role-option" data-role="asistente" onclick="selectRole(this)">
-                    <div class="r-icon">📋</div>
-                    <div class="r-name">Asistente</div>
-                </div>
-            </div>
+            <p class="login-sub">Ingresa tus credenciales para acceder al sistema</p>
+            <div id="roleSelector" style="display:none;"></div>
             <div class="form-group">
                 <label class="form-label">Usuario o correo electrónico</label>
                 <input type="text" class="form-control" id="loginEmail"
