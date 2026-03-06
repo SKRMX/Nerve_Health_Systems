@@ -11,19 +11,19 @@ let _rxPatients = [];
 function renderPrescriptions() {
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `
-  <div class="page-header">
+  < div class="page-header" >
     <div><div class="page-title">💊 Recetas Digitales</div><div class="page-subtitle">Historial y gestión de prescripciones</div></div>
     <div class="page-actions">
       <button class="btn btn-primary" onclick="renderRxBuilder()">+ Nueva receta (General)</button>
     </div>
-  </div>
+  </div >
   <div id="rxContent"></div>`;
   renderRxHistory();
 }
 
 async function renderRxBuilder(data = null) {
   const area = document.getElementById('rxContent');
-  area.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted)">⏳ Cargando...</div>`;
+  area.innerHTML = `< div style = "padding:30px;text-align:center;color:var(--text-muted)" >⏳ Cargando...</div > `;
 
   // Reset sheets if starting fresh
   if (!data || !data.keepSheets) {
@@ -40,7 +40,7 @@ async function renderRxBuilder(data = null) {
   } catch (e) { _rxPatients = []; }
 
   area.innerHTML = `
-  <div class="content-grid content-grid-1-1">
+  < div class="content-grid content-grid-1-1" >
     <div>
       <div class="card" style="margin-bottom:16px">
         <div class="card-header"><span class="card-title">👤 Datos del Paciente</span></div>
@@ -121,7 +121,7 @@ async function renderRxBuilder(data = null) {
       </div>
       <div id="rxPreview" style="padding:20px;max-height:800px;overflow-y:auto;display:flex;flex-direction:column;gap:20px"></div>
     </div>
-  </div>`;
+  </div > `;
 
   // Init Autocomplete
   const input = document.getElementById('rxPatientInput');
@@ -170,13 +170,13 @@ function setActiveSheet(idx) {
   const title = document.querySelector('.card-title');
 
   if (tabs) tabs.innerHTML = _rxSheets.map((_, i) => `
-    <button class="btn btn-sm ${i === _activeSheetIdx ? 'btn-primary' : 'btn-secondary'}" onclick="setActiveSheet(${i})">Hoja ${i + 1}</button>
-  `).join('');
+  < button class="btn btn-sm ${i === _activeSheetIdx ? 'btn-primary' : 'btn-secondary'}" onclick = "setActiveSheet(${i})" > Hoja ${i + 1}</button >
+    `).join('');
 
   if (list) list.innerHTML = renderDrugItems();
   // Update title in medical card
   const titleEl = document.querySelectorAll('.card-header .card-title')[1];
-  if (titleEl) titleEl.innerText = `💊 Medicamentos (Hoja ${_activeSheetIdx + 1})`;
+  if (titleEl) titleEl.innerText = `💊 Medicamentos(Hoja ${_activeSheetIdx + 1})`;
 
   updatePreview();
 }
@@ -192,10 +192,10 @@ const _debouncedUpdatePreview = APP.debounce(() => updatePreview(), 300);
 
 function renderDrugItems() {
   const currentDrugs = _rxSheets[_activeSheetIdx];
-  if (currentDrugs.length === 0) return `<div class="empty-state" style="padding:24px"><div class="empty-state-icon">💊</div><div class="empty-state-desc">Sin medicamentos en esta hoja.</div></div>`;
+  if (currentDrugs.length === 0) return `< div class="empty-state" style = "padding:24px" ><div class="empty-state-icon">💊</div><div class="empty-state-desc">Sin medicamentos en esta hoja.</div></div > `;
 
   return currentDrugs.map((d, i) => `
-  <div class="rx-drug-item">
+  < div class="rx-drug-item" >
     <div class="rx-drug-num">${i + 1}</div>
     <div style="flex:1">
       <div style="font-weight:700;font-size:0.92rem">${d.name} ${d.dose} · ${d.form}</div>
@@ -203,7 +203,7 @@ function renderDrugItems() {
       <div style="font-size:0.78rem;color:var(--text-dim);margin-top:3px">💬 ${d.inst}</div>
     </div>
     <button class="btn btn-danger btn-sm" onclick="removeDrug(${i})">✕</button>
-  </div>`).join('');
+  </div > `).join('');
 }
 
 function removeDrug(idx) {
@@ -236,7 +236,7 @@ function updatePreview() {
   const orgName = user.orgName || user.org || 'Clínica Médica';
   const drName = user.name || 'Dr. Médico';
   const drSpecialty = user.specialty || (APP.currentRole === 'doctor' ? 'Médico General' : '');
-  const drLicense = user.license ? `Céd. Prof. ${user.license}` : '';
+  const drLicense = user.license ? `Céd.Prof.${user.license} ` : '';
   const rxNumBase = 'RX-' + date.replace(/-/g, '').slice(2);
 
   // Calculate scaling factor based on area relative to "Carta" (Standard reference)
@@ -261,7 +261,7 @@ function updatePreview() {
   let html = '';
 
   _rxSheets.forEach((sheet, sheetIdx) => {
-    const rxNum = `${rxNumBase}-${sheetIdx + 1}-${String(Math.floor(Math.random() * 90) + 10)}`;
+    const rxNum = `${rxNumBase} -${sheetIdx + 1} -${String(Math.floor(Math.random() * 90) + 10)} `;
 
     // Aggressive density scaling to fit up to 10 drugs
     const threshold = pageSize === 'media' ? 2 : 3;
@@ -269,7 +269,7 @@ function updatePreview() {
     const densityScale = Math.max(0.42, 1 - (Math.max(0, sheet.length - threshold) * shrinkRate));
 
     html += `
-    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${padding * densityScale}%;font-size:${fSize * densityScale}rem;width:100%;max-width:${maxWidthPx}px;margin:0 auto 20px auto;aspect-ratio: ${dim.w} / ${dim.h};box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden;line-height:1.2">
+  < div class="prescription-page" style = "background:#fff;color:#111;border-radius:4px;padding:${padding * densityScale}%;font-size:${fSize * densityScale}rem;width:100%;max-width:${maxWidthPx}px;margin:0 auto 20px auto;aspect-ratio: ${dim.w} / ${dim.h};box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden;line-height:1.2" >
       <div>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:${1.5 * scale * densityScale}px solid #11718B;padding-bottom:${6 * scale * densityScale}px;margin-bottom:${8 * scale * densityScale}px">
           <div>
@@ -318,7 +318,7 @@ function updatePreview() {
           Gestión por Sistema NERVE · Válida 30 días
         </div>
       </div>
-    </div>`;
+    </div > `;
   });
 
   prev.innerHTML = html;
@@ -326,10 +326,10 @@ function updatePreview() {
 
 function openAddDrugModal() {
   openModal('💊 Agregar Medicamento', `
-    <div class="form-row form-row-2">
+  < div class="form-row form-row-2" >
       <div class="form-group"><label class="form-label">Medicamento</label><input class="form-control" id="drugName" placeholder="Ej: Amoxicilina" /></div>
       <div class="form-group"><label class="form-label">Dosis</label><input class="form-control" id="drugDose" placeholder="Ej: 500 mg" /></div>
-    </div>
+    </div >
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Forma farmacéutica</label>
         <select class="form-control" id="drugForm"><option>Tabletas</option><option>Cápsulas</option><option>Jarabe</option><option>Inyectable</option><option>Crema</option><option>Gotas</option></select>
@@ -344,8 +344,8 @@ function openAddDrugModal() {
     <div class="form-group"><label class="form-label">Instrucciones especiales</label>
       <input class="form-control" id="drugInst" placeholder="Ej: Tomar con alimentos, evitar el sol..." />
     </div>`,
-    `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-   <button class="btn btn-primary" onclick="addDrug()">Agregar medicamento</button>`);
+    `< button class="btn btn-secondary" onclick = "closeModal()" > Cancelar</button >
+  <button class="btn btn-primary" onclick="addDrug()">Agregar medicamento</button>`);
 }
 
 function addDrug() {
@@ -411,34 +411,34 @@ function printPrescription() {
   };
 
   const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Imprimir Receta</title>
+  win.document.write(`< !DOCTYPE html > <html><head><title>Imprimir Receta</title>
   <style>
-    body{font-family:Inter,sans-serif;margin:0;padding:0;background:#f5f5f5;color:#111}
-    .prescription-page { 
-      page-break-after: always; 
-      margin: auto;
-      box-shadow: none !important;
+    body{font - family:Inter,sans-serif;margin:0;padding:0;background:#f5f5f5;color:#111}
+    .prescription-page {
+      page -break-after: always;
+    margin: auto;
+    box-shadow: none !important;
     }
     @page {
       size: ${sizeMap[pageSize] || 'auto'};
-      margin: 0;
+    margin: 0;
     }
     @media print {
-      body { background: #fff; }
-      .prescription-page { 
-        padding: 15mm !important;
-        min-height: 0 !important;
-        height: 100vh;
+      body {background: #fff; }
+    .prescription-page {
+      padding: 15mm !important;
+    min-height: 0 !important;
+    height: 100vh;
       }
     }
   </style>
-  </head><body><div id="print-content">${prev.innerHTML}</div><script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
+</head><body><div id="print-content">${prev.innerHTML}</div><script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
   win.document.close();
 }
 
 async function renderRxHistory() {
   const area = document.getElementById('rxContent');
-  area.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted)">⏳ Cargando historial...</div>`;
+  area.innerHTML = `< div style = "padding:30px;text-align:center;color:var(--text-muted)" >⏳ Cargando historial...</div > `;
 
   let rxData = [];
   try {
@@ -459,12 +459,12 @@ async function renderRxHistory() {
   });
 
   area.innerHTML = `
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  < div style = "display:flex;justify-content:space-between;align-items:center;margin-bottom:16px" >
     <h3 class="card-title">📋 Historial de Recetas</h3>
     <button class="btn btn-primary btn-sm" onclick="renderRxBuilder()">+ Nueva receta</button>
-  </div>
+  </div >
   <div class="card">
-  ${sortedKeys.length === 0 ?
+    ${sortedKeys.length === 0 ?
       `<div class="empty-state" style="padding:40px"><div class="empty-state-icon">💊</div><div class="empty-state-title">Sin recetas</div><div class="empty-state-desc">Aún no hay recetas generadas.</div></div>` :
       `<div class="table-wrap"><table>
     <thead><tr><th>Receta / Medicamentos</th><th>Paciente</th><th>Fecha</th><th>Acciones</th></tr></thead>
