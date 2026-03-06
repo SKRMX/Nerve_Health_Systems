@@ -261,19 +261,13 @@ function hideSplash() {
   }
 }
 
-function doLogout() {
-  const body = `
-    <div style="text-align:center; padding:20px;">
-      <div style="font-size:3rem; margin-bottom:15px;">👋</div>
-      <p style="color:var(--text); font-size:1.1rem; margin-bottom:10px;">¿Estás seguro que deseas cerrar sesión?</p>
-      <p style="color:var(--text-muted); font-size:0.9rem;">Se cerrará tu acceso actual y deberás ingresar tus credenciales nuevamente.</p>
-    </div>
-  `;
-  const footer = `
-    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-    <button class="btn btn-primary" onclick="confirmLogout()" style="background:var(--danger); border-color:var(--danger);">Cerrar sesión</button>
-  `;
-  openModal('Confirmar salida', body, footer, 'sm');
+async function doLogout() {
+  const ok = await APP.confirm(
+    'Confirmar salida',
+    '¿Estás seguro que deseas cerrar sesión? Se cerrará tu acceso actual.',
+    { okText: 'Cerrar sesión', variant: 'danger' }
+  );
+  if (ok) confirmLogout();
 }
 
 function confirmLogout() {
@@ -294,6 +288,23 @@ function confirmLogout() {
 }
 
 // ---- Utility Helpers ----
+APP.confirm = function (title, message, options = {}) {
+  return new Promise((resolve) => {
+    const { okText = 'Continuar', cancelText = 'Cancelar', variant = 'primary' } = options;
+    const body = `<div style="padding:10px 0; color:var(--text-light); line-height:1.5">${message}</div>`;
+    const footer = `
+      <button class="btn btn-secondary" onclick="APP._resolveConfirm(false)">${cancelText}</button>
+      <button class="btn btn-${variant}" id="btnConfirmOk" onclick="APP._resolveConfirm(true)">${okText}</button>
+    `;
+    openModal(title, body, footer, 'sm');
+
+    APP._resolveConfirm = (val) => {
+      closeModal();
+      resolve(val);
+    };
+  });
+};
+
 function formatDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
@@ -812,7 +823,14 @@ async function saveOrgLimits(orgId) {
     const docCount = users.filter(u => u.role === 'doctor').length;
 
     if (maxDoctors < docCount) {
-      if (!confirm(`Advertencia: Estás estableciendo un límite de ${maxDoctors} doctores, pero actualmente hay ${docCount} registrados. ¿Deseas continuar?`)) {
+      const ok = await APP.confirm(
+        'Advertencia de Límite',
+        `Estás estableciendo un límite de <strong>${maxDoctors}</strong> doctores, pero actualmente hay <strong>${docCount}</strong> registrados. ¿Deseas continuar?`,
+        { okText: 'Confirmar y Guardar', variant: 'warning' }
+      );
+      if (!ok) {
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
         return;
       }
     }
@@ -934,7 +952,12 @@ async function renderSubscriptions() {
 }
 
 async function extendSubscription(orgId, months) {
-  if (!confirm(`¿Estás seguro de regalar ${months} mes(es) a esta organización?`)) return;
+  const ok = await APP.confirm(
+    'Confirmar Regalo',
+    `¿Estás seguro de regalar <strong>${months} mes(es)</strong> a esta organización?`,
+    { okText: 'Sí, regalar tiempo', variant: 'cyan' }
+  );
+  if (!ok) return;
 
   try {
     // We need current expiry or now
