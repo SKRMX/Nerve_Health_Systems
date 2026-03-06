@@ -66,7 +66,7 @@ router.post('/',
     auditMiddleware('prescription'),
     async (req, res) => {
         try {
-            const { patientId, medication, dosage, frequency, duration, notes } = req.body;
+            const { patientId, medication, dosage, frequency, duration, notes, batchId } = req.body;
 
             if (!patientId || !medication || !dosage || !frequency || !duration) {
                 return res.status(400).json({ error: 'Paciente, medicamento, dosis, frecuencia y duración son requeridos' });
@@ -81,6 +81,7 @@ router.post('/',
                     frequency,
                     duration,
                     notes: notes || null,
+                    batchId: batchId || null,
                 },
                 include: {
                     patient: { select: { id: true, name: true } },

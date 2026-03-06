@@ -376,20 +376,23 @@ async function saveRxToBackend() {
     return showNotification('Selecciona un paciente y agrega medicamentos', 'error');
   }
 
+  const batchId = 'batch-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
   try {
     for (let i = 0; i < _rxSheets.length; i++) {
       for (const d of _rxSheets[i]) {
         await API.createPrescription({
           patientId: patId,
-          medication: `${d.name} ${d.dose} (Hoja ${i + 1})`,
+          medication: d.name,
           dosage: d.dose,
           frequency: d.freq,
           duration: d.dur,
-          notes: d.inst,
+          notes: d.inst, // Instructions
+          batchId: batchId
         });
       }
     }
-    showNotification(`${totalDrugs} medicamento(s) en ${_rxSheets.length} hojas guardados correctamente`, 'success');
+    showNotification(`${totalDrugs} medicamento(s) guardados correctamente`, 'success');
   } catch (err) {
     showNotification(err.message || 'Error al guardar receta', 'error');
   }
@@ -443,27 +446,78 @@ async function renderRxHistory() {
     rxData = res.data || [];
   } catch (e) { rxData = []; }
 
+  // Group by batchId
+  const groups = {};
+  rxData.forEach(r => {
+    const key = r.batchId || ('single-' + r.id);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    return new Date(groups[b][0].createdAt) - new Date(groups[a][0].createdAt);
+  });
+
   area.innerHTML = `
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <h3 class="card-title">📋 Historial de Recetas</h3>
     <button class="btn btn-primary btn-sm" onclick="renderRxBuilder()">+ Nueva receta</button>
   </div>
   <div class="card">
-  ${rxData.length === 0 ?
+  ${sortedKeys.length === 0 ?
       `<div class="empty-state" style="padding:40px"><div class="empty-state-icon">💊</div><div class="empty-state-title">Sin recetas</div><div class="empty-state-desc">Aún no hay recetas generadas.</div></div>` :
       `<div class="table-wrap"><table>
-    <thead><tr><th>Medicamento</th><th>Paciente</th><th>Dosis</th><th>Frecuencia</th><th>Fecha</th><th>Estado</th></tr></thead>
+    <thead><tr><th>Receta / Medicamentos</th><th>Paciente</th><th>Fecha</th><th>Acciones</th></tr></thead>
     <tbody>
-    ${rxData.slice(0, 30).map(r => `<tr>
-      <td class="fw-700">${r.medication}</td>
-      <td><div class="avatar-row"><div class="avatar sm">${(r.patient?.name || 'RX').split(' ').map(x => x[0]).slice(0, 2).join('')}</div>${r.patient?.name || '—'}</div></td>
-      <td class="text-muted">${r.dosage}</td>
-      <td class="text-muted">${r.frequency}</td>
-      <td class="text-muted">${new Date(r.createdAt).toLocaleDateString('es-MX')}</td>
-      <td><span class="badge ${r.active ? 'badge-success' : 'badge-muted'}">${r.active ? 'Activa' : 'Finalizada'}</span></td>
-    </tr>`).join('')}
+    ${sortedKeys.slice(0, 30).map(key => {
+        const items = groups[key];
+        const main = items[0];
+        const medsSummary = items.map(i => i.medication).join(', ');
+        return `<tr>
+      <td>
+        <div class="fw-700">${items.length} medicamento(s)</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${medsSummary}</div>
+      </td>
+      <td><div class="avatar-row"><div class="avatar sm">${(main.patient?.name || 'RX').split(' ').map(x => x[0]).slice(0, 2).join('')}</div>${main.patient?.name || '—'}</div></td>
+      <td class="text-muted">${new Date(main.createdAt).toLocaleDateString('es-MX')}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="reprintBatch('${key}')">Ver Receta</button>
+      </td>
+    </tr>`;
+      }).join('')}
     </tbody>
   </table></div>`}
   </div>`;
+
+  // Define reprintBatch in window scope for the click handler
+  window.reprintBatch = async (batchId) => {
+    const batch = rxData.filter(r => (r.batchId === batchId || ('single-' + r.id) === batchId));
+    if (batch.length === 0) return;
+
+    // Group into sheets (max 10 per sheet)
+    const sheets = [];
+    for (let i = 0; i < batch.length; i += 10) {
+      sheets.push(batch.slice(i, i + 10).map(b => ({
+        name: b.medication,
+        dose: b.dosage,
+        form: '', // Not saved explicitly in backend per-se, but we have medication name
+        freq: b.frequency,
+        dur: b.duration,
+        inst: b.notes || '—'
+      })));
+    }
+
+    _rxSheets = sheets;
+    _activeSheetIdx = 0;
+
+    // Switch to builder mode but with "Preview" focus or just render and print
+    await renderRxBuilder({
+      patientId: batch[0].patientId,
+      date: new Date(batch[0].createdAt).toISOString().split('T')[0],
+      keepSheets: true
+    });
+
+    showNotification('Receta cargada en el previsualizador', 'info');
+  };
 }
 

@@ -376,7 +376,7 @@ async function renderConsultations() {
         <div style="font-weight:600">${p.name}</div>
         <div style="font-size:0.8rem;color:var(--text-muted)">${p.diagnosis || 'Sin diagnóstico'}</div>
       </div>
-      <button class="btn btn-primary" onclick="navigate('patients')">Ver expediente ▶</button>
+      <button class="btn btn-primary" onclick="openPatientDetail('${p.id}')">Ver expediente ▶</button>
     </div>`).join('')}
   </div></div>`;
 }

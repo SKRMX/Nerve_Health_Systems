@@ -6,6 +6,9 @@
 - **Objetivo Principal:** Crear la plataforma SaaS de gestión médica, expedientes clínicos y administración más moderna, rápida y escalable para médicos y hospitales en México.
 - **Diferenciador:** Interfaces intuitivas, arquitectura multi-tenant real (hasta grandes hospitales jerárquicos) y experiencia premium en Web y Escritorio.
 
+## 🛡️ Estándares de Calidad (Quality Gate)
+- **Detalle Profesional**: Toda función nueva debe verificarse minuciosamente. No se permiten fugas de código crudo (JSON), clics redundantes o listas desordenadas. El flujo debe ser fluido y de grado médico profesional.
+
 ## 2. Estado Actual del Software (Actualizado: Marzo 2026) 🩺
 - **Frontend:** Completado en su fase V1 (Landing responsiva, dashboard modular con Vanilla JS, interfaz veloz sin frameworks inyectados, comunicación robusta en `api.js`).
 - **Backend:** Node.js + Express + Prisma + PostgreSQL. Altamente funcional y seguro.

@@ -189,7 +189,7 @@ async function renderDoctorDash() {
                 <div style="font-size:0.74rem;color:var(--text-muted)">${a.type || ''} · ${new Date(a.date).toLocaleDateString('es-MX')}</div>
               </div>
               <span class="badge badge-success">${a.status}</span>
-              <button class="btn btn-primary btn-sm" onclick="navigate('patients')">Consultar</button>
+              <button class="btn btn-primary btn-sm" onclick="openPatientDetail('${a.patientId}')">Consultar</button>
             </div>`).join('')}
         </div>` : '<div class="empty-state" style="padding:30px"><div class="empty-state-icon">📅</div><div class="empty-state-desc">Sin citas programadas. ¡Tu agenda está libre!</div></div>'}
       </div>
@@ -199,7 +199,7 @@ async function renderDoctorDash() {
         <div class="card-header"><span class="card-title">🫀 Mis pacientes</span></div>
         <div style="display:flex;flex-direction:column;gap:8px">
           ${patients.slice(0, 4).map(p => `
-            <div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer" onclick="navigate('patients')">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer" onclick="openPatientDetail('${p.id}')">
               <div class="avatar">${p.name.split(' ').map(x => x[0]).slice(0, 2).join('')}</div>
               <div style="flex:1">
                 <div style="font-size:0.85rem;font-weight:600">${p.name}</div>

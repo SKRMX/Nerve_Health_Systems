@@ -224,7 +224,25 @@ async function openPatientDetail(id) {
   <!-- Tab: Notas -->
   <div id="tabNotas" style="display:none">
     <div class="card">
-      <div style="font-size:0.85rem;color:var(--text-light);white-space:pre-wrap;padding:10px">${p.medicalNotes || 'Sin notas médicas registradas.'}</div>
+      <div style="font-size:0.85rem;color:var(--text-light);white-space:pre-wrap;padding:10px">
+        ${(function () {
+      if (!p.medicalNotes) return 'Sin notas médicas registradas.';
+      try {
+        if (p.medicalNotes.trim().startsWith('{')) {
+          const data = JSON.parse(p.medicalNotes);
+          let html = '<div style="font-weight:600;margin-bottom:8px;color:var(--cyan)">📋 Datos clínicos estructurados:</div>';
+          for (const key in data) {
+            if (key === '_lastUpdated') continue;
+            const label = key.replace(/_/g, ' ').toUpperCase();
+            html += `<div style="margin-bottom:5px"><strong>${label}:</strong> ${data[key]}</div>`;
+          }
+          if (data._lastUpdated) html += `<div style="font-size:0.75rem;color:var(--text-dim);margin-top:10px">Última actualización: ${new Date(data._lastUpdated).toLocaleString('es-MX')}</div>`;
+          return html;
+        }
+      } catch (e) { }
+      return p.medicalNotes;
+    })()}
+      </div>
     </div>
   </div>`;
 
