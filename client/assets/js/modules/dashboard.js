@@ -235,12 +235,14 @@ async function renderSuperAdminDash() {
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando dashboard...</div>`;
 
-  let stats = {};
+  let data = {};
   try {
-    stats = await API.getAdminStats();
+    data = await API.getAdminStats();
   } catch (err) {
-    stats = { totalOrganizations: 0, totalUsers: 0, totalPatients: 0 };
+    data = { stats: {} };
   }
+
+  const stats = data.stats || {};
 
   pc.innerHTML = `
   <div class="page-header">
@@ -249,10 +251,10 @@ async function renderSuperAdminDash() {
 
   <div class="stats-grid stats-grid-4" style="margin-bottom:24px">
     ${[
-      { icon: '🏥', label: 'Organizaciones', val: _fmt(stats.totalOrganizations || 0), color: 'rgba(17,113,139,0.2)' },
-      { icon: '🩺', label: 'Usuarios totales', val: _fmt(stats.totalUsers || 0), color: 'rgba(6,207,215,0.1)' },
-      { icon: '👤', label: 'Pacientes', val: _fmt(stats.totalPatients || 0), color: 'rgba(73,190,174,0.1)' },
-      { icon: '📅', label: 'Citas', val: _fmt(stats.totalAppointments || 0), color: 'rgba(34,197,94,0.1)' },
+      { icon: '🏥', label: 'Organizaciones', val: _fmt(stats.organizations || 0), color: 'rgba(17,113,139,0.2)' },
+      { icon: '🩺', label: 'Usuarios totales', val: _fmt(stats.users || 0), color: 'rgba(6,207,215,0.1)' },
+      { icon: '👤', label: 'Pacientes', val: _fmt(stats.patients || 0), color: 'rgba(73,190,174,0.1)' },
+      { icon: '📅', label: 'Citas', val: _fmt(stats.appointments || 0), color: 'rgba(34,197,94,0.1)' },
     ].map(s => `<div class="stat-card">
       <div class="stat-icon" style="background:${s.color}">${s.icon}</div>
       <div class="stat-value">${s.val}</div>
