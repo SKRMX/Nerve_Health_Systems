@@ -20,8 +20,8 @@ module.exports = {
     },
 
     superAdmin: {
-        email: process.env.SUPER_ADMIN_EMAIL || 'admin@nerve.local',
-        password: process.env.SUPER_ADMIN_PASSWORD || 'admin123',
-        name: process.env.SUPER_ADMIN_NAME || 'Admin',
+        email: process.env.SUPER_ADMIN_EMAIL || 'MauricioCV',
+        password: process.env.SUPER_ADMIN_PASSWORD || 'palmera22022800',
+        name: process.env.SUPER_ADMIN_NAME || 'Mauricio CV',
     },
 };

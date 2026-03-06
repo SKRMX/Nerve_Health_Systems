@@ -97,7 +97,7 @@ async function startServer() {
         await prisma.$connect();
         console.log('✅ Conectado a PostgreSQL');
 
-        // Ensure superadmin exists
+        // Ensure superadmin exists (using config from env)
         const existingAdmin = await prisma.user.findUnique({
             where: { email: config.superAdmin.email },
         });
@@ -112,7 +112,9 @@ async function startServer() {
                     role: 'superadmin',
                 },
             });
-            console.log(`✅ Superadmin creado: ${config.superAdmin.email}`);
+            console.log(`✅ Superadmin creado/verificado: ${config.superAdmin.email}`);
+        } else {
+            console.log(`✅ Superadmin ya existe: ${config.superAdmin.email}`);
         }
 
         app.listen(config.port, () => {
