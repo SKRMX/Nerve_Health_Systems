@@ -260,6 +260,14 @@ const API = (() => {
         return request(`/admin/organizations/${orgId}/plan`, { method: 'PUT', body: data });
     }
 
+    async function getOrganizationUsers(orgId) {
+        return request(`/organizations/${orgId}/users`);
+    }
+
+    async function getOrganizationAudit(orgId) {
+        return request(`/admin/organizations/${orgId}/audit`);
+    }
+
     // ---- Health Check ----
     async function healthCheck() {
         try {
@@ -282,8 +290,10 @@ const API = (() => {
         getPrescriptions, createPrescription, updatePrescription,
         // Users
         getUsers, inviteUser, createUser, updateUser, deleteUser,
+        getUserById: (id) => request(`/users/${id}`),
         // Organizations
         getOrganizations, getOrganization, updateOrganization,
+        getOrganizationUsers, getOrganizationAudit,
         // Departments
         getDepartments, createDepartment, deleteDepartment,
         // Admin

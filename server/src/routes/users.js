@@ -104,10 +104,18 @@ router.post('/invite',
                 return res.status(409).json({ error: 'Ya existe un usuario con ese correo registrado en el sistema' });
             }
 
-            // We need the org name to embed in the token
-            const org = await prisma.organization.findUnique({ where: { id: req.user.orgId } });
+            // We need the org name to embed in the token and check limits
+            const org = await prisma.organization.findUnique({
+                where: { id: req.user.orgId },
+                include: { _count: { select: { users: { where: { role: 'doctor' } } } } }
+            });
             if (!org) {
                 return res.status(404).json({ error: 'Organización no encontrada' });
+            }
+
+            // Limit check for doctors
+            if (role === 'doctor' && org._count.users >= org.maxDoctors) {
+                return res.status(403).json({ error: `Límite de doctores alcanzado (${org.maxDoctors}). Favor de contactar a soporte.` });
             }
 
             // Import jwt (require inside or globally, let's just use jsonwebtoken)
@@ -165,10 +173,15 @@ router.post('/create',
                 return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
             }
 
-            // Check duplicate
-            const existing = await prisma.user.findUnique({ where: { email } });
-            if (existing) {
-                return res.status(409).json({ error: 'Ya existe un usuario con ese correo registrado en el sistema' });
+            // Check doctor limit
+            if (role === 'doctor') {
+                const org = await prisma.organization.findUnique({
+                    where: { id: req.user.orgId },
+                    include: { _count: { select: { users: { where: { role: 'doctor' } } } } }
+                });
+                if (org && org._count.users >= org.maxDoctors) {
+                    return res.status(403).json({ error: `Límite de doctores alcanzado (${org.maxDoctors}).` });
+                }
             }
 
             const passwordHash = await bcrypt.hash(password, 12);

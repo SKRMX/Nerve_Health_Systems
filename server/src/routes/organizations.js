@@ -86,4 +86,27 @@ router.put('/:id',
     }
 );
 
+// ---- GET /api/organizations/:id/users ----
+// List all users in a specific organization
+router.get('/:id/users',
+    authorize('superadmin', 'org_owner'),
+    async (req, res) => {
+        try {
+            if (req.user.role !== 'superadmin' && req.params.id !== req.user.orgId) {
+                return res.status(403).json({ error: 'Sin acceso' });
+            }
+
+            const users = await prisma.user.findMany({
+                where: { orgId: req.params.id },
+                select: { id: true, name: true, email: true, role: true, active: true, specialty: true },
+                orderBy: { name: 'asc' }
+            });
+
+            res.json(users);
+        } catch (err) {
+            res.status(500).json({ error: 'Error al listar usuarios de la organización' });
+        }
+    }
+);
+
 module.exports = router;

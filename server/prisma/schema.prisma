@@ -24,6 +24,7 @@ model Organization {
   email       String?
   active      Boolean  @default(true)
   mpSubscriptionId String? // Mercado Pago subscription ID
+  subscriptionExpires DateTime? @map("subscription_expires")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

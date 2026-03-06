@@ -99,20 +99,40 @@ router.get('/audit', async (req, res) => {
 // Change org plan
 router.put('/organizations/:id/plan', async (req, res) => {
     try {
-        const { plan, maxDoctors, active } = req.body;
+        const { plan, maxDoctors, active, subscriptionExpires } = req.body;
 
         const org = await prisma.organization.update({
             where: { id: req.params.id },
             data: {
                 ...(plan && { plan }),
-                ...(maxDoctors && { maxDoctors }),
+                ...(maxDoctors !== undefined && { maxDoctors: parseInt(maxDoctors) }),
                 ...(active !== undefined && { active }),
+                ...(subscriptionExpires !== undefined && { subscriptionExpires: subscriptionExpires ? new Date(subscriptionExpires) : null }),
             },
         });
 
         res.json(org);
     } catch (err) {
         res.status(500).json({ error: 'Error al actualizar plan' });
+    }
+});
+
+// ---- GET /api/admin/organizations/:id/audit ----
+// Fetch audit logs for a specific organization
+router.get('/organizations/:id/audit', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const logs = await prisma.auditLog.findMany({
+            where: {
+                user: { orgId: id }
+            },
+            include: { user: { select: { name: true, role: true } } },
+            orderBy: { createdAt: 'desc' },
+            take: 100
+        });
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener auditoría de la organización' });
     }
 });
 

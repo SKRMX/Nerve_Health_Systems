@@ -9,18 +9,18 @@ let _mappings = {};
 const IMPORT_COLUMNS = ['Nombre', 'Apellidos', 'Fecha nacimiento', 'Sexo', 'Teléfono', 'Email', 'Tipo sangre', 'Alergias', 'Diagnóstico previo'];
 const SAMPLE_CSV_HEADERS = ['first_name', 'last_name', 'birthdate', 'gender', 'phone', 'email', 'blood_type', 'allergies', 'diagnosis'];
 const SAMPLE_ROWS = [
-    ['María', 'García López', '1992-03-15', 'F', '+52 55 1234 5678', 'maria@email.com', 'O+', 'Penicilina', 'HTA'],
-    ['Carlos', 'Mendoza Ruiz', '1974-07-28', 'M', '+52 55 2345 6789', 'c.mendoza@email.com', 'A+', '', 'DM2'],
-    ['Ana', 'Ruiz Jiménez', '1998-11-04', 'F', '+52 55 3456 7890', 'ana.ruiz@email.com', 'B-', 'Ibuprofeno', ''],
-    ['Pedro', 'Hernández Torres', '1959-02-20', 'M', '+52 55 4567 8901', 'pedro.h@email.com', 'AB+', 'Sulfonamidas', 'Cardiopatía'],
-    ['Laura', 'Vega Torres', '1981-09-12', 'F', '+52 55 5678 9012', 'lauravega@email.com', 'A-', 'Látex', ''],
+  ['María', 'García López', '1992-03-15', 'F', '+52 55 1234 5678', 'maria@email.com', 'O+', 'Penicilina', 'HTA'],
+  ['Carlos', 'Mendoza Ruiz', '1974-07-28', 'M', '+52 55 2345 6789', 'c.mendoza@email.com', 'A+', '', 'DM2'],
+  ['Ana', 'Ruiz Jiménez', '1998-11-04', 'F', '+52 55 3456 7890', 'ana.ruiz@email.com', 'B-', 'Ibuprofeno', ''],
+  ['Pedro', 'Hernández Torres', '1959-02-20', 'M', '+52 55 4567 8901', 'pedro.h@email.com', 'AB+', 'Sulfonamidas', 'Cardiopatía'],
+  ['Laura', 'Vega Torres', '1981-09-12', 'F', '+52 55 5678 9012', 'lauravega@email.com', 'A-', 'Látex', ''],
 ];
 
 function renderImporter() {
-    const pc = document.getElementById('pageContent');
-    _importStep = 1;
-    _importFile = null;
-    pc.innerHTML = `
+  const pc = document.getElementById('pageContent');
+  _importStep = 1;
+  _importFile = null;
+  pc.innerHTML = `
   <div class="page-header">
     <div><div class="page-title">📤 Importador de Datos Masivo</div>
     <div class="page-subtitle">Migra tu base de pacientes desde CSV o Excel en minutos</div></div>
@@ -32,11 +32,11 @@ function renderImporter() {
   <!-- Steps -->
   <div style="display:flex;align-items:center;gap:0;margin-bottom:28px" id="importSteps">
     ${[
-            { n: 1, label: 'Subir archivo' },
-            { n: 2, label: 'Mapear columnas' },
-            { n: 3, label: 'Vista previa' },
-            { n: 4, label: 'Importar' },
-        ].map((s, i, arr) => `
+      { n: 1, label: 'Subir archivo' },
+      { n: 2, label: 'Mapear columnas' },
+      { n: 3, label: 'Vista previa' },
+      { n: 4, label: 'Importar' },
+    ].map((s, i, arr) => `
     <div style="display:flex;align-items:center;flex:1">
       <div style="display:flex;align-items:center;gap:8px">
         <div id="step${s.n}Dot" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;transition:.3s;
@@ -57,7 +57,7 @@ function renderImporter() {
 }
 
 function renderImportStep1() {
-    return `
+  return `
   <div class="card">
     <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()"
       ondragover="event.preventDefault();this.classList.add('dragover')"
@@ -83,51 +83,51 @@ function renderImportStep1() {
 }
 
 function handleFileDrop(e) {
-    e.preventDefault();
-    document.getElementById('fileDrop').classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
+  e.preventDefault();
+  document.getElementById('fileDrop').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
 }
 function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) processFile(file);
+  const file = e.target.files[0];
+  if (file) processFile(file);
 }
 function processFile(file) {
-    _importFile = file;
-    document.getElementById('fileInfo').style.display = 'flex';
-    document.getElementById('fileName').textContent = file.name;
-    document.getElementById('fileSize').textContent = `${(file.size / 1024).toFixed(1)} KB · ~847 filas detectadas`;
-    const btn = document.getElementById('nextBtn');
-    if (btn) { btn.disabled = false; }
+  _importFile = file;
+  document.getElementById('fileInfo').style.display = 'flex';
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = `${(file.size / 1024).toFixed(1)} KB · ~847 filas detectadas`;
+  const btn = document.getElementById('nextBtn');
+  if (btn) { btn.disabled = false; }
 }
 function clearFile() {
-    _importFile = null;
-    const fi = document.getElementById('fileInfo'); if (fi) fi.style.display = 'none';
-    const btn = document.getElementById('nextBtn'); if (btn) btn.disabled = true;
+  _importFile = null;
+  const fi = document.getElementById('fileInfo'); if (fi) fi.style.display = 'none';
+  const btn = document.getElementById('nextBtn'); if (btn) btn.disabled = true;
 }
 function downloadTemplate() {
-    const csv = IMPORT_COLUMNS.join(',') + '\n' + SAMPLE_ROWS.map(r => r.join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'nerve_plantilla_pacientes.csv'; a.click();
+  const csv = IMPORT_COLUMNS.join(',') + '\n' + SAMPLE_ROWS.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'nerve_plantilla_pacientes.csv'; a.click();
 }
 
 function activateStep(n) {
-    [1, 2, 3, 4].forEach(s => {
-        const dot = document.getElementById(`step${s}Dot`);
-        const lbl = document.getElementById(`step${s}Label`);
-        if (!dot || !lbl) return;
-        if (s < n) { dot.style.background = 'var(--success)'; dot.style.borderColor = 'var(--success)'; dot.style.color = '#fff'; dot.innerHTML = '✓'; }
-        else if (s === n) { dot.style.background = 'var(--cyan-mid)'; dot.style.borderColor = 'var(--cyan-mid)'; dot.style.color = '#fff'; dot.innerHTML = s; }
-        else { dot.style.background = 'var(--dark-4)'; dot.style.borderColor = 'var(--border)'; dot.style.color = 'var(--text-muted)'; dot.innerHTML = s; }
-        lbl.style.fontWeight = s === n ? '700' : '400';
-        lbl.style.color = s === n ? 'var(--text)' : 'var(--text-muted)';
-    });
+  [1, 2, 3, 4].forEach(s => {
+    const dot = document.getElementById(`step${s}Dot`);
+    const lbl = document.getElementById(`step${s}Label`);
+    if (!dot || !lbl) return;
+    if (s < n) { dot.style.background = 'var(--success)'; dot.style.borderColor = 'var(--success)'; dot.style.color = '#fff'; dot.innerHTML = '✓'; }
+    else if (s === n) { dot.style.background = 'var(--cyan-mid)'; dot.style.borderColor = 'var(--cyan-mid)'; dot.style.color = '#fff'; dot.innerHTML = s; }
+    else { dot.style.background = 'var(--dark-4)'; dot.style.borderColor = 'var(--border)'; dot.style.color = 'var(--text-muted)'; dot.innerHTML = s; }
+    lbl.style.fontWeight = s === n ? '700' : '400';
+    lbl.style.color = s === n ? 'var(--text)' : 'var(--text-muted)';
+  });
 }
 
 function goToStep2() {
-    _importStep = 2; activateStep(2);
-    document.getElementById('importBody').innerHTML = `
+  _importStep = 2; activateStep(2);
+  document.getElementById('importBody').innerHTML = `
   <div class="card">
     <div class="card-header"><span class="card-title">🔗 Mapeo de columnas</span>
     <span class="badge badge-mint">Detección automática activa</span></div>
@@ -156,8 +156,8 @@ function goToStep2() {
 }
 
 function goToStep3() {
-    _importStep = 3; activateStep(3);
-    document.getElementById('importBody').innerHTML = `
+  _importStep = 3; activateStep(3);
+  document.getElementById('importBody').innerHTML = `
   <div class="card">
     <div class="card-header"><span class="card-title">👁 Vista previa (primeras 5 filas)</span>
     <span class="badge badge-cyan">${SAMPLE_ROWS.length} filas de 847 total</span></div>
@@ -176,8 +176,8 @@ function goToStep3() {
 }
 
 function goToStep4() {
-    _importStep = 4; activateStep(4);
-    document.getElementById('importBody').innerHTML = `
+  _importStep = 4; activateStep(4);
+  document.getElementById('importBody').innerHTML = `
   <div class="card" style="text-align:center">
     <div style="font-size:2rem;margin-bottom:12px">🚀</div>
     <div class="fw-700" style="font-size:1.1rem;margin-bottom:8px">Importando pacientes...</div>
@@ -188,17 +188,17 @@ function goToStep4() {
     <div id="importStatus" class="text-muted fs-sm">0 / 847 registros procesados</div>
   </div>`;
 
-    let prog = 0;
-    const interval = setInterval(() => {
-        prog = Math.min(100, prog + Math.random() * 15);
-        const pEl = document.getElementById('importProgress');
-        const sEl = document.getElementById('importStatus');
-        if (pEl) pEl.style.width = prog + '%';
-        if (sEl) sEl.textContent = `${Math.round(prog / 100 * 847)} / 847 registros procesados`;
-        if (prog >= 100) {
-            clearInterval(interval);
-            const body = document.getElementById('importBody');
-            if (body) body.innerHTML = `
+  let prog = 0;
+  const interval = setInterval(() => {
+    prog = Math.min(100, prog + Math.random() * 15);
+    const pEl = document.getElementById('importProgress');
+    const sEl = document.getElementById('importStatus');
+    if (pEl) pEl.style.width = prog + '%';
+    if (sEl) sEl.textContent = `${Math.round(prog / 100 * 847)} / 847 registros procesados`;
+    if (prog >= 100) {
+      clearInterval(interval);
+      const body = document.getElementById('importBody');
+      if (body) body.innerHTML = `
       <div class="card" style="text-align:center;padding:48px">
         <div style="font-size:3rem;margin-bottom:16px">✅</div>
         <div class="fw-700" style="font-size:1.2rem;margin-bottom:8px">¡Importación completada!</div>
@@ -208,6 +208,6 @@ function goToStep4() {
           <button class="btn btn-primary" onclick="navigate('patients')">Ver pacientes →</button>
         </div>
       </div>`;
-        }
-    }, 200);
+    }
+  }, 200);
 }

@@ -293,6 +293,19 @@ function confirmLogout() {
   if (passInput) passInput.value = '';
 }
 
+// ---- Utility Helpers ----
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function addMonths(date, months) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
 // ---- Navigation ----
 function buildNav() {
   const nav = document.getElementById('sidebarNav');
@@ -583,8 +596,13 @@ async function renderTenants() {
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando organizaciones...</div>`;
   let orgs = [];
-  try { const res = await API.getOrganizations(); orgs = res.data || res || []; } catch (e) { }
+  try {
+    const res = await API.getOrganizations();
+    orgs = res.data || res.organizations || res || [];
+  } catch (e) { console.error('Error fetching orgs:', e); }
+
   if (!Array.isArray(orgs)) orgs = [];
+
   pc.innerHTML = `
   <div class="page-header"><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro · ${orgs.length} organizaciones</div></div>
   <div class="page-actions"><button class="btn btn-primary" onclick="openNewTenantModal()">+ Nuevo Hospital</button></div></div>
@@ -595,15 +613,150 @@ async function renderTenants() {
         <tbody>
           ${orgs.map(h => `<tr>
             <td style="font-family:monospace;color:var(--text-muted);font-size:0.75rem">${(h.id || '').substring(0, 8)}...</td>
-            <td><div style="font-weight:600">${h.name || '—'}</div></td>
-            <td><span class="badge badge-cyan">${h.plan || 'starter'}</span></td>
+            <td><a href="#" class="cell-link" onclick="renderTenantDetail('${h.id}')">${h.name || '—'}</a></td>
+            <td><span class="badge ${h.plan === 'enterprise' ? 'badge-info' : 'badge-cyan'}">${h.plan || 'starter'}</span></td>
             <td><strong>${h._count?.users || 0}</strong> / ${h.maxDoctors || 0}</td>
-            <td><button class="btn btn-sm btn-secondary" onclick="openEditLimitsModal('${h.id}', '${h.name}', '${h.plan || 'starter'}', ${h.maxDoctors || 0})">Modificar</button> <button class="btn btn-sm btn-danger" onclick="openSuspendTenantModal('${h.name}')">Suspender</button></td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="openEditLimitsModal('${h.id}', '${h.name}', '${h.plan || 'starter'}', ${h.maxDoctors || 0})">Límites</button>
+              <button class="btn btn-sm btn-danger" onclick="openSuspendTenantModal('${h.name}')">Suspender</button>
+            </td>
           </tr>`).join('')}
         </tbody>
       </table>` : '<div class="empty-state" style="padding:30px"><div class="empty-state-icon">🏥</div><div class="empty-state-desc">Sin organizaciones registradas</div></div>'}
     </div>
   </div>`;
+}
+
+async function renderTenantDetail(orgId) {
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando detalles de organización...</div>`;
+
+  try {
+    const [org, users, audit] = await Promise.all([
+      API.getOrganization(orgId),
+      API.getOrganizationUsers(orgId),
+      API.getOrganizationAudit(orgId)
+    ]);
+
+    pc.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <button class="btn btn-secondary btn-sm" onclick="renderTenants()">← Volver</button>
+          <div class="page-title">${org.name}</div>
+        </div>
+        <div class="page-subtitle">Panel de control administrativo para esta entidad</div>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-primary" onclick="openEditLimitsModal('${org.id}', '${org.name}', '${org.plan}', ${org.maxDoctors})">Ajustar Plan</button>
+      </div>
+    </div>
+
+    <div class="stats-grid stats-grid-4" style="margin-bottom:24px">
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(59,130,246,0.1)">🏥</div><div class="stat-value">${org.plan.toUpperCase()}</div><div class="stat-label">Plan Actual</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(34,197,94,0.1)">👨‍⚕️</div><div class="stat-value">${users.filter(u => u.role === 'doctor').length}</div><div class="stat-label">Doctores Activos</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(168,85,247,0.1)">🫀</div><div class="stat-value">${org._count?.patients || 0}</div><div class="stat-label">Pacientes Totales</div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:rgba(234,179,8,0.1)">📅</div><div class="stat-value">Activo</div><div class="stat-label">Estado</div></div>
+    </div>
+
+    <div class="content-grid content-grid-2-1">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Personal y Usuarios</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Acción</th></tr></thead>
+            <tbody>
+              ${users.map(u => `
+              <tr>
+                <td><div class="cell-primary">${u.name}</div><div class="cell-secondary">${u.email}</div></td>
+                <td><span class="badge badge-secondary">${getRoleLabel(u.role)}</span></td>
+                <td><span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? 'Activo' : 'Inactivo'}</span></td>
+                <td><button class="btn btn-sm btn-secondary" onclick="renderUserDetail('${u.id}', '${orgId}')">Ver Perfil</button></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Auditoría Reciente</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${audit.length === 0 ? '<div class="text-muted">Sin actividad registrada</div>' :
+        audit.slice(0, 10).map(log => `
+            <div style="padding:10px;border-bottom:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;font-size:0.8rem">
+                <strong style="color:var(--cyan)">${log.action}</strong>
+                <span class="text-muted">${formatDate(log.createdAt)}</span>
+              </div>
+              <div style="font-size:0.85rem;margin-top:4px">${log.user?.name}: ${log.details || log.entity}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    `;
+  } catch (err) {
+    showNotification('Error al cargar detalles: ' + err.message, 'error');
+    renderTenants();
+  }
+}
+
+async function renderUserDetail(userId, returnOrgId = null) {
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando detalles de usuario...</div>`;
+
+  try {
+    const user = await API.getUserById(userId);
+    const audit = await API.getAuditLogs({ userId });
+
+    pc.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <button class="btn btn-secondary btn-sm" onclick="${returnOrgId ? `renderTenantDetail('${returnOrgId}')` : 'renderTenants()'}">← Volver</button>
+          <div class="page-title">Perfil: ${user.name}</div>
+        </div>
+        <div class="page-subtitle">${getRoleLabel(user.role)} · ${user.email}</div>
+      </div>
+    </div>
+
+    <div class="content-grid content-grid-1-2">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Datos Básicos</span></div>
+        <div style="display:flex;flex-direction:column;gap:15px;padding-top:10px">
+          <div class="info-block"><label>Nombre Completo</label><div>${user.name}</div></div>
+          <div class="info-block"><label>Correo Electrónico</label><div>${user.email}</div></div>
+          <div class="info-block"><label>Rol</label><div><span class="badge badge-info">${getRoleLabel(user.role)}</span></div></div>
+          <div class="info-block"><label>Especialidad</label><div>${user.specialty || '—'}</div></div>
+          <div class="info-block"><label>Cédula</label><div>${user.license || '—'}</div></div>
+          <div class="info-block"><label>Teléfono</label><div>${user.phone || '—'}</div></div>
+          <div class="info-block"><label>Miembro desde</label><div>${formatDate(user.createdAt)}</div></div>
+          <div class="info-block"><label>Estado</label><div><span class="badge ${user.active ? 'badge-success' : 'badge-danger'}">${user.active ? 'Cuenta Activa' : 'Cuenta Suspendida'}</span></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Historial de Auditoría (Trazabilidad)</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha / Hora</th><th>Acción</th><th>Recurso</th><th>Detalles</th></tr></thead>
+            <tbody>
+              ${audit.data.map(log => `
+              <tr>
+                <td style="font-size:0.8rem">${new Date(log.createdAt).toLocaleString('es-MX')}</td>
+                <td><span class="badge badge-info">${log.action}</span></td>
+                <td>${log.entity}</td>
+                <td class="text-muted fs-xs">${log.details || '—'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    `;
+  } catch (err) {
+    showNotification('Error al cargar perfil: ' + err.message, 'error');
+    if (returnOrgId) renderTenantDetail(returnOrgId); else renderTenants();
+  }
 }
 
 function openNewTenantModal() {
@@ -650,13 +803,25 @@ function openEditLimitsModal(orgId, orgName, plan, docs) {
 
 async function saveOrgLimits(orgId) {
   const plan = document.getElementById('limitPlan').value;
-  const maxDoctors = document.getElementById('limitDocs').value;
+  const maxDoctors = parseInt(document.getElementById('limitDocs').value);
   const btn = document.getElementById('btnSaveLimits');
+
+  // Hard detail: check if we are lowering below current count
+  try {
+    const users = await API.getOrganizationUsers(orgId);
+    const docCount = users.filter(u => u.role === 'doctor').length;
+
+    if (maxDoctors < docCount) {
+      if (!confirm(`Advertencia: Estás estableciendo un límite de ${maxDoctors} doctores, pero actualmente hay ${docCount} registrados. ¿Deseas continuar?`)) {
+        return;
+      }
+    }
+  } catch (e) { }
 
   if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
 
   try {
-    await API.updateOrganization(orgId, { plan, maxDoctors: parseInt(maxDoctors) });
+    await API.updateOrgPlan(orgId, { plan, maxDoctors });
     closeModal();
     showNotification('Límites de la organización actualizados correctamente', 'success');
     renderTenants();
@@ -681,6 +846,96 @@ function openSuspendTenantModal(orgName) {
 function renderDoctorSettings() { renderGenericSettings(); }
 function renderSystemConfig() { renderGenericSettings(); }
 function renderBilling() { renderSubscriptions(); }
+
+async function renderSubscriptions() {
+  const pc = document.getElementById('pageContent');
+  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando suscripciones y planes...</div>`;
+
+  try {
+    const res = await API.getAdminStats();
+    const orgs = res.organizations || [];
+
+    pc.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">💳 Gestión de Suscripciones</div>
+        <div class="page-subtitle">Control de planes, vigencia y cortesías para clientes</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Organización</th><th>Plan</th><th>Estado Pago</th><th>Vence el</th><th>Gestión</th></tr></thead>
+          <tbody>
+            ${orgs.map(o => `
+            <tr>
+              <td><strong>${o.name}</strong></td>
+              <td><span class="badge badge-info">${o.plan.toUpperCase()}</span></td>
+              <td><span class="badge badge-success">Suscrito</span></td>
+              <td style="font-family:monospace">${o.subscriptionExpires ? formatDate(o.subscriptionExpires) : 'Lifetime / Sin límite'}</td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-sm btn-secondary" onclick="extendSubscription('${o.id}', 1)">+1 Mes Gratis</button>
+                  <button class="btn btn-sm btn-secondary" onclick="extendSubscription('${o.id}', 3)">+3 Meses</button>
+                  <button class="btn btn-sm btn-cyan" onclick="openCustomExpiryModal('${o.id}', '${o.name}', '${o.subscriptionExpires || ''}')">⚙️ Fecha Personalizada</button>
+                </div>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  } catch (err) {
+    showNotification('Error al cargar suscripciones', 'error');
+  }
+}
+
+async function extendSubscription(orgId, months) {
+  if (!confirm(`¿Estás seguro de regalar ${months} mes(es) a esta organización?`)) return;
+
+  try {
+    // We need current expiry or now
+    const orgs = (await API.getAdminStats()).organizations;
+    const org = orgs.find(o => o.id === orgId);
+    let baseDate = org.subscriptionExpires ? new Date(org.subscriptionExpires) : new Date();
+
+    const newExpiry = addMonths(baseDate, months);
+    await API.updateOrgPlan(orgId, { subscriptionExpires: newExpiry.toISOString() });
+    showNotification('Suscripción extendida con éxito', 'success');
+    renderSubscriptions();
+  } catch (err) {
+    showNotification('Error al extender suscripción', 'error');
+  }
+}
+
+function openCustomExpiryModal(orgId, orgName, currentExpiry) {
+  openModal(`⚙️ Ajustar Vencimiento: ${orgName}`, `
+    <div class="form-group">
+      <label class="form-label">Nueva Fecha de Vencimiento</label>
+      <input type="date" id="newExpiryDate" class="form-control" value="${currentExpiry ? currentExpiry.split('T')[0] : ''}" />
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-top:8px">Al establecer esta fecha, el acceso de la organización se mantendrá activo hasta este día independientemente de su estado en Mercado Pago.</p>
+    </div>
+  `, `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveCustomExpiry('${orgId}')">Guardar Fecha</button>
+  `, 'sm');
+}
+
+async function saveCustomExpiry(orgId) {
+  const date = document.getElementById('newExpiryDate').value;
+  if (!date) return showNotification('Selecciona una fecha', 'error');
+
+  try {
+    await API.updateOrgPlan(orgId, { subscriptionExpires: new Date(date).toISOString() });
+    closeModal();
+    showNotification('Fecha de vencimiento actualizada', 'success');
+    renderSubscriptions();
+  } catch (err) {
+    showNotification('Error al guardar fecha', 'error');
+  }
+}
+
 function renderDepartments() { renderStaff(); }
 
 function renderGenericSettings() {
