@@ -209,7 +209,8 @@ function enterApp() {
 
   if (window.innerWidth <= 900) document.getElementById('mobileMenuBtn').style.display = 'block';
   buildNav();
-  navigate('dashboard');
+  history.replaceState({ moduleId: 'dashboard' }, null, "");
+  navigate('dashboard', false);
 
   if (!isSuperAdmin && localStorage.getItem('nerve_firsttime') === '1') {
     setTimeout(() => showOnboarding(), 600);
@@ -253,7 +254,7 @@ function buildNav() {
   });
 }
 
-function navigate(moduleId) {
+function navigate(moduleId, push = true) {
   APP.currentModule = moduleId;
   document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.id === moduleId));
   const item = (APP.navByRole[APP.currentRole] || []).find(i => i.id === moduleId);
@@ -269,11 +270,23 @@ function navigate(moduleId) {
     } else {
       console.warn('navigate: módulo "' + moduleId + '" — función "' + fn + '" no encontrada');
     }
+
+    // --- History API Support ---
+    if (push) {
+      history.pushState({ moduleId }, null, "");
+    }
   }
   // Close mobile sidebar
   try { document.getElementById('sidebar').classList.remove('mobile-open'); } catch (e) { }
   try { closeNotifications(); } catch (e) { }
 }
+
+// Handle Browser Back/Forward buttons
+window.onpopstate = function (event) {
+  if (event.state && event.state.moduleId) {
+    navigate(event.state.moduleId, false);
+  }
+};
 
 // ---- Sidebar toggle ----
 function toggleSidebar() {
