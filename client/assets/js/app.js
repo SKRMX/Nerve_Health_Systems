@@ -95,19 +95,33 @@ function selectRole(el) {
   // Legacy function - role selection is now automated via API login
 }
 // On load: highlight default role OR auto-login if coming from register/invite
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   try {
     const storedRole = localStorage.getItem('nerve_role');
-    const storedEmail = localStorage.getItem('nerve_email');
     const storedToken = localStorage.getItem('nerve_token');
 
-    if (storedRole && storedToken) {
-      APP.currentRole = storedRole;
+    if (storedToken) {
+      // Fetch profile to ensure session is valid and populate currentUser
+      const user = await API.getMe();
+      APP.liveUser = user;
+      APP.currentRole = user.role;
+
+      // Update user data from API
+      APP.currentUser[user.role] = {
+        name: user.name,
+        initials: user.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase(),
+        org: user.orgName || 'NERVE Platform',
+        role: getRoleLabel(user.role),
+        specialty: user.specialty || '',
+        license: user.license || '',
+      };
+
       enterApp();
     } else {
       // No session: show login and hide splash
       document.getElementById('login-screen').style.display = 'flex';
       hideSplash();
+      const storedEmail = localStorage.getItem('nerve_email');
       if (storedEmail) {
         const emailInput = document.getElementById('loginEmail');
         if (emailInput) emailInput.value = storedEmail;
@@ -115,8 +129,9 @@ window.addEventListener('load', () => {
     }
   } catch (err) {
     console.error('Core init error:', err);
-    hideSplash();
+    clearTokens();
     document.getElementById('login-screen').style.display = 'flex';
+    hideSplash();
   }
 });
 
@@ -147,10 +162,9 @@ function doLogin() {
         APP.liveUser = user;
         APP.currentRole = user.role;
 
-        const remember = document.getElementById('rememberMe')?.checked;
         if (remember) {
           localStorage.setItem('nerve_role', user.role);
-          localStorage.setItem('nerve_email', user.email);
+          localStorage.setItem('nerve_email', typedUser); // Store the actual typed email
           localStorage.setItem('nerve_name', user.name);
         } else {
           localStorage.removeItem('nerve_role');
