@@ -238,7 +238,9 @@ async function renderSuperAdminDash() {
   let data = {};
   try {
     data = await API.getAdminStats();
+    console.log('SuperAdminDash Data:', data);
   } catch (err) {
+    console.error('SuperAdminDash API Error:', err);
     data = { stats: {} };
   }
 
