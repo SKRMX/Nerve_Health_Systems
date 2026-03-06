@@ -99,14 +99,17 @@ window.addEventListener('load', () => {
   const storedRole = localStorage.getItem('nerve_role');
   const storedEmail = localStorage.getItem('nerve_email');
 
-  if (storedRole && APP.currentUser[storedRole] && localStorage.getItem('nerve_token')) {
-    // Auto-login if we have a token and a saved role
+  if (storedRole) {
     APP.currentRole = storedRole;
     enterApp();
-  } else if (storedEmail) {
-    // Pre-fill email if we have one saved
-    const emailInput = document.getElementById('loginEmail');
-    if (emailInput) emailInput.value = storedEmail;
+  } else {
+    // No session: show login and hide splash
+    document.getElementById('login-screen').style.display = 'flex';
+    hideSplash();
+    if (storedEmail) {
+      const emailInput = document.getElementById('loginEmail');
+      if (emailInput) emailInput.value = storedEmail;
+    }
   }
 });
 
@@ -193,7 +196,10 @@ function getRoleLabel(role) {
 
 function enterApp() {
   const user = APP.currentUser[APP.currentRole];
-  if (!user) return;
+  if (!user) {
+    hideSplash();
+    return;
+  }
 
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-layout').style.display = 'flex';
@@ -214,6 +220,18 @@ function enterApp() {
 
   if (!isSuperAdmin && localStorage.getItem('nerve_firsttime') === '1') {
     setTimeout(() => showOnboarding(), 600);
+  }
+
+  // Hide splash after everything is rendered
+  setTimeout(() => hideSplash(), 300);
+}
+
+function hideSplash() {
+  const splash = document.getElementById('splash-screen');
+  if (splash) {
+    splash.style.opacity = '0';
+    splash.style.visibility = 'hidden';
+    setTimeout(() => splash.remove(), 500);
   }
 }
 
