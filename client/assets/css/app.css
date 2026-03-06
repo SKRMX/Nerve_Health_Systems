@@ -425,6 +425,11 @@ body {
     justify-content: center;
     box-shadow: 0 0 0 2px var(--dark-2);
     line-height: normal;
+    transition: opacity 0.2s;
+}
+
+.icon-btn .badge:empty {
+    display: none;
 }
 
 .user-avatar {

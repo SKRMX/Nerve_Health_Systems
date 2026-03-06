@@ -22,6 +22,13 @@ router.get('/stats', async (req, res) => {
             prisma.prescription.count(),
         ]);
 
+        console.log('--- GLOBAL STATS DEBUG ---');
+        console.log('Orgs:', orgCount);
+        console.log('Users:', userCount);
+        console.log('Patients:', patientCount);
+        console.log('Appointments:', appointmentCount);
+        console.log('--------------------------');
+
         // Doctors count
         const doctorCount = await prisma.user.count({ where: { role: 'doctor' } });
 
