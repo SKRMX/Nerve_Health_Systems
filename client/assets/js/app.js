@@ -254,13 +254,39 @@ function buildNav() {
   });
 }
 
-function navigate(moduleId, push = true) {
+function navigate(moduleId, push = true, payload = null) {
   APP.currentModule = moduleId;
+  const state = { moduleId, payload };
+
+  // --- History API Support ---
+  if (push) {
+    history.pushState(state, null, "");
+  }
+
+  // Handle special "virtual" views first
+  if (moduleId === 'patientDetail' && payload && payload.id) {
+    document.getElementById('breadcrumbPage').textContent = 'Expediente';
+    if (typeof window.openPatientDetail === 'function') {
+      window.openPatientDetail(payload.id, false);
+      return;
+    }
+  }
+  if (moduleId === 'rxBuilder') {
+    document.getElementById('breadcrumbPage').textContent = 'Nueva Receta';
+    if (typeof window.renderRxBuilder === 'function') {
+      window.renderRxBuilder(payload, false);
+      return;
+    }
+  }
+
+  // Reset active state in sidebar
   document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.id === moduleId));
+
   const item = (APP.navByRole[APP.currentRole] || []).find(i => i.id === moduleId);
   if (item) {
     document.getElementById('breadcrumbSection').textContent = APP.liveUser ? (APP.liveUser.orgName || 'NERVE') : (APP.currentUser[APP.currentRole] || {}).org || '';
     document.getElementById('breadcrumbPage').textContent = item.label;
+
     // Resolve fn string → global function at runtime
     var fn = item.fn;
     if (typeof fn === 'string' && typeof window[fn] === 'function') {
@@ -270,12 +296,8 @@ function navigate(moduleId, push = true) {
     } else {
       console.warn('navigate: módulo "' + moduleId + '" — función "' + fn + '" no encontrada');
     }
-
-    // --- History API Support ---
-    if (push) {
-      history.pushState({ moduleId }, null, "");
-    }
   }
+
   // Close mobile sidebar
   try { document.getElementById('sidebar').classList.remove('mobile-open'); } catch (e) { }
   try { closeNotifications(); } catch (e) { }
@@ -284,7 +306,7 @@ function navigate(moduleId, push = true) {
 // Handle Browser Back/Forward buttons
 window.onpopstate = function (event) {
   if (event.state && event.state.moduleId) {
-    navigate(event.state.moduleId, false);
+    navigate(event.state.moduleId, false, event.state.payload);
   }
 };
 

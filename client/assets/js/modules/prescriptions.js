@@ -21,7 +21,11 @@ function renderPrescriptions() {
   renderRxHistory();
 }
 
-async function renderRxBuilder(data = null) {
+async function renderRxBuilder(data = null, push = true) {
+  if (push && typeof navigate === 'function') {
+    navigate('rxBuilder', true, data);
+    return;
+  }
   const area = document.getElementById('rxContent');
   area.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted)">⏳ Cargando...</div>`;
 

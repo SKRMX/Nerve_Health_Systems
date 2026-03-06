@@ -93,7 +93,11 @@ function renderPatientTable() {
 </table></div>`;
 }
 
-async function openPatientDetail(id) {
+async function openPatientDetail(id, push = true) {
+  if (push && typeof navigate === 'function') {
+    navigate('patientDetail', true, { id });
+    return;
+  }
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando expediente...</div>`;
 
