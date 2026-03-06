@@ -602,28 +602,28 @@ async function renderTenants() {
 
 function openNewTenantModal() {
   openModal('🏥 Nuevo Hospital / Clínica', `
-    < div class="form-row form-row-2" >
+    <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Nombre de la organización</label><input class="form-control" placeholder="Ej. Clínica Las Condes" /></div>
       <div class="form-group"><label class="form-label">Plan de suscripción</label>
         <select class="form-control"><option>Starter</option><option>Clínica Pro</option><option>Enterprise</option></select>
       </div>
-    </div >
+    </div>
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Nombre del administrador</label><input class="form-control" placeholder="Ej. Dr. Juan Pérez" /></div>
       <div class="form-group"><label class="form-label">Correo del administrador</label><input type="email" class="form-control" placeholder="admin@clinica.com" /></div>
     </div>
     <div class="form-group"><label class="form-label">Límite de doctores</label><input type="number" class="form-control" value="10" /></div>
 `, `
-  < button class="btn btn-secondary" onclick = "closeModal()" > Cancelar</button >
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="closeModal();showNotification('Organización creada y correo enviado al administrador con éxito','success')">Crear Organización</button>
 `);
 }
 
 function openEditLimitsModal(orgName, plan, docs) {
   openModal('⚙️ Modificar Límites: ' + orgName, `
-  < div class="form-group" ><label class="form-label">Plan Actual</label>
+    <div class="form-group"><label class="form-label">Plan Actual</label>
       <select class="form-control"><option ${plan === 'hospital' ? 'selected' : ''}>Enterprise (Hospital)</option><option ${plan === 'clinica' ? 'selected' : ''}>Clínica Pro</option><option ${plan === 'starter' ? 'selected' : ''}>Starter</option></select>
-    </div >
+    </div>
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Límite de Doctores</label><input type="number" class="form-control" value="${docs}" /></div>
       <div class="form-group"><label class="form-label">Límite de Almacenamiento (GB)</label><input type="number" class="form-control" value="50" /></div>
@@ -633,20 +633,20 @@ function openEditLimitsModal(orgName, plan, docs) {
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--cyan-mid)"> Módulo de analítica avanzada</label>
     </div>
 `, `
-  < button class="btn btn-secondary" onclick = "closeModal()" > Cancelar</button >
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     <button class="btn btn-primary" onclick="closeModal();showNotification('Límites de la organización actualizados','success')">Guardar Cambios</button>
 `);
 }
 
 function openSuspendTenantModal(orgName) {
   openModal('⚠️ Suspender Organización', `
-  < div style = "padding:4px 0;" >
-      ¿Estás seguro de que deseas suspender el acceso a < strong style = "color:var(--text)" > ${orgName}</strong >? <br><br>
-  <span style="color:var(--text-muted);font-size:0.85rem">Los usuarios de esta organización no podrán acceder al sistema hasta que se reactive la cuenta desde este panel. Sus datos clínicos permanecerán intactos en la base de datos y no serán eliminados.</span>
-</div>
+    <div style="padding:4px 0;">
+      ¿Estás seguro de que deseas suspender el acceso a <strong style="color:var(--text)">${orgName}</strong>? <br><br>
+      <span style="color:var(--text-muted);font-size:0.85rem">Los usuarios de esta organización no podrán acceder al sistema hasta que se reactive la cuenta desde este panel. Sus datos clínicos permanecerán intactos en la base de datos y no serán eliminados.</span>
+    </div>
   `, `
-  <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-  <button class="btn btn-danger" onclick="closeModal();showNotification('Organización suspendida temporalmente','warning')">Sí, Suspender</button>
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-danger" onclick="closeModal();showNotification('Organización suspendida temporalmente','warning')">Sí, Suspender</button>
   `);
 }
 
