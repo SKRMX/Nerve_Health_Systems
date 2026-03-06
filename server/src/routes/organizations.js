@@ -64,7 +64,7 @@ router.put('/:id',
                 return res.status(403).json({ error: 'Sin acceso' });
             }
 
-            const { name, location, city, phone, email } = req.body;
+            const { name, location, city, phone, email, plan, maxDoctors } = req.body;
 
             const org = await prisma.organization.update({
                 where: { id: req.params.id },
@@ -74,6 +74,8 @@ router.put('/:id',
                     ...(city !== undefined && { city }),
                     ...(phone !== undefined && { phone }),
                     ...(email !== undefined && { email }),
+                    ...(plan && { plan }),
+                    ...(maxDoctors !== undefined && { maxDoctors: parseInt(maxDoctors) }),
                 },
             });
 

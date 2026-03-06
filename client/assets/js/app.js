@@ -428,7 +428,13 @@ window.showNotification = function (msg, type = 'success') {
 // ---- Modal ----
 function openModal(title, bodyHTML, footerHTML = '', size = '') {
   document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalBody').innerHTML = bodyHTML;
+  const modalBody = document.getElementById('modalBody');
+  modalBody.innerHTML = bodyHTML;
+  modalBody.setAttribute('translate', 'no');
+
+  const modalBox = document.getElementById('modalBox');
+  modalBox.setAttribute('translate', 'no');
+
   document.getElementById('modalFooter').innerHTML = footerHTML;
   const box = document.getElementById('modalBox');
   box.className = 'modal' + (size ? ` modal-${size}` : '');
@@ -575,24 +581,24 @@ function renderPatientPrescriptions() {
 
 async function renderTenants() {
   const pc = document.getElementById('pageContent');
-  pc.innerHTML = `< div style = "padding:40px;text-align:center;color:var(--text-muted)" >⏳ Cargando organizaciones...</div > `;
+  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando organizaciones...</div>`;
   let orgs = [];
   try { const res = await API.getOrganizations(); orgs = res.data || res || []; } catch (e) { }
   if (!Array.isArray(orgs)) orgs = [];
   pc.innerHTML = `
-  < div class="page-header" ><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro · ${orgs.length} organizaciones</div></div>
-  <div class="page-actions"><button class="btn btn-primary" onclick="openNewTenantModal()">+ Nuevo Hospital</button></div></div >
+  <div class="page-header"><div><div class="page-title">🏥 Organizaciones (Tenants)</div><div class="page-subtitle">Control maestro · ${orgs.length} organizaciones</div></div>
+  <div class="page-actions"><button class="btn btn-primary" onclick="openNewTenantModal()">+ Nuevo Hospital</button></div></div>
   <div class="card">
     <div class="table-wrap">
       ${orgs.length > 0 ? `<table>
-        <thead><tr><th>ID</th><th>Organización</th><th>Plan</th><th>Usuarios</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>ID</th><th>Organización</th><th>Plan</th><th>Doctores / Límite</th><th>Acciones</th></tr></thead>
         <tbody>
           ${orgs.map(h => `<tr>
             <td style="font-family:monospace;color:var(--text-muted);font-size:0.75rem">${(h.id || '').substring(0, 8)}...</td>
             <td><div style="font-weight:600">${h.name || '—'}</div></td>
             <td><span class="badge badge-cyan">${h.plan || 'starter'}</span></td>
-            <td>${h._count?.users || '—'}</td>
-            <td><button class="btn btn-sm btn-secondary" onclick="openEditLimitsModal('${h.name}', '${h.plan || 'starter'}', 0)">Modificar</button> <button class="btn btn-sm btn-danger" onclick="openSuspendTenantModal('${h.name}')">Suspender</button></td>
+            <td><strong>${h._count?.users || 0}</strong> / ${h.maxDoctors || 0}</td>
+            <td><button class="btn btn-sm btn-secondary" onclick="openEditLimitsModal('${h.id}', '${h.name}', '${h.plan || 'starter'}', ${h.maxDoctors || 0})">Modificar</button> <button class="btn btn-sm btn-danger" onclick="openSuspendTenantModal('${h.name}')">Suspender</button></td>
           </tr>`).join('')}
         </tbody>
       </table>` : '<div class="empty-state" style="padding:30px"><div class="empty-state-icon">🏥</div><div class="empty-state-desc">Sin organizaciones registradas</div></div>'}
@@ -619,14 +625,18 @@ function openNewTenantModal() {
 `);
 }
 
-function openEditLimitsModal(orgName, plan, docs) {
+function openEditLimitsModal(orgId, orgName, plan, docs) {
   openModal('⚙️ Modificar Límites: ' + orgName, `
     <div class="form-group"><label class="form-label">Plan Actual</label>
-      <select class="form-control"><option ${plan === 'hospital' ? 'selected' : ''}>Enterprise (Hospital)</option><option ${plan === 'clinica' ? 'selected' : ''}>Clínica Pro</option><option ${plan === 'starter' ? 'selected' : ''}>Starter</option></select>
+      <select class="form-control" id="limitPlan">
+        <option value="enterprise" ${plan === 'enterprise' || plan === 'hospital' ? 'selected' : ''}>Enterprise (Hospital)</option>
+        <option value="clinica_pro" ${plan === 'clinica_pro' || plan === 'clinica' ? 'selected' : ''}>Clínica Pro</option>
+        <option value="starter" ${plan === 'starter' ? 'selected' : ''}>Starter</option>
+      </select>
     </div>
     <div class="form-row form-row-2">
-      <div class="form-group"><label class="form-label">Límite de Doctores</label><input type="number" class="form-control" value="${docs}" /></div>
-      <div class="form-group"><label class="form-label">Límite de Almacenamiento (GB)</label><input type="number" class="form-control" value="50" /></div>
+      <div class="form-group"><label class="form-label">Límite de Doctores</label><input type="number" id="limitDocs" class="form-control" value="${docs}" /></div>
+      <div class="form-group"><label class="form-label">Límite de Almacenamiento (GB)</label><input type="number" class="form-control" value="50" disabled /></div>
     </div>
     <div class="form-group"><label class="form-label">Características adicionales</label>
       <label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--cyan-mid)"> Facturación automática</label>
@@ -634,8 +644,26 @@ function openEditLimitsModal(orgName, plan, docs) {
     </div>
 `, `
     <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-    <button class="btn btn-primary" onclick="closeModal();showNotification('Límites de la organización actualizados','success')">Guardar Cambios</button>
+    <button class="btn btn-primary" id="btnSaveLimits" onclick="saveOrgLimits('${orgId}')">Guardar Cambios</button>
 `);
+}
+
+async function saveOrgLimits(orgId) {
+  const plan = document.getElementById('limitPlan').value;
+  const maxDoctors = document.getElementById('limitDocs').value;
+  const btn = document.getElementById('btnSaveLimits');
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+  try {
+    await API.updateOrganization(orgId, { plan, maxDoctors: parseInt(maxDoctors) });
+    closeModal();
+    showNotification('Límites de la organización actualizados correctamente', 'success');
+    renderTenants();
+  } catch (err) {
+    showNotification(err.message || 'Error al actualizar límites', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar Cambios'; }
+  }
 }
 
 function openSuspendTenantModal(orgName) {
