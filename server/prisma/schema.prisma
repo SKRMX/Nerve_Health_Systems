@@ -124,6 +124,7 @@ model Prescription {
   frequency   String
   duration    String
   notes       String?
+  batchId     String?  @map("batch_id")
   active      Boolean  @default(true)
 
   patientId   String   @map("patient_id")
