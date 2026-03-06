@@ -223,6 +223,18 @@
     <script src="assets/js/modules/importer.js?v=11"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script>
+        // Failsafe: Si en 5 segundos no se ha quitado el splash (por error de JS), quitarlo a la fuerza
+        setTimeout(() => {
+            const s = document.getElementById('splash-screen');
+            if (s) {
+                console.warn('Splash failsafe triggered');
+                s.style.opacity = '0';
+                s.style.visibility = 'hidden';
+                setTimeout(() => s.remove(), 500);
+            }
+        }, 5000);
+    </script>
 </body>
 
 </html>

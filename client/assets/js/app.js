@@ -96,22 +96,34 @@ function selectRole(el) {
 }
 // On load: highlight default role OR auto-login if coming from register/invite
 window.addEventListener('load', () => {
-  const storedRole = localStorage.getItem('nerve_role');
-  const storedEmail = localStorage.getItem('nerve_email');
+  try {
+    const storedRole = localStorage.getItem('nerve_role');
+    const storedEmail = localStorage.getItem('nerve_email');
+    const storedToken = localStorage.getItem('nerve_token');
 
-  if (storedRole) {
-    APP.currentRole = storedRole;
-    enterApp();
-  } else {
-    // No session: show login and hide splash
-    document.getElementById('login-screen').style.display = 'flex';
-    hideSplash();
-    if (storedEmail) {
-      const emailInput = document.getElementById('loginEmail');
-      if (emailInput) emailInput.value = storedEmail;
+    if (storedRole && storedToken) {
+      APP.currentRole = storedRole;
+      enterApp();
+    } else {
+      // No session: show login and hide splash
+      document.getElementById('login-screen').style.display = 'flex';
+      hideSplash();
+      if (storedEmail) {
+        const emailInput = document.getElementById('loginEmail');
+        if (emailInput) emailInput.value = storedEmail;
+      }
     }
+  } catch (err) {
+    console.error('Core init error:', err);
+    hideSplash();
+    document.getElementById('login-screen').style.display = 'flex';
   }
 });
+
+// Failsafe: Hide splash if ANY global error occurs during load
+window.onerror = function () {
+  hideSplash();
+};
 
 function doLogin() {
   const emailInput = document.getElementById('loginEmail');
