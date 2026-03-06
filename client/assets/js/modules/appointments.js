@@ -68,9 +68,11 @@ async function renderAppointments() {
             <td class="text-muted">${a.type || '—'}</td>
             <td><span class="badge ${a.status === 'programada' ? 'badge-success' : a.status === 'cancelada' ? 'badge-danger' : a.status === 'completada' ? 'badge-cyan' : 'badge-warning'}">${a.status}</span></td>
             <td><div style="display:flex;gap:6px">
-              ${a.status !== 'cancelada' && a.status !== 'completada' ? `
-              <button class="btn btn-primary btn-sm" onclick="completeAppt('${a.id}')">Completar</button>
-              <button class="btn btn-danger btn-sm" onclick="cancelAppt('${a.id}')">Cancelar</button>` : '—'}
+              ${a.status !== 'cancelada' ? `
+              ${a.status !== 'completada' ? `<button class="btn btn-primary btn-sm" onclick="completeAppt('${a.id}')">Completar</button>` : ''}
+              <button class="btn btn-secondary btn-sm" style="background:var(--mint);border-color:var(--mint);color:#111" onclick="openPrescriptionFromAppt('${a.id}')">💊 Recetar</button>
+              ${a.status !== 'completada' ? `<button class="btn btn-danger btn-sm" onclick="cancelAppt('${a.id}')">Cancelar</button>` : ''}
+              ` : '—'}
             </div></td>
           </tr>`).join('')}
           </tbody>
@@ -155,7 +157,10 @@ function calDayClick(dateStr) {
     dayApts.map(a => `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--dark-4);border-radius:8px;margin-bottom:8px;border-left:3px solid ${a.status === 'programada' ? 'var(--cyan-mid)' : 'var(--warning)'}">
       <div style="font-weight:700;color:var(--cyan);width:45px">${a.time}</div>
       <div style="flex:1"><div style="font-weight:600">${a.patient?.name || 'Sin paciente'}</div><div style="font-size:0.78rem;color:var(--text-muted)">${a.type || ''}</div></div>
-      <span class="badge ${a.status === 'programada' ? 'badge-success' : 'badge-warning'}">${a.status}</span>
+      <div style="display:flex;gap:5px;align-items:center">
+        ${a.status !== 'cancelada' ? `<button class="btn btn-sm" style="background:var(--mint);border-color:var(--mint);color:#111;padding:4px 8px;font-size:0.7rem" onclick="closeModal();openPrescriptionFromAppt('${a.id}')">💊 Recetar</button>` : ''}
+        <span class="badge ${a.status === 'programada' ? 'badge-success' : 'badge-warning'}">${a.status}</span>
+      </div>
     </div>`).join('') + `<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="closeModal();openNewApptModal('${dateStr}')">+ Agregar cita en esta fecha</button>`,
     `<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>`);
 }
@@ -267,4 +272,22 @@ async function completeAppt(id) {
   } catch (err) {
     showNotification(err.message || 'Error al completar', 'error');
   }
+}
+async function openPrescriptionFromAppt(apptId) {
+  const appt = _appointments.find(a => a.id === apptId);
+  if (!appt) return;
+
+  // Switch to prescriptions module first
+  renderPrescriptions();
+
+  // Then launch builder with pre-filled data
+  setTimeout(() => {
+    if (typeof renderRxBuilder === 'function') {
+      renderRxBuilder({
+        patientId: appt.patientId || appt.patient?.id,
+        diagnosis: appt.reason || '',
+        notes: `Cita del ${new Date(appt.date).toLocaleDateString()} a las ${appt.time}`
+      });
+    }
+  }, 100);
 }

@@ -190,9 +190,10 @@ async function submitPayment() {
     }
 
     try {
+        const license = document.getElementById('userCedula')?.value?.trim();
         // CALL REAL API
         if (typeof API !== 'undefined') {
-            await API.register(name, email, password, orgName, phone, specialty);
+            await API.register(name, email, password, orgName, phone, specialty, license);
 
             // Store some UI state for the app
             localStorage.setItem('nerve_firsttime', '1');

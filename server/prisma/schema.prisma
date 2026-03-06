@@ -42,6 +42,7 @@ model User {
   name         String
   role         String   // superadmin, org_owner, dept_head, doctor, asistente, patient
   specialty    String?
+  license      String?
   phone        String?
   avatarUrl    String?  @map("avatar_url")
   active       Boolean  @default(true)

@@ -150,6 +150,7 @@ function doLogin() {
           org: user.orgName || 'NERVE Platform',
           role: getRoleLabel(user.role),
           specialty: user.specialty || '',
+          license: user.license || '',
         };
         enterApp();
       })

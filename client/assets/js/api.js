@@ -111,10 +111,10 @@ const API = (() => {
         return data.user;
     }
 
-    async function register(name, email, password, orgName, phone, specialty) {
+    async function register(name, email, password, orgName, phone, specialty, license) {
         const data = await request('/auth/register', {
             method: 'POST',
-            body: { name, email, password, orgName, phone, specialty },
+            body: { name, email, password, orgName, phone, specialty, license },
         });
         setTokens(data.accessToken, data.refreshToken);
         setUser(data.user);

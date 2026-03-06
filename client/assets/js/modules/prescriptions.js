@@ -12,19 +12,26 @@ function renderPrescriptions() {
   const pc = document.getElementById('pageContent');
   pc.innerHTML = `
   <div class="page-header">
-    <div><div class="page-title">💊 Recetas Digitales</div><div class="page-subtitle">Generación de recetas en PDF con branding</div></div>
+    <div><div class="page-title">💊 Recetas Digitales</div><div class="page-subtitle">Historial y gestión de prescripciones</div></div>
     <div class="page-actions">
-      <button class="btn btn-secondary" onclick="renderRxHistory()">📋 Historial de recetas</button>
-      <button class="btn btn-primary" onclick="renderRxBuilder()">+ Nueva receta</button>
+      <button class="btn btn-primary" onclick="renderRxBuilder()">+ Nueva receta (General)</button>
     </div>
   </div>
   <div id="rxContent"></div>`;
-  renderRxBuilder();
+  renderRxHistory();
 }
 
-async function renderRxBuilder() {
+async function renderRxBuilder(data = null) {
   const area = document.getElementById('rxContent');
-  area.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted)">⏳ Cargando pacientes...</div>`;
+  area.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted)">⏳ Cargando...</div>`;
+
+  // Reset sheets if starting fresh
+  if (!data || !data.keepSheets) {
+    _rxSheets = [
+      [{ id: Date.now(), name: '', dose: '', form: '', freq: '', dur: '', inst: '' }]
+    ];
+    _activeSheetIdx = 0;
+  }
 
   // Load patients
   try {
@@ -129,6 +136,23 @@ async function renderRxBuilder() {
     });
   }
 
+  // Pre-fill data if provided (from Appointment)
+  if (data) {
+    if (data.patientId) {
+      const p = _rxPatients.find(px => px.id === data.patientId);
+      if (p) {
+        if (input) input.value = p.name;
+        document.getElementById('rxPatientId').value = p.id;
+      }
+    }
+    if (data.diagnosis) {
+      document.getElementById('rxDx').value = data.diagnosis;
+    }
+    if (data.notes) {
+      document.getElementById('rxNotes').value = data.notes;
+    }
+  }
+
   APP.initDatePicker("#rxDate", {
     defaultDate: "today",
     onChange: () => _debouncedUpdatePreview()
@@ -212,6 +236,7 @@ function updatePreview() {
   const orgName = user.orgName || user.org || 'Clínica Médica';
   const drName = user.name || 'Dr. Médico';
   const drSpecialty = user.specialty || (APP.currentRole === 'doctor' ? 'Médico General' : '');
+  const drLicense = user.license ? `Céd. Prof. ${user.license}` : '';
   const rxNumBase = 'RX-' + date.replace(/-/g, '').slice(2);
 
   // Calculate scaling factor based on area relative to "Carta" (Standard reference)
@@ -283,8 +308,9 @@ function updatePreview() {
         <div style="display:flex;justify-content:space-between;border-top:${1 * scale * densityScale}px dashed #ccc;padding-top:${5 * scale * densityScale}px;margin-top:${5 * scale * densityScale}px">
           <div style="font-size:${0.6 * scale * densityScale}rem;color:#666">
             <strong style="color:#111">${drName}</strong><br>
-            <span style="font-size:0.9em;font-weight:600">${drSpecialty}</span><br>
-            ${orgName}
+            <span style="font-size:0.9em;font-weight:600;display:block;line-height:1.2">${drSpecialty}</span>
+            <span style="font-size:0.85em;display:block;margin-top:1px">${drLicense}</span>
+            <span style="font-size:0.85em;display:block">${orgName}</span>
           </div>
           <div style="width:${80 * scale * densityScale}px;height:${30 * scale * densityScale}px;border-bottom:${1 * scale * densityScale}px solid #333;text-align:center;font-size:${0.5 * scale * densityScale}rem;color:#999;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px">Firma y Sello</div>
         </div>

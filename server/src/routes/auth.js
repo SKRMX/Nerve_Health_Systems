@@ -28,7 +28,7 @@ const registerLimiter = rateLimit({
 // Creates an organization + org_owner in one step
 router.post('/register', registerLimiter, async (req, res) => {
     try {
-        const { name, email, password, orgName, phone, specialty } = req.body;
+        const { name, email, password, orgName, phone, specialty, license } = req.body;
 
         if (!name || !email || !password || !orgName) {
             return res.status(400).json({ error: 'Nombre, email, contraseña y nombre de organización son requeridos' });
@@ -63,6 +63,7 @@ router.post('/register', registerLimiter, async (req, res) => {
                     role: 'org_owner',
                     phone: phone || null,
                     specialty: specialty || null,
+                    license: license || null,
                     orgId: org.id,
                 },
             });
@@ -80,6 +81,8 @@ router.post('/register', registerLimiter, async (req, res) => {
                 name: result.user.name,
                 email: result.user.email,
                 role: result.user.role,
+                specialty: result.user.specialty,
+                license: result.user.license,
                 orgId: result.org.id,
                 orgName: result.org.name,
             },
@@ -130,6 +133,7 @@ router.post('/login', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 specialty: user.specialty,
+                license: user.license,
                 phone: user.phone,
                 orgId: user.org?.id || null,
                 orgName: user.org?.name || null,
