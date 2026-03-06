@@ -208,7 +208,10 @@ function updatePreview() {
   };
 
   const dim = sizeDims[pageSize] || sizeDims['a4'];
-  const orgName = APP.liveUser?.organization?.name || 'Clínica Médica';
+  const user = APP.liveUser || APP.currentUser[APP.currentRole] || {};
+  const orgName = user.orgName || user.org || 'Clínica Médica';
+  const drName = user.name || 'Dr. Médico';
+  const drSpecialty = user.specialty || (APP.currentRole === 'doctor' ? 'Médico General' : '');
   const rxNumBase = 'RX-' + date.replace(/-/g, '').slice(2);
 
   // Calculate scaling factor based on area relative to "Carta" (Standard reference)
@@ -279,7 +282,8 @@ function updatePreview() {
       <div style="margin-top:auto">
         <div style="display:flex;justify-content:space-between;border-top:${1 * scale * densityScale}px dashed #ccc;padding-top:${5 * scale * densityScale}px;margin-top:${5 * scale * densityScale}px">
           <div style="font-size:${0.6 * scale * densityScale}rem;color:#666">
-            <strong style="color:#111">${APP.liveUser?.name || 'Dr. Médico'}</strong><br>
+            <strong style="color:#111">${drName}</strong><br>
+            <span style="font-size:0.9em;font-weight:600">${drSpecialty}</span><br>
             ${orgName}
           </div>
           <div style="width:${80 * scale * densityScale}px;height:${30 * scale * densityScale}px;border-bottom:${1 * scale * densityScale}px solid #333;text-align:center;font-size:${0.5 * scale * densityScale}rem;color:#999;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px">Firma y Sello</div>

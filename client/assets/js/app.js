@@ -149,6 +149,7 @@ function doLogin() {
           initials: user.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase(),
           org: user.orgName || 'NERVE Platform',
           role: getRoleLabel(user.role),
+          specialty: user.specialty || '',
         };
         enterApp();
       })
