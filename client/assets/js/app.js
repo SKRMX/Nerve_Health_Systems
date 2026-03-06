@@ -248,13 +248,30 @@ function hideSplash() {
 }
 
 function doLogout() {
-  if (!confirm('¿Cerrar sesión?')) return;
+  const body = `
+    <div style="text-align:center; padding:20px;">
+      <div style="font-size:3rem; margin-bottom:15px;">👋</div>
+      <p style="color:var(--text); font-size:1.1rem; margin-bottom:10px;">¿Estás seguro que deseas cerrar sesión?</p>
+      <p style="color:var(--text-muted); font-size:0.9rem;">Se cerrará tu acceso actual y deberás ingresar tus credenciales nuevamente.</p>
+    </div>
+  `;
+  const footer = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="confirmLogout()" style="background:var(--danger); border-color:var(--danger);">Cerrar sesión</button>
+  `;
+  openModal('Confirmar salida', body, footer, 'sm');
+}
+
+function confirmLogout() {
+  closeModal();
   // Clear API tokens
   if (typeof API !== 'undefined') API.clearTokens();
   APP.liveUser = null;
   localStorage.removeItem('nerve_firsttime');
   localStorage.removeItem('nerve_role');
   localStorage.removeItem('nerve_name');
+  localStorage.removeItem('nerve_token'); // Final sweep
+
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app-layout').style.display = 'none';
   // Clear password field

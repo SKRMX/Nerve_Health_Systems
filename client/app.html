@@ -127,6 +127,12 @@
             </div>
             <nav class="sidebar-nav" id="sidebarNav"></nav>
             <div class="sidebar-footer">
+                <button class="nav-item"
+                    style="width:calc(100% - 12px); border:none; background:transparent; margin-bottom:8px;"
+                    onclick="doLogout()">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-label">Cerrar sesión</span>
+                </button>
                 <button class="sidebar-toggle" onclick="toggleSidebar()">
                     <span style="font-size:1rem;">⟨</span>
                     <span class="toggle-label" style="font-size:0.82rem;font-weight:500;">Colapsar</span>
@@ -158,29 +164,8 @@
                         </div>
                         <div class="notif-drop" id="notifDrop">
                             <div class="notif-header">Notificaciones</div>
-                            <div class="notif-item unread" onclick="closeNotifications()">
-                                <div class="notif-dot"></div>
-                                <div>
-                                    <div class="notif-title">Nueva cita programada</div>
-                                    <div class="notif-desc">María García · Mañana 09:00 AM</div>
-                                    <div class="notif-time">Hace 5 min</div>
-                                </div>
-                            </div>
-                            <div class="notif-item unread" onclick="closeNotifications()">
-                                <div class="notif-dot"></div>
-                                <div>
-                                    <div class="notif-title">Recordatorio de seguimiento</div>
-                                    <div class="notif-desc">Carlos López · Resultados pendientes</div>
-                                    <div class="notif-time">Hace 1 hr</div>
-                                </div>
-                            </div>
-                            <div class="notif-item" onclick="closeNotifications()">
-                                <div class="notif-dot" style="background:var(--text-dim)"></div>
-                                <div>
-                                    <div class="notif-title">Prescripción descargada</div>
-                                    <div class="notif-desc">Ana Ruiz descargó su receta</div>
-                                    <div class="notif-time">Hace 3 hrs</div>
-                                </div>
+                            <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:0.85rem;">
+                                No tienes notificaciones nuevas
                             </div>
                         </div>
                     </div>
