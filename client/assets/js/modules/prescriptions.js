@@ -235,56 +235,56 @@ function updatePreview() {
   _rxSheets.forEach((sheet, sheetIdx) => {
     const rxNum = `${rxNumBase}-${sheetIdx + 1}-${String(Math.floor(Math.random() * 90) + 10)}`;
 
-    // Density factor: shrink items as the list grows to fit the page
-    // If more than 3 drugs, start shrinking
-    const densityScale = Math.max(0.65, 1 - (Math.max(0, sheet.length - 3) * 0.08));
-    const itemFSize = fSize * densityScale;
+    // Aggressive density scaling to fit up to 10 drugs
+    const threshold = pageSize === 'media' ? 2 : 3;
+    const shrinkRate = pageSize === 'media' ? 0.08 : 0.06;
+    const densityScale = Math.max(0.42, 1 - (Math.max(0, sheet.length - threshold) * shrinkRate));
 
     html += `
-    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${padding}%;font-size:${fSize}rem;width:100%;max-width:${maxWidthPx}px;margin:0 auto 20px auto;aspect-ratio: ${dim.w} / ${dim.h};box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden;line-height:1.25">
+    <div class="prescription-page" style="background:#fff;color:#111;border-radius:4px;padding:${padding * densityScale}%;font-size:${fSize * densityScale}rem;width:100%;max-width:${maxWidthPx}px;margin:0 auto 20px auto;aspect-ratio: ${dim.w} / ${dim.h};box-shadow:0 4px 15px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden;line-height:1.2">
       <div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:${1.5 * scale}px solid #11718B;padding-bottom:${8 * scale}px;margin-bottom:${10 * scale * densityScale}px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:${1.5 * scale * densityScale}px solid #11718B;padding-bottom:${6 * scale * densityScale}px;margin-bottom:${8 * scale * densityScale}px">
           <div>
-            <div style="font-size:${1.1 * scale}rem;font-weight:900;color:#11718B;text-transform:uppercase;line-height:1">${orgName}</div>
-            <div style="font-size:${0.6 * scale}rem;color:#666">Servicios de Salud Profesionales</div>
+            <div style="font-size:${1.1 * scale * densityScale}rem;font-weight:900;color:#11718B;text-transform:uppercase;line-height:1">${orgName}</div>
+            <div style="font-size:${0.6 * scale * densityScale}rem;color:#666">Servicios de Salud Profesionales</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:${0.6 * scale}rem;color:#666;font-weight:600">HOJA ${sheetIdx + 1}/${_rxSheets.length}</div>
-            <div style="font-weight:700;color:#11718B;font-size:${0.7 * scale}rem">${rxNum}</div>
-            <div style="font-size:${0.6 * scale}rem;color:#666">${new Date(date + 'T12:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+            <div style="font-size:${0.6 * scale * densityScale}rem;color:#666;font-weight:600">HOJA ${sheetIdx + 1}/${_rxSheets.length}</div>
+            <div style="font-weight:700;color:#11718B;font-size:${0.7 * scale * densityScale}rem">${rxNum}</div>
+            <div style="font-size:${0.6 * scale * densityScale}rem;color:#666">${new Date(date + 'T12:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
           </div>
         </div>
         
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:${6 * scale}px;background:#f0f8ff;border-radius:4px;padding:${6 * scale * densityScale}px;margin-bottom:${10 * scale * densityScale}px">
-          <div><div style="font-size:${0.5 * scale}rem;color:#666">PACIENTE</div><div style="font-weight:700;font-size:${0.75 * scale}rem">${pat.name}</div></div>
-          <div><div style="font-size:${0.5 * scale}rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600;font-size:${0.75 * scale}rem">${pat.bloodType || '—'}</div></div>
-          <div style="grid-column: span 2"><div style="font-size:${0.5 * scale}rem;color:#666">DIAGNÓSTICO</div><div style="font-weight:600;font-size:${0.75 * scale}rem">${dx || '—'}</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:${6 * scale * densityScale}px;background:#f0f8ff;border-radius:3px;padding:${5 * scale * densityScale}px;margin-bottom:${8 * scale * densityScale}px">
+          <div><div style="font-size:${0.5 * scale * densityScale}rem;color:#666">PACIENTE</div><div style="font-weight:700;font-size:${0.75 * scale * densityScale}rem">${pat.name}</div></div>
+          <div><div style="font-size:${0.5 * scale * densityScale}rem;color:#666">TIPO DE SANGRE</div><div style="font-weight:600;font-size:${0.75 * scale * densityScale}rem">${pat.bloodType || '—'}</div></div>
+          <div style="grid-column: span 2"><div style="font-size:${0.5 * scale * densityScale}rem;color:#666">DIAGNÓSTICO</div><div style="font-weight:600;font-size:${0.75 * scale * densityScale}rem">${dx || '—'}</div></div>
         </div>
         
-        <div style="font-weight:700;margin-bottom:${6 * scale * densityScale}px;color:#11718B;border-bottom:${1 * scale}px solid #11718B;padding-bottom:1px;font-size:${0.65 * scale}rem">℞ PRESCRIPCIÓN</div>
+        <div style="font-weight:700;margin-bottom:${4 * scale * densityScale}px;color:#11718B;border-bottom:${1 * scale * densityScale}px solid #11718B;padding-bottom:1px;font-size:${0.65 * scale * densityScale}rem">℞ PRESCRIPCIÓN</div>
         
         <div style="flex:1">
-          ${sheet.length === 0 ? `<div style="color:#999;font-style:italic;padding:8px 0;text-align:center;font-size:${0.65 * scale}rem">Sin medicamentos en esta hoja.</div>` :
+          ${sheet.length === 0 ? `<div style="color:#999;font-style:italic;padding:4px 0;text-align:center;font-size:${0.65 * scale * densityScale}rem">Sin medicamentos en esta hoja.</div>` :
         sheet.map((d, i) => `
-            <div style="margin-bottom:${4 * scale * densityScale}px;padding:${4 * scale * densityScale}px;border-left:${2 * scale}px solid #06CFD7;background:#fafafa">
+            <div style="margin-bottom:${3 * scale * densityScale}px;padding:${3 * scale * densityScale}px;border-left:${2 * scale * densityScale}px solid #06CFD7;background:#fafafa">
               <div style="font-weight:700;font-size:${0.75 * scale * densityScale}rem">${i + 1}. ${d.name} ${d.dose}</div>
               <div style="color:#555;font-size:${0.65 * scale * densityScale}rem">${d.freq} por ${d.dur} · ${d.form}</div>
-              <div style="color:#777;font-size:${0.6 * scale * densityScale}rem;line-height:1.1">${d.inst}</div>
+              <div style="color:#777;font-size:${0.55 * scale * densityScale}rem;line-height:1">${d.inst}</div>
             </div>`).join('')}
         </div>
           
-        ${notes && sheetIdx === _rxSheets.length - 1 ? `<div style="margin-top:${4 * scale}px;padding:${4 * scale}px;background:#f9f9f9;border-radius:2px;font-size:${0.55 * scale * densityScale}rem;border:1px solid #eee"><strong>Inc:</strong> ${notes}</div>` : ''}
+        ${notes && sheetIdx === _rxSheets.length - 1 ? `<div style="margin-top:${4 * scale * densityScale}px;padding:${4 * scale * densityScale}px;background:#f9f9f9;border-radius:2px;font-size:${0.55 * scale * densityScale}rem;border:1px solid #eee"><strong>Inc:</strong> ${notes}</div>` : ''}
       </div>
       
       <div style="margin-top:auto">
-        <div style="display:flex;justify-content:space-between;border-top:${1 * scale}px dashed #ccc;padding-top:${6 * scale}px;margin-top:${6 * scale}px">
-          <div style="font-size:${0.6 * scale}rem;color:#666">
+        <div style="display:flex;justify-content:space-between;border-top:${1 * scale * densityScale}px dashed #ccc;padding-top:${5 * scale * densityScale}px;margin-top:${5 * scale * densityScale}px">
+          <div style="font-size:${0.6 * scale * densityScale}rem;color:#666">
             <strong style="color:#111">${APP.liveUser?.name || 'Dr. Médico'}</strong><br>
             ${orgName}
           </div>
-          <div style="width:${80 * scale}px;height:${30 * scale}px;border-bottom:${1 * scale}px solid #333;text-align:center;font-size:${0.5 * scale}rem;color:#999;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px">Firma y Sello</div>
+          <div style="width:${80 * scale * densityScale}px;height:${30 * scale * densityScale}px;border-bottom:${1 * scale * densityScale}px solid #333;text-align:center;font-size:${0.5 * scale * densityScale}rem;color:#999;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px">Firma y Sello</div>
         </div>
-        <div style="text-align:center;margin-top:${4 * scale}px;font-size:${0.45 * scale}rem;color:#aaa;line-height:1">
+        <div style="text-align:center;margin-top:${4 * scale * densityScale}px;font-size:${0.45 * scale * densityScale}rem;color:#aaa;line-height:1">
           Gestión por Sistema NERVE · Válida 30 días
         </div>
       </div>
