@@ -10,7 +10,7 @@ const VPS = {
 const conn = new Client();
 conn.on('ready', () => {
     console.log('✅ Connected to VPS');
-    conn.exec('cd /var/www/nerve && git pull origin main && npm install && npx -y prisma generate && npx -y prisma db push --accept-data-loss && pm2 restart ecosystem.config.js', { pty: true }, (err, stream) => {
+    conn.exec('cd /var/www/nerve && git pull origin main && npm install && cd server && npm install && npx -y prisma generate && npx -y prisma db push --accept-data-loss && cd .. && pm2 restart ecosystem.config.js', { pty: true }, (err, stream) => {
         stream.on('data', d => process.stdout.write(d.toString()));
         stream.on('close', code => {
             console.log(`✅ Git pulled (Code ${code})`);
