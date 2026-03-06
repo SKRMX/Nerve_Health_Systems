@@ -350,16 +350,3 @@ async function submitNewPatient() {
   }
 }
 
-/* --- Subscriptions page --- */
-function renderSubscriptions() {
-  const pc = document.getElementById('pageContent');
-  const user = API.getUser();
-  pc.innerHTML = `
-  <div class="page-header"><div><div class="page-title">💳 Suscripción</div><div class="page-subtitle">Plan activo y facturación</div></div></div>
-  <div class="card">
-    <div style="padding:30px;text-align:center;color:var(--text-light)">
-      <div style="font-size:2rem;margin-bottom:10px">💳</div>
-      <p>Módulo de suscripciones próximamente. Contacta a soporte para cambios de plan.</p>
-    </div>
-  </div>`;
-}

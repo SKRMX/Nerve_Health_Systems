@@ -849,45 +849,87 @@ function renderBilling() { renderSubscriptions(); }
 
 async function renderSubscriptions() {
   const pc = document.getElementById('pageContent');
-  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando suscripciones y planes...</div>`;
+  pc.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">⏳ Cargando suscripción...</div>`;
 
+  const role = APP.currentRole;
+  const user = API.getUser();
+
+  if (role === 'superadmin') {
+    try {
+      const res = await API.getAdminStats();
+      const orgs = res.organizations || [];
+
+      pc.innerHTML = `
+      <div class="page-header"><div><div class="page-title">💳 Gestión Global de Suscripciones</div><div class="page-subtitle">Control maestro de planes y vigencias</div></div></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Organización</th><th>Plan</th><th>Vence el</th><th>Gestión</th></tr></thead>
+            <tbody>
+              ${orgs.map(o => `<tr>
+                <td><strong>${o.name}</strong></td>
+                <td><span class="badge badge-info">${(o.plan || 'starter').toUpperCase()}</span></td>
+                <td style="font-family:monospace">${o.subscriptionExpires ? formatDate(o.subscriptionExpires) : '<span style="color:var(--success)">Lifetime</span>'}</td>
+                <td>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-sm btn-secondary" onclick="extendSubscription('${o.id}', 1)">+1 Mes</button>
+                    <button class="btn btn-sm btn-cyan" onclick="openCustomExpiryModal('${o.id}', '${o.name}', '${o.subscriptionExpires || ''}')">⚙️</button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    } catch (err) { showNotification('Error al cargar suscripciones', 'error'); }
+    return;
+  }
+
+  // Tenant/Org Owner view
   try {
-    const res = await API.getAdminStats();
-    const orgs = res.organizations || [];
+    const org = await API.getOrganization(user.orgId);
+    const isExpired = org.subscriptionExpires && new Date(org.subscriptionExpires) < new Date();
 
     pc.innerHTML = `
-    <div class="page-header">
-      <div>
-        <div class="page-title">💳 Gestión de Suscripciones</div>
-        <div class="page-subtitle">Control de planes, vigencia y cortesías para clientes</div>
+    <div class="page-header"><div><div class="page-title">💳 Mi Suscripción</div><div class="page-subtitle">Estado actual de tu plan NERVE</div></div></div>
+    
+    <div class="content-grid content-grid-2-1">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Resumen del Plan</span></div>
+        <div style="display:flex;align-items:center;gap:20px;padding:10px 0;">
+          <div style="width:80px;height:80px;background:var(--cyan-mid);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2rem;">💎</div>
+          <div style="flex:1">
+            <h3 style="margin:0;color:var(--cyan)">Plan ${org.plan ? org.plan.charAt(0).toUpperCase() + org.plan.slice(1) : 'Starter'}</h3>
+            <p style="margin:4px 0;font-size:0.9rem;color:var(--text-muted)">Estado: <span class="badge ${isExpired ? 'badge-danger' : 'badge-success'}">${isExpired ? 'Vencido' : 'Activo'}</span></p>
+          </div>
+        </div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Próxima renovación:</span> <strong>${org.subscriptionExpires ? formatDate(org.subscriptionExpires) : 'Infinita / Sin límite'}</strong></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Límite de médicos:</span> <strong>${org.maxDoctors}</strong></div>
+          <div style="display:flex;justify-content:space-between"><span>Método de pago:</span> <strong>Mercado Pago / Manual</strong></div>
+        </div>
+      </div>
+
+      <div class="card" style="background:linear-gradient(135deg, var(--dark-3), var(--dark-2))">
+        <div class="card-header"><span class="card-title">Soporte y Ayuda</span></div>
+        <p style="font-size:0.85rem;color:var(--text-dim)">Si necesitas cambiar de plan, aumentar tu límite de médicos o tienes dudas con tu facturación, nuestro equipo está listo para ayudarte.</p>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px">Contactar a Soporte →</button>
       </div>
     </div>
 
-    <div class="card">
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Organización</th><th>Plan</th><th>Estado Pago</th><th>Vence el</th><th>Gestión</th></tr></thead>
-          <tbody>
-            ${orgs.map(o => `
-            <tr>
-              <td><strong>${o.name}</strong></td>
-              <td><span class="badge badge-info">${o.plan.toUpperCase()}</span></td>
-              <td><span class="badge badge-success">Suscrito</span></td>
-              <td style="font-family:monospace">${o.subscriptionExpires ? formatDate(o.subscriptionExpires) : 'Lifetime / Sin límite'}</td>
-              <td>
-                <div style="display:flex;gap:6px">
-                  <button class="btn btn-sm btn-secondary" onclick="extendSubscription('${o.id}', 1)">+1 Mes Gratis</button>
-                  <button class="btn btn-sm btn-secondary" onclick="extendSubscription('${o.id}', 3)">+3 Meses</button>
-                  <button class="btn btn-sm btn-cyan" onclick="openCustomExpiryModal('${o.id}', '${o.name}', '${o.subscriptionExpires || ''}')">⚙️ Fecha Personalizada</button>
-                </div>
-              </td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
+    <div class="card mt-4">
+      <div class="card-header"><span class="card-title">Beneficios Incluidos</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:15px;padding-top:10px">
+        ${['Expediente Clínico ILIMITADO', 'Recetas Digitales con Firma', 'Agenda Multiconsultorio', 'Soporte 24/7 Premium', 'Backups Diarios Automáticos', 'Seguridad Nivel Hospitalario'].map(b => `
+          <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-light)">
+            <span style="color:var(--success)">✓</span> ${b}
+          </div>
+        `).join('')}
       </div>
-    </div>`;
+    </div>
+    `;
   } catch (err) {
-    showNotification('Error al cargar suscripciones', 'error');
+    showNotification('Error al cargar datos de suscripción', 'error');
   }
 }
 
