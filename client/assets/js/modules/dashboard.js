@@ -41,7 +41,7 @@ async function renderOrgDash() {
 
   <div class="stats-grid stats-grid-4" style="margin-bottom:24px">
     ${[
-      { icon: '🩺', label: 'Médicos activos', val: _fmt(doctors.length), chg: `${users.length} total personal`, color: 'rgba(17,113,139,0.2)' },
+      { icon: '🩺', label: 'Médicos activos', val: _fmt(doctors.filter(d => d.active).length), chg: `${users.length} total personal`, color: 'rgba(17,113,139,0.2)' },
       { icon: '👤', label: 'Pacientes totales', val: _fmt(patients.length), chg: `Registrados en el sistema`, color: 'rgba(6,207,215,0.1)' },
       { icon: '📅', label: 'Citas registradas', val: _fmt(appointments.length), chg: `${confApts} programadas`, color: 'rgba(73,190,174,0.1)' },
       { icon: '✅', label: 'Personal activo', val: `${users.filter(u => u.active).length}/${users.length}`, chg: 'Cuentas activas', color: 'rgba(34,197,94,0.1)' },
@@ -58,10 +58,10 @@ async function renderOrgDash() {
       <div class="card" style="margin-bottom:20px">
         <div class="card-header"><span class="card-title">👩‍⚕️ Equipo médico</span><button class="btn btn-secondary btn-sm" onclick="navigate('staff')">Ver todos</button></div>
         <div class="table-wrap">
-          ${doctors.length > 0 ? `<table>
+          ${doctors.filter(d => d.active).length > 0 ? `<table>
             <thead><tr><th>Médico</th><th>Especialidad</th><th>Pacientes</th><th>Estado</th></tr></thead>
             <tbody>
-              ${doctors.slice(0, 8).map(dr => `<tr>
+              ${doctors.filter(d => d.active).slice(0, 8).map(dr => `<tr>
                 <td><div class="avatar-row"><div class="avatar">${_initials(dr.name)}</div><div class="cell-primary">${dr.name}</div></div></td>
                 <td class="text-muted">${dr.specialty || '—'}</td>
                 <td>${dr._count?.patients || 0}</td>
