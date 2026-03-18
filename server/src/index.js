@@ -26,6 +26,7 @@ const limiter = rateLimit({
     max: 5000,                 // 5000 requests per window (Escalado para múltiples doctores en misma IP)
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { xForwardedForHeader: false, trustProxy: false },
     message: { error: 'Demasiadas solicitudes. Intenta de nuevo en 15 minutos.' },
 });
 app.use('/api/', limiter);
@@ -34,6 +35,7 @@ app.use('/api/', limiter);
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100, // 100 attempts per 15 mins for clinics with multiple users logging in
+    validate: { xForwardedForHeader: false, trustProxy: false },
     message: { error: 'Demasiados intentos de login. Intenta de nuevo en 15 minutos.' },
 });
 
