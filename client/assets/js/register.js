@@ -38,8 +38,8 @@ let selectedPlan = null;
 let billingCycle = 'monthly';
 
 const planPrices = {
-    monthly: { starter: 699, clinica: 4999 },
-    annual: { starter: 559, clinica: 3999 },
+    monthly: { starter: 999, clinica: 6999 },
+    annual: { starter: 832, clinica: 5832 },
 };
 
 // ---- Step navigation ----
