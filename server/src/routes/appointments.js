@@ -159,7 +159,7 @@ router.put('/:id',
 
 // ---- DELETE /api/appointments/:id ----
 router.delete('/:id',
-    authorize('superadmin', 'org_owner', 'dept_head', 'doctor'),
+    authorize('superadmin', 'org_owner', 'dept_head', 'doctor', 'asistente'),
     auditMiddleware('appointment'),
     async (req, res) => {
         try {
