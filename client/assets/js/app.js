@@ -143,8 +143,10 @@ window.onerror = function () {
 function doLogin() {
   const emailInput = document.getElementById('loginEmail');
   const passInput = document.getElementById('loginPass');
+  const rememberElement = document.getElementById('rememberMe');
   const typedUser = emailInput ? emailInput.value.trim() : '';
   const typedPass = passInput ? passInput.value.trim() : '';
+  const remember = rememberElement ? rememberElement.checked : false;
 
   if (!typedUser || !typedPass) {
     showNotification('Ingresa tu correo y contraseña', 'warning');
