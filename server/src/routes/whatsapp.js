@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { authorize } = require('../middleware/auth');
+const { authorize } = require('../middleware/rbac');
 const WhatsAppService = require('../services/whatsappService');
 
-// Requiere ser Dueño o Doctor para manipular ajustes de mensajería
-router.use(authorize(['org_owner', 'doctor']));
+// Requiere ser Dueño, Doctor o Superadmin para manipular ajustes de mensajería
+router.use(authorize('org_owner', 'doctor', 'superadmin'));
 
 // Estado actual (esperando QR, desconectado, conectado)
 router.get('/status', (req, res) => {
