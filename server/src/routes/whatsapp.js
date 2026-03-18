@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { authorize } = require('../middleware/rbac');
+const { authenticate } = require('../middleware/auth');
 const WhatsAppService = require('../services/whatsappService');
 
+router.use(authenticate);
 // Requiere ser Dueño, Doctor o Superadmin para manipular ajustes de mensajería
 router.use(authorize('org_owner', 'doctor', 'superadmin'));
 
