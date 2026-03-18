@@ -100,6 +100,23 @@ const API = (() => {
         }
     }
 
+    // ---- Generic Methods ----
+    async function get(endpoint, options = {}) {
+        return request(endpoint, { ...options, method: 'GET' });
+    }
+    async function post(endpoint, body = {}, options = {}) {
+        return request(endpoint, { ...options, method: 'POST', body });
+    }
+    async function put(endpoint, body = {}, options = {}) {
+        return request(endpoint, { ...options, method: 'PUT', body });
+    }
+    async function patch(endpoint, body = {}, options = {}) {
+        return request(endpoint, { ...options, method: 'PATCH', body });
+    }
+    async function _delete(endpoint, options = {}) {
+        return request(endpoint, { ...options, method: 'DELETE' });
+    }
+
     // ---- Auth ----
     async function login(email, password) {
         const data = await request('/auth/login', {
@@ -298,6 +315,8 @@ const API = (() => {
         getDepartments, createDepartment, deleteDepartment,
         // Admin
         getAdminStats, getAuditLogs, updateOrgPlan,
+        // Generic
+        get, post, put, patch, delete: _delete,
         // Utility
         healthCheck, clearTokens, request,
     };

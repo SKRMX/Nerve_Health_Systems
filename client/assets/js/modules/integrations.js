@@ -25,7 +25,7 @@ async function loadWAInterface() {
   const pc = document.getElementById('pageContent');
   
   try {
-    const res = await API.get('/api/whatsapp/status');
+    const res = await API.get('/whatsapp/status');
     const st = res.status || 'DISCONNECTED';
     
     let contentHtml = '';
@@ -137,7 +137,7 @@ async function loadWAInterface() {
 async function checkWAStatusPulse() {
   // Silent pulse check
   try {
-    const res = await API.get('/api/whatsapp/status');
+    const res = await API.get('/whatsapp/status');
     const st = res.status;
     if (st === 'CONNECTED' || st === 'QR_READY' || st === 'DISCONNECTED') {
       loadWAInterface(); // Update view
@@ -150,7 +150,7 @@ async function checkWAStatusPulse() {
 async function initWAFlow() {
   document.getElementById('pageContent').innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)"><div class="spinner" style="margin:0 auto 15px;"></div>Solicitando puente de seguridad...</div>`;
   try {
-    await API.post('/api/whatsapp/connect', {});
+    await API.post('/whatsapp/connect', {});
     setTimeout(() => {
       loadWAInterface();
     }, 1500);
@@ -164,7 +164,7 @@ async function disconnectWA() {
   APP.confirm('¿Desvincular WhatsApp?', 'Se destruirá la sesión conectada y las notificaciones a pacientes se detendrán inmediatamente.', async () => {
     if(waPollingInterval) clearInterval(waPollingInterval);
     document.getElementById('pageContent').innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)"><div class="spinner" style="margin:0 auto 15px;"></div>Cerrando sesión de forma segura...</div>`;
-    await API.post('/api/whatsapp/disconnect', {});
+    await API.post('/whatsapp/disconnect', {});
     setTimeout(() => {
       loadWAInterface();
     }, 1500);
