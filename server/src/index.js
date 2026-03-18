@@ -10,6 +10,9 @@ const config = require('./config/env');
 
 const app = express();
 
+// Confíe en el proxy de Nginx para poder leer IP real en Express-Rate-Limit v7+
+app.set('trust proxy', 1);
+
 // ---- Security ----
 app.use(helmet());
 app.use(cors({
