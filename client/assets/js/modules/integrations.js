@@ -26,7 +26,7 @@ async function loadWAInterface() {
   
   try {
     const res = await API.get('/api/whatsapp/status');
-    const st = res.data.status || 'DISCONNECTED';
+    const st = res.status || 'DISCONNECTED';
     
     let contentHtml = '';
     
@@ -41,7 +41,7 @@ async function loadWAInterface() {
             <span style="font-size:1.4rem">💬</span>
             <div>
               <div style="font-size:0.8rem;color:var(--text-dim)">Número Emisor (Organización)</div>
-              <div style="font-size:1.1rem;font-weight:700;color:var(--cyan)">+${res.data.number}</div>
+              <div style="font-size:1.1rem;font-weight:700;color:var(--cyan)">+${res.number}</div>
             </div>
           </div>
           
@@ -59,7 +59,7 @@ async function loadWAInterface() {
           <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px">1. Abre WhatsApp en el celular de la Clínica.<br/>2. Toca en Menú o Configuración y selecciona "Dispositivos vinculados".<br/>3. Toca en "Vincular un dispositivo" y apunta tu cámara a esta pantalla.</p>
           
           <div style="background:#fff;padding:20px;display:inline-block;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5)">
-            <img src="${res.data.qr}" alt="QR Code" style="width:260px;height:260px;" />
+            <img src="${res.qr}" alt="QR Code" style="width:260px;height:260px;" />
           </div>
           
           <div style="margin-top:20px;color:var(--cyan-mid);font-size:0.85rem">🔄 Esperando escaneo... no recargues la página.</div>
@@ -138,7 +138,7 @@ async function checkWAStatusPulse() {
   // Silent pulse check
   try {
     const res = await API.get('/api/whatsapp/status');
-    const st = res.data.status;
+    const st = res.status;
     if (st === 'CONNECTED' || st === 'QR_READY' || st === 'DISCONNECTED') {
       loadWAInterface(); // Update view
     }
