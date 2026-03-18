@@ -47,6 +47,7 @@ class WhatsAppService {
         });
 
         // Set to STARTING phase
+        console.log(`[WA] Client created for org ${orgId}. Calling initialize...`);
         clients.set(orgId, client);
 
         client.on('qr', async (qr) => {
@@ -88,7 +89,10 @@ class WhatsAppService {
              removeAuthFolder(orgId);
         });
 
-        client.initialize().catch(err => {
+        console.log(`[WA] Initializing puppeteer for org ${orgId}...`);
+        client.initialize().then(() => {
+            console.log(`[WA] Initialize promise resolved for org ${orgId}`);
+        }).catch(err => {
             console.error('[WA] Failed to init client:', err);
             clients.delete(orgId);
         });
