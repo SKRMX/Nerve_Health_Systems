@@ -245,8 +245,22 @@ function enterApp() {
 
   if (window.innerWidth <= 900) document.getElementById('mobileMenuBtn').style.display = 'block';
   buildNav();
-  history.replaceState({ moduleId: 'dashboard' }, null, "");
-  navigate('dashboard', false);
+  
+  let initialModule = 'dashboard';
+  let initialPayload = null;
+  
+  if (window.history.state && window.history.state.moduleId) {
+      initialModule = window.history.state.moduleId;
+      initialPayload = window.history.state.payload;
+  } else if (window.location.hash) {
+      const hashModule = window.location.hash.substring(1);
+      const isValid = (APP.navByRole[APP.currentRole] || []).some(m => m.id === hashModule) 
+                      || hashModule === 'patientDetail' || hashModule === 'rxBuilder';
+      if (isValid) initialModule = hashModule;
+  }
+  
+  history.replaceState({ moduleId: initialModule, payload: initialPayload }, null, "#" + initialModule);
+  navigate(initialModule, false, initialPayload);
 
   if (!isSuperAdmin && localStorage.getItem('nerve_firsttime') === '1') {
     setTimeout(() => showOnboarding(), 600);
@@ -357,7 +371,7 @@ function navigate(moduleId, push = true, payload = null) {
 
   // --- History API Support ---
   if (push) {
-    history.pushState(state, null, "");
+    history.pushState(state, null, "#" + moduleId);
   }
 
   // Handle special "virtual" views first
