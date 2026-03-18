@@ -119,7 +119,7 @@ class WhatsAppService {
         
         try {
             // Very basic phone sanitization for WhatsApp standard
-            let phone = phoneStr.replace(/\\D/g, '');
+            let phone = phoneStr.replace(/\D/g, '');
             // Assume 10-digit MX numbers
             if (phone.length === 10) phone = '521' + phone; 
             
