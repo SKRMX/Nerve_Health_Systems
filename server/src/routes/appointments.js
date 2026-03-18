@@ -96,10 +96,30 @@ router.post('/',
                     reason: reason || null,
                 },
                 include: {
-                    patient: { select: { id: true, name: true } },
+                    patient: { select: { id: true, name: true, phone: true, orgId: true } },
                     doctor: { select: { id: true, name: true } },
                 },
             });
+
+            // --- WHATSAPP INTEGRATION ---
+            try {
+                const org = await prisma.organization.findUnique({ where: { id: appointment.patient.orgId } });
+                if (org && org.whatsappConnected && appointment.patient.phone) {
+                    const waService = require('../services/whatsappService');
+                    
+                    // Add 12 hours to counter UTC offset issues sometimes seen on server
+                    const dLocal = new Date(new Date(appointment.date).getTime() + 12*60*60*1000).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+                    
+                    const drName = appointment.doctor.name.replace('Dr. ', '').replace('Dra. ', '');
+                    const msg = `🏥 *NERVE Reminders*\n\nHola *${appointment.patient.name.split(' ')[0]}*, confirmamos tu cita médica programada en *${org.name}*.\n\n👨‍⚕️ Especialista: Dr(a). ${drName}\n📅 Fecha: ${dLocal}\n⏰ Hora: ${appointment.time}\n\nSi necesitas cancelar o reprogramar, por favor contáctanos con anticipación.`;
+                    
+                    // Fire and forget
+                    waService.sendMessage(org.id, appointment.patient.phone, msg);
+                }
+            } catch (waErr) {
+                console.error('[WA] Send hook error:', waErr);
+            }
+            // -----------------------------
 
             res.status(201).json(appointment);
         } catch (err) {

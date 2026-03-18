@@ -23,6 +23,8 @@ model Organization {
   phone       String?
   email       String?
   active      Boolean  @default(true)
+  whatsappConnected Boolean @default(false) @map("whatsapp_connected")
+  whatsappNumber    String?  @map("whatsapp_number")
   mpSubscriptionId String? // Mercado Pago subscription ID
   subscriptionExpires DateTime? @map("subscription_expires")
   createdAt   DateTime @default(now())

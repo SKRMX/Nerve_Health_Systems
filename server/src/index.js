@@ -54,6 +54,7 @@ const userRoutes = require('./routes/users');
 const orgRoutes = require('./routes/organizations');
 const deptRoutes = require('./routes/departments');
 const adminRoutes = require('./routes/admin');
+const whatsappRoutes = require('./routes/whatsapp');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/patients', patientRoutes);
@@ -63,6 +64,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/organizations', orgRoutes);
 app.use('/api/departments', deptRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
