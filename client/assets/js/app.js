@@ -284,6 +284,14 @@ function confirmLogout() {
 
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app-layout').style.display = 'none';
+
+  // Fix: Reset login button state
+  const loginBtn = document.querySelector('.login-card .btn-primary');
+  if (loginBtn) {
+    loginBtn.textContent = 'Ingresar al sistema →';
+    loginBtn.disabled = false;
+  }
+
   // Clear password field
   const passInput = document.getElementById('loginPass');
   if (passInput) passInput.value = '';
