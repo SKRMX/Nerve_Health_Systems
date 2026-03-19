@@ -35,13 +35,15 @@ class WhatsAppService {
             authStrategy: new LocalAuth({ clientId: 'org-' + orgId }),
             puppeteer: {
                 headless: true,
+                executablePath: '/snap/bin/chromium',
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-accelerated-2d-canvas',
                     '--no-first-run',
-                    '--no-zygote'
+                    '--no-zygote',
+                    '--disable-gpu'
                 ]
             }
         });
