@@ -300,16 +300,21 @@ function openNewPatientModal() {
   openModal('➕ Nuevo Paciente', `
   <div class="form-row form-row-2">
     <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-control" id="newPatName" placeholder="Ana Lucía Martínez García" /></div>
-    <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="newPatEmail" placeholder="paciente@email.com" /></div>
-  </div>
-  <div class="form-row form-row-2">
-    <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input class="form-control" type="text" id="newPatDob" placeholder="Seleccionar fecha..." /></div>
-    <div class="form-group"><label class="form-label">Sexo</label>
-      <select class="form-control" id="newPatGender"><option value="Femenino">Femenino</option><option value="Masculino">Masculino</option><option value="Otro">Otro</option></select>
+    <div class="form-group"><label class="form-label">Teléfono (WhatsApp)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:0.9rem;color:var(--text-muted)">+52</span>
+        <input class="form-control" id="newPatPhone" placeholder="10 dígitos (ej: 5512345678)" />
+      </div>
     </div>
   </div>
   <div class="form-row form-row-2">
-    <div class="form-group"><label class="form-label">Teléfono</label><input class="form-control" id="newPatPhone" placeholder="+52 55 1234 5678" /></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="newPatEmail" placeholder="paciente@email.com" /></div>
+    <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input class="form-control" type="text" id="newPatDob" placeholder="Seleccionar fecha..." /></div>
+  </div>
+  <div class="form-row form-row-2">
+    <div class="form-group"><label class="form-label">Sexo</label>
+      <select class="form-control" id="newPatGender"><option value="Femenino">Femenino</option><option value="Masculino">Masculino</option><option value="Otro">Otro</option></select>
+    </div>
     <div class="form-group"><label class="form-label">Tipo de Sangre</label>
       <select class="form-control" id="newPatBlood"><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select>
     </div>
@@ -339,7 +344,11 @@ async function submitNewPatient() {
   if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
 
   try {
-    await API.createPatient({ name, email, dob, gender, phone, bloodType, allergies });
+    let phoneNum = phone.replace(/\D/g, '');
+    if (phoneNum && phoneNum.length === 10) phoneNum = '+521' + phoneNum;
+    else if (phoneNum && !phoneNum.startsWith('+')) phoneNum = '+' + phoneNum;
+
+    await API.createPatient({ name, email, dob, gender, phone: phoneNum, bloodType, allergies });
     closeModal();
     showNotification('Paciente registrado exitosamente', 'success');
     // Refresh if on patients page

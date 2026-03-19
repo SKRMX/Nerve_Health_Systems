@@ -190,6 +190,12 @@ async function openNewApptModal(date = '') {
       <input type="hidden" id="apptPatientId" />
       <div style="font-size:0.73rem;color:var(--text-dim);margin-top:4px">💡 Si el paciente no está registrado, escribe su nombre y se creará automáticamente.</div>
     </div>
+    <div class="form-group"><label class="form-label">Teléfono (WhatsApp)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:0.9rem;color:var(--text-muted)">+52</span>
+        <input class="form-control" id="apptPatientPhone" placeholder="10 dígitos (ej: 5512345678)" />
+      </div>
+    </div>
     <div class="form-row form-row-2">
       <div class="form-group"><label class="form-label">Tipo de consulta</label>
         <select class="form-control" id="apptType"><option>consulta</option><option>seguimiento</option><option>primera_vez</option><option>urgencia</option></select>
@@ -212,6 +218,11 @@ async function openNewApptModal(date = '') {
         searchKeys: ['name', 'email'],
         onSelect: (p) => {
           document.getElementById('apptPatientId').value = p.id;
+          if (p.phone) {
+            let ph = p.phone.replace('+52', '');
+            if (ph.startsWith('1')) ph = ph.substring(1);
+            document.getElementById('apptPatientPhone').value = ph;
+          }
         }
       });
     }
@@ -240,11 +251,18 @@ async function submitNewAppt() {
   if (btn) { btn.disabled = true; btn.textContent = 'Creando...'; }
 
   try {
+    let phoneNum = document.getElementById('apptPatientPhone')?.value.replace(/\D/g, '');
+    if (phoneNum && phoneNum.length === 10) phoneNum = '+521' + phoneNum;
+    else if (phoneNum && !phoneNum.startsWith('+')) phoneNum = '+' + phoneNum;
+
     // If no existing patient matched, create one on the fly
     if (!patientId) {
-      const newPat = await API.createPatient({ name: patientName });
+      const newPat = await API.createPatient({ name: patientName, phone: phoneNum });
       patientId = newPat.id;
       showNotification(`Paciente "${patientName}" registrado automáticamente`, 'success');
+    } else if (phoneNum) {
+      // Update phone if provided for existing patient
+      await API.updatePatientInfo(patientId, { phone: phoneNum });
     }
 
     await API.createAppointment({ date, time, type, patientId, reason });
