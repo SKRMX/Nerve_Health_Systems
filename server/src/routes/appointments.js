@@ -164,10 +164,29 @@ router.put('/:id',
                 where: { id: req.params.id },
                 data: updateData,
                 include: {
-                    patient: { select: { id: true, name: true } },
+                    patient: { select: { id: true, name: true, phone: true, orgId: true } },
                     doctor: { select: { id: true, name: true } },
                 },
             });
+
+            // --- WHATSAPP: RESCHEDULE NOTIFICATION ---
+            if ((date || time) && appointment.patient.phone) {
+                try {
+                    const org = await prisma.organization.findUnique({ where: { id: appointment.patient.orgId } });
+                    if (org && org.whatsappConnected) {
+                        const waService = require('../services/whatsappService');
+                        const firstName = appointment.patient.name.split(' ')[0];
+                        const drName = appointment.doctor.name.replace('Dr. ', '').replace('Dra. ', '');
+                        const newDate = new Date(new Date(appointment.date).getTime() + 12*60*60*1000)
+                            .toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+                        const msg = `📋 *Cita Reagendada*\n\nHola *${firstName}*, tu consulta en *${org.name}* ha sido modificada.\n\n📅 Nueva fecha: ${newDate}\n⏰ Nueva hora: ${appointment.time}\n👨‍⚕️ Dr(a). ${drName}\n\nSi tienes alguna duda, contáctanos.`;
+                        waService.sendMessage(org.id, appointment.patient.phone, msg);
+                    }
+                } catch (waErr) {
+                    console.error('[WA] Reschedule hook error:', waErr);
+                }
+            }
+            // -----------------------------------------
 
             res.json(appointment);
         } catch (err) {
@@ -185,13 +204,35 @@ router.delete('/:id',
         try {
             const existing = await prisma.appointment.findUnique({
                 where: { id: req.params.id },
-                include: { patient: { select: { orgId: true } } },
+                include: {
+                    patient: { select: { name: true, phone: true, orgId: true } },
+                    doctor: { select: { name: true } },
+                },
             });
 
             if (!existing) return res.status(404).json({ error: 'Cita no encontrada' });
             if (req.user.role !== 'superadmin' && existing.patient.orgId !== req.user.orgId) {
                 return res.status(403).json({ error: 'Sin acceso' });
             }
+
+            // --- WHATSAPP: CANCELLATION NOTIFICATION ---
+            if (existing.patient.phone) {
+                try {
+                    const org = await prisma.organization.findUnique({ where: { id: existing.patient.orgId } });
+                    if (org && org.whatsappConnected) {
+                        const waService = require('../services/whatsappService');
+                        const firstName = existing.patient.name.split(' ')[0];
+                        const dateStr = new Date(new Date(existing.date).getTime() + 12*60*60*1000)
+                            .toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+                        const drName = existing.doctor.name.replace('Dr. ', '').replace('Dra. ', '');
+                        const msg = `❌ *Cita Cancelada*\n\nHola *${firstName}*, tu consulta del ${dateStr} a las ${existing.time} en *${org.name}* con Dr(a). ${drName} ha sido cancelada.\n\nSi deseas reagendar, por favor contáctanos. 🏥`;
+                        waService.sendMessage(org.id, existing.patient.phone, msg);
+                    }
+                } catch (waErr) {
+                    console.error('[WA] Cancellation hook error:', waErr);
+                }
+            }
+            // -------------------------------------------
 
             await prisma.appointment.delete({ where: { id: req.params.id } });
             res.json({ message: 'Cita eliminada' });

@@ -133,6 +133,14 @@ async function startServer() {
 ║   URL: http://localhost:${config.port}                ║
 ╚═══════════════════════════════════════════════╝
       `);
+
+            // Start the automated WhatsApp reminder scheduler
+            try {
+                const { startReminderScheduler } = require('./services/reminderScheduler');
+                startReminderScheduler();
+            } catch (err) {
+                console.error('⚠️ Reminder scheduler failed to start:', err.message);
+            }
         });
     } catch (err) {
         console.error('❌ Error al iniciar el servidor:', err);

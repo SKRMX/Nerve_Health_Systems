@@ -107,6 +107,9 @@ model Appointment {
   reason    String?
   notes     String?
 
+  reminderSentAt   DateTime? @map("reminder_sent_at")
+  reminder2hSentAt DateTime? @map("reminder_2h_sent_at")
+
   patientId String   @map("patient_id")
   patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
