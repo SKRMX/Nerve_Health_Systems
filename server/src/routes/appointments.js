@@ -169,24 +169,35 @@ router.put('/:id',
                 },
             });
 
-            // --- WHATSAPP: RESCHEDULE NOTIFICATION ---
-            if ((date || time) && appointment.patient.phone) {
+            // --- WHATSAPP NOTIFICATIONS ---
+            if (appointment.patient.phone) {
                 try {
                     const org = await prisma.organization.findUnique({ where: { id: appointment.patient.orgId } });
                     if (org && org.whatsappConnected) {
                         const waService = require('../services/whatsappService');
                         const firstName = appointment.patient.name.split(' ')[0];
                         const drName = appointment.doctor.name.replace('Dr. ', '').replace('Dra. ', '');
-                        const newDate = new Date(new Date(appointment.date).getTime() + 12*60*60*1000)
-                            .toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-                        const msg = `📋 *Cita Reagendada*\n\nHola *${firstName}*, tu consulta en *${org.name}* ha sido modificada.\n\n📅 Nueva fecha: ${newDate}\n⏰ Nueva hora: ${appointment.time}\n👨‍⚕️ Dr(a). ${drName}\n\nSi tienes alguna duda, contáctanos.`;
-                        waService.sendMessage(org.id, appointment.patient.phone, msg);
+                        
+                        // 1. CANCELLATION via status update
+                        if (status === 'cancelada') {
+                            const dateStr = new Date(new Date(appointment.date).getTime() + 12*60*60*1000)
+                                .toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+                            const msg = `❌ *Cita Cancelada*\n\nHola *${firstName}*, tu consulta del ${dateStr} a las ${appointment.time} en *${org.name}* con Dr(a). ${drName} ha sido cancelada.\n\nSi deseas reagendar, por favor contáctanos. 🏥`;
+                            waService.sendMessage(org.id, appointment.patient.phone, msg);
+                        } 
+                        // 2. RESCHEDULE via date/time change
+                        else if (date || time) {
+                            const newDate = new Date(new Date(appointment.date).getTime() + 12*60*60*1000)
+                                .toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+                            const msg = `📋 *Cita Reagendada*\n\nHola *${firstName}*, tu consulta en *${org.name}* ha sido modificada.\n\n📅 Nueva fecha: ${newDate}\n⏰ Nueva hora: ${appointment.time}\n👨‍⚕️ Dr(a). ${drName}\n\nSi tienes alguna duda, contáctanos.`;
+                            waService.sendMessage(org.id, appointment.patient.phone, msg);
+                        }
                     }
                 } catch (waErr) {
-                    console.error('[WA] Reschedule hook error:', waErr);
+                    console.error('[WA] Update hook error:', waErr);
                 }
             }
-            // -----------------------------------------
+            // ------------------------------
 
             res.json(appointment);
         } catch (err) {

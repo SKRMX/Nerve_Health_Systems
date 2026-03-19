@@ -69,7 +69,10 @@ async function renderAppointments() {
             <td><span class="badge ${a.status === 'programada' ? 'badge-success' : a.status === 'cancelada' ? 'badge-danger' : a.status === 'completada' ? 'badge-cyan' : 'badge-warning'}">${a.status}</span></td>
             <td><div style="display:flex;gap:6px">
               ${a.status !== 'cancelada' ? `
-              ${a.status !== 'completada' ? `<button class="btn btn-primary btn-sm" onclick="completeAppt('${a.id}')">Completar</button>` : ''}
+              ${a.status !== 'completada' ? `
+                <button class="btn btn-primary btn-sm" onclick="completeAppt('${a.id}')">Completar</button>
+                <button class="btn btn-secondary btn-sm" onclick="openEditApptModal('${a.id}')">✏️ Editar</button>
+              ` : ''}
               <button class="btn btn-secondary btn-sm" style="background:var(--mint);border-color:var(--mint);color:#111" onclick="openPrescriptionFromAppt('${a.id}')">💊 Recetar</button>
               ${a.status !== 'completada' ? `<button class="btn btn-danger btn-sm" onclick="cancelAppt('${a.id}')">Cancelar</button>` : ''}
               ` : '—'}
@@ -290,4 +293,63 @@ async function openPrescriptionFromAppt(apptId) {
       });
     }
   }, 100);
+}
+async function openEditApptModal(apptId) {
+  const appt = _appointments.find(a => a.id === apptId);
+  if (!appt) return showNotification('Cita no encontrada', 'error');
+
+  openModal('✏️ Editar / Reagendar Cita', `
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Fecha</label><input class="form-control" type="text" id="editApptDate" value="${new Date(appt.date).toISOString().split('T')[0]}" /></div>
+      <div class="form-group"><label class="form-label">Hora</label><input class="form-control" type="text" id="editApptTime" value="${appt.time}" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Paciente</label>
+      <input class="form-control" value="${appt.patient?.name || ''}" disabled />
+    </div>
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Tipo de consulta</label>
+        <select class="form-control" id="editApptType">
+          <option ${appt.type === 'consulta' ? 'selected' : ''}>consulta</option>
+          <option ${appt.type === 'seguimiento' ? 'selected' : ''}>seguimiento</option>
+          <option ${appt.type === 'primera_vez' ? 'selected' : ''}>primera_vez</option>
+          <option ${appt.type === 'urgencia' ? 'selected' : ''}>urgencia</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Estado</label>
+        <select class="form-control" id="editApptStatus">
+          <option ${appt.status === 'programada' ? 'selected' : ''}>programada</option>
+          <option ${appt.status === 'cancelada' ? 'selected' : ''}>cancelada</option>
+          <option ${appt.status === 'completada' ? 'selected' : ''}>completada</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Motivo / Notas</label><textarea class="form-control" id="editApptReason">${appt.reason || ''}</textarea></div>`,
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" id="btnEditAppt" onclick="submitEditAppt('${appt.id}')">Guardar Cambios →</button>`);
+
+  setTimeout(() => {
+    APP.initDatePicker("#editApptDate", { defaultDate: new Date(appt.date) });
+    APP.initTimePicker("#editApptTime", { defaultDate: appt.time });
+  }, 50);
+}
+
+async function submitEditAppt(id) {
+  const date = document.getElementById('editApptDate')?.value;
+  const time = document.getElementById('editApptTime')?.value;
+  const type = document.getElementById('editApptType')?.value;
+  const status = document.getElementById('editApptStatus')?.value;
+  const reason = document.getElementById('editApptReason')?.value;
+
+  const btn = document.getElementById('btnEditAppt');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+  try {
+    await API.updateAppointment(id, { date, time, type, status, reason });
+    closeModal();
+    showNotification('Cita actualizada y notificada', 'success');
+    renderAppointments();
+  } catch (err) {
+    showNotification(err.message || 'Error al actualizar', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar Cambios →'; }
+  }
 }
