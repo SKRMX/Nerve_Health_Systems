@@ -126,6 +126,7 @@ async function openPatientDetail(id, push = true) {
       <div><div class="page-title">${p.name}</div><div class="page-subtitle">Expediente clínico</div></div>
     </div>
     <div class="page-actions">
+      <button class="btn btn-secondary" onclick="openEditPatientModal('${p.id}')">✏️ Editar datos</button>
       <button class="btn btn-primary" onclick="openNewApptModalForPatient('${p.id}','${p.name}')">+ Nueva cita</button>
     </div>
   </div>
@@ -332,5 +333,69 @@ async function submitApptForPatient(patientId) {
     openPatientDetail(patientId); // Refresh
   } catch (err) {
     showNotification(err.message || 'Error al crear cita', 'error');
+  }
+}
+async function openEditPatientModal(id) {
+  const p = await API.getPatient(id);
+  openModal('✏️ Editar Paciente', `
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-control" id="editPatName" value="${p.name}" /></div>
+      <div class="form-group"><label class="form-label">Teléfono (WhatsApp)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:0.9rem;color:var(--text-muted)">+52</span>
+          <input class="form-control" id="editPatPhone" value="${(p.phone || '').replace('+521', '').replace('+52', '')}" placeholder="10 dígitos" />
+        </div>
+      </div>
+    </div>
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="editPatEmail" value="${p.email || ''}" /></div>
+      <div class="form-group"><label class="form-label">F. Nacimiento</label><input class="form-control" type="text" id="editPatDob" value="${p.dob ? new Date(p.dob).toISOString().split('T')[0] : ''}" /></div>
+    </div>
+    <div class="form-row form-row-2">
+      <div class="form-group"><label class="form-label">Sexo</label>
+        <select class="form-control" id="editPatGender">
+          <option ${p.gender === 'Femenino' ? 'selected' : ''}>Femenino</option>
+          <option ${p.gender === 'Masculino' ? 'selected' : ''}>Masculino</option>
+          <option ${p.gender === 'Otro' ? 'selected' : ''}>Otro</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Sangre</label>
+        <select class="form-control" id="editPatBlood">
+          ${['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map(b => `<option ${p.bloodType === b ? 'selected' : ''}>${b}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Alergias</label><input class="form-control" id="editPatAllergies" value="${p.allergies || ''}" /></div>`,
+    `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" id="btnSavePat" onclick="submitEditPatient('${p.id}')">Guardar cambios →</button>`);
+
+  setTimeout(() => {
+    APP.initDatePicker("#editPatDob", { defaultDate: p.dob || null });
+  }, 50);
+}
+
+async function submitEditPatient(id) {
+  const name = document.getElementById('editPatName').value.trim();
+  const email = document.getElementById('editPatEmail').value.trim();
+  let phone = document.getElementById('editPatPhone').value.replace(/\D/g, '');
+  const dob = document.getElementById('editPatDob').value;
+  const gender = document.getElementById('editPatGender').value;
+  const bloodType = document.getElementById('editPatBlood').value;
+  const allergies = document.getElementById('editPatAllergies').value.trim();
+
+  if (phone && phone.length === 10) phone = '+521' + phone;
+  else if (phone && !phone.startsWith('+')) phone = '+' + phone;
+
+  const btn = document.getElementById('btnSavePat');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+  try {
+    await API.updatePatientInfo(id, { name, email, phone, dob, gender, bloodType, allergies });
+    closeModal();
+    showNotification('Datos actualizados', 'success');
+    openPatientDetail(id);
+  } catch (err) {
+    showNotification(err.message || 'Error al guardar', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios →'; }
   }
 }
