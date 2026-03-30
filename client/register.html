@@ -252,103 +252,63 @@
             </div>
         </div>
 
-        <!-- ===== STEP 4: Pago ===== -->
+        <!-- ===== STEP 4: Pago con Mercado Pago ===== -->
         <div class="reg-step" id="step4">
             <div class="reg-step-header">
                 <div class="reg-badge">✦ Paso 4 de 4</div>
-                <h1>Método de pago</h1>
-                <p>Tu primer mes es <strong style="color:var(--cyan)">completamente gratis</strong>. No se realizará
-                    ningún cargo hasta el día 16.</p>
+                <h1>Activar tu cuenta</h1>
+                <p>Tu cuenta ha sido creada exitosamente. Elige cómo quieres empezar:</p>
             </div>
             <div class="checkout-layout">
-                <div class="checkout-form">
+                <!-- Order Summary -->
+                <div class="order-summary" style="max-width:520px;margin:0 auto;">
+                    <div class="summary-title">Resumen de tu plan</div>
+                    <div class="summary-plan" id="summaryPlan">Clínica Pro</div>
+                    <div class="summary-billing" id="summaryBilling">Facturación mensual</div>
+
                     <!-- Billing toggle -->
-                    <div class="billing-toggle">
+                    <div class="billing-toggle" style="margin:16px 0;">
                         <button class="bill-btn active" id="billMonthly"
                             onclick="setBilling('monthly')">Mensual</button>
                         <button class="bill-btn" id="billAnnual" onclick="setBilling('annual')">Anual <span
-                                class="disc-badge">-20%</span></button>
+                                class="disc-badge">-17%</span></button>
                     </div>
-
-                    <div class="checkout-section">
-                        <div class="checkout-section-title">💳 Datos de pago</div>
-                        <div class="form-group">
-                            <label class="form-label">Número de tarjeta</label>
-                            <div class="card-input-wrap">
-                                <input type="text" class="form-control" id="cardNumber"
-                                    placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" />
-                                <div class="card-brands">
-                                    <span>VISA</span><span>MC</span><span>AMEX</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-row form-row-2">
-                            <div class="form-group">
-                                <label class="form-label">Vencimiento</label>
-                                <input type="text" class="form-control" id="cardExp" placeholder="MM/AA" maxlength="5"
-                                    oninput="formatExp(this)" />
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">CVV</label>
-                                <input type="text" class="form-control" id="cardCvv" placeholder="•••" maxlength="4" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nombre en la tarjeta</label>
-                            <input type="text" class="form-control" id="cardName"
-                                placeholder="Como aparece en la tarjeta" />
-                        </div>
-                    </div>
-
-                    <div class="checkout-section">
-                        <div class="checkout-section-title">🧾 Facturación (opcional)</div>
-                        <div class="form-group">
-                            <label class="form-label">RFC</label>
-                            <input type="text" class="form-control" id="rfc" placeholder="GOSA800101AB1"
-                                style="text-transform:uppercase;" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Razón social</label>
-                            <input type="text" class="form-control" id="razonSocial" placeholder="Para CFDI" />
-                        </div>
-                    </div>
-
-                    <div class="secure-badge">
-                        🔒 Pago seguro con encriptación TLS/AES-256 · Powered by Stripe
-                    </div>
-                </div>
-
-                <!-- Order Summary -->
-                <div class="order-summary">
-                    <div class="summary-title">Resumen de tu pedido</div>
-                    <div class="summary-plan" id="summaryPlan">Clínica Pro</div>
-                    <div class="summary-billing" id="summaryBilling">Facturación mensual</div>
 
                     <div class="summary-line">
                         <span>Trial gratuito (15 días)</span>
                         <span class="summary-free">GRATIS</span>
                     </div>
                     <div class="summary-line">
-                        <span id="summaryLabel">Desde el día 16</span>
-                        <span id="summaryPrice">$4,999/mes</span>
+                        <span id="summaryLabel">Después del trial</span>
+                        <span id="summaryPrice">$6,999/mes</span>
                     </div>
                     <div class="summary-divider"></div>
                     <div class="summary-line summary-total">
                         <span>Hoy pagas</span>
                         <span class="summary-zero">$0.00</span>
                     </div>
-                    <div class="summary-note">Cancela antes del día 16 y no se te cobrará nada.</div>
+                    <div class="summary-note">Los primeros 15 días son completamente gratis. Después se te cobrará automáticamente.</div>
 
-                    <button class="btn btn-primary"
+                    <button class="btn btn-primary" id="mpPayButton"
                         style="width:100%;justify-content:center;padding:14px;font-size:1rem;margin-top:16px;"
-                        onclick="submitPayment()">
-                        Activar prueba gratuita →
+                        onclick="activateWithMercadoPago()">
+                        🔒 Pagar con Mercado Pago →
+                    </button>
+
+                    <button class="btn btn-outline" id="skipPayButton"
+                        style="width:100%;justify-content:center;padding:12px;font-size:0.9rem;margin-top:10px;"
+                        onclick="skipPaymentAndStart()">
+                        Empezar trial gratuito sin pago →
                     </button>
 
                     <div class="summary-features">
-                        <div>✓ Sin compromiso</div>
-                        <div>✓ Cancela en 1 click</div>
-                        <div>✓ Soporte incluido</div>
+                        <div>✓ 15 días gratis</div>
+                        <div>✓ Cancela cuando quieras</div>
+                        <div>✓ Pago seguro con Mercado Pago</div>
+                    </div>
+
+                    <div class="secure-badge" style="margin-top:12px;">
+                        🔒 Pago procesado por Mercado Pago · Encriptación TLS
                     </div>
                 </div>
             </div>

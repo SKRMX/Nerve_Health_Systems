@@ -1,7 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/database');
+const config = require('../config/env');
 const fs = require('fs');
 const path = require('path');
 
@@ -31,11 +31,8 @@ class WhatsAppService {
         if (clients.has(orgId)) return;
 
         console.log(`[WA] Initializing client for org ${orgId}`);
-        const client = new Client({
-            authStrategy: new LocalAuth({ clientId: 'org-' + orgId }),
-            puppeteer: {
+        const puppeteerOpts = {
                 headless: true,
-                executablePath: '/snap/bin/chromium',
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
@@ -45,7 +42,15 @@ class WhatsAppService {
                     '--no-zygote',
                     '--disable-gpu'
                 ]
+            };
+            // Use configurable Chromium path if provided
+            if (config.chromiumPath) {
+                puppeteerOpts.executablePath = config.chromiumPath;
             }
+
+        const client = new Client({
+            authStrategy: new LocalAuth({ clientId: 'org-' + orgId }),
+            puppeteer: puppeteerOpts
         });
 
         // Set to STARTING phase

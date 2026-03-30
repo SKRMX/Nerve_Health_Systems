@@ -2,6 +2,13 @@
 // NERVE Health Systems — Prisma Schema
 // ================================================
 
+// ⚠️ DISCLAIMER: NERVE Health Systems es una herramienta de gestión
+// administrativa para clínicas y consultorios. NO es un dispositivo
+// médico ni sustituye el criterio profesional del médico. Los datos
+// clínicos (notas médicas, diagnósticos) se almacenan en texto plano
+// sin cifrado a nivel de campo. La seguridad se gestiona a nivel de
+// transporte (TLS/HTTPS) y acceso (JWT + RBAC + Multi-tenancy).
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -16,7 +23,7 @@ model Organization {
   id          String   @id @default(uuid())
   name        String
   slug        String   @unique
-  plan        String   @default("trial") // trial, consultorio, clinica_pro, enterprise
+  plan        String   @default("trial") // trial, starter, clinica_pro, enterprise
   maxDoctors  Int      @default(3)
   location    String?
   city        String?
@@ -25,7 +32,7 @@ model Organization {
   active      Boolean  @default(true)
   whatsappConnected Boolean @default(false) @map("whatsapp_connected")
   whatsappNumber    String?  @map("whatsapp_number")
-  mpSubscriptionId String? // Mercado Pago subscription ID
+  mpSubscriptionId String? @map("mp_subscription_id")
   subscriptionExpires DateTime? @map("subscription_expires")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -33,6 +40,8 @@ model Organization {
   users       User[]
   patients    Patient[]
   departments Department[]
+  subscriptions Subscription[]
+  payments      Payment[]
 
   @@map("organizations")
 }
@@ -65,6 +74,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([orgId])
   @@map("users")
 }
 
@@ -79,7 +89,7 @@ model Patient {
   bloodType    String?  @map("blood_type")
   allergies    String?
   diagnosis    String?
-  medicalNotes String?  @map("medical_notes") // AES-256 encrypted
+  medicalNotes String?  @map("medical_notes")
   status       String   @default("Activo")
 
   doctorId     String   @map("doctor_id")
@@ -94,6 +104,8 @@ model Patient {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([doctorId])
+  @@index([orgId])
   @@map("patients")
 }
 
@@ -119,6 +131,8 @@ model Appointment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([date])
+  @@index([doctorId])
   @@map("appointments")
 }
 
@@ -155,6 +169,57 @@ model Department {
   users  User[]
 
   @@map("departments")
+}
+
+// ---- Subscriptions (Mercado Pago) ----
+model Subscription {
+  id              String   @id @default(uuid())
+  plan            String   // starter, clinica_pro
+  status          String   @default("pending") // pending, active, paused, cancelled, expired
+  amount          Int      // amount in MXN cents (e.g. 99900 = $999)
+  currency        String   @default("MXN")
+  billingCycle    String   @default("monthly") @map("billing_cycle") // monthly, annual
+  mpPreferenceId  String?  @map("mp_preference_id")
+  mpPaymentId     String?  @map("mp_payment_id")
+  trialEndsAt     DateTime? @map("trial_ends_at")
+  currentPeriodStart DateTime? @map("current_period_start")
+  currentPeriodEnd   DateTime? @map("current_period_end")
+
+  orgId   String @map("org_id")
+  org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+// ---- Payments (individual payment records) ----
+model Payment {
+  id              String   @id @default(uuid())
+  amount          Int      // amount in MXN cents
+  currency        String   @default("MXN")
+  status          String   // approved, pending, rejected, refunded
+  mpPaymentId     String?  @unique @map("mp_payment_id")
+  mpStatus        String?  @map("mp_status")
+  mpStatusDetail  String?  @map("mp_status_detail")
+  description     String?
+
+  subscriptionId  String?  @map("subscription_id")
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  orgId           String   @map("org_id")
+  org             Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([orgId])
+  @@index([mpPaymentId])
+  @@map("payments")
 }
 
 // ---- Audit Log ----

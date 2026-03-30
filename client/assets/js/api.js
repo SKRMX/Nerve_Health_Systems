@@ -295,6 +295,27 @@ const API = (() => {
         }
     }
 
+    // ---- Payments (Mercado Pago) ----
+    async function createPaymentPreference(plan, billingCycle) {
+        return request('/payments/create-preference', {
+            method: 'POST',
+            body: { plan, billingCycle },
+        });
+    }
+
+    async function getSubscriptionStatus() {
+        return request('/payments/subscription-status');
+    }
+
+    async function getPlans() {
+        try {
+            const res = await fetch(`${BASE_URL}/payments/plans`);
+            return res.json();
+        } catch {
+            return { plans: [] };
+        }
+    }
+
     // ---- Public Interface ----
     return {
         // Auth
@@ -315,6 +336,8 @@ const API = (() => {
         getDepartments, createDepartment, deleteDepartment,
         // Admin
         getAdminStats, getAuditLogs, updateOrgPlan,
+        // Payments
+        createPaymentPreference, getSubscriptionStatus, getPlans,
         // Generic
         get, post, put, patch, delete: _delete,
         // Utility

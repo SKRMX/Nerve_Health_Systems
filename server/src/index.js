@@ -16,7 +16,14 @@ app.set('trust proxy', 1);
 // ---- Security ----
 app.use(helmet());
 app.use(cors({
-    origin: config.clientUrl,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, Electron, curl, etc.)
+        if (!origin) return callback(null, true);
+        if (config.allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Origen no permitido por CORS'));
+    },
     credentials: true,
 }));
 
@@ -60,6 +67,7 @@ const orgRoutes = require('./routes/organizations');
 const deptRoutes = require('./routes/departments');
 const adminRoutes = require('./routes/admin');
 const whatsappRoutes = require('./routes/whatsapp');
+const paymentRoutes = require('./routes/payments');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/patients', patientRoutes);
@@ -70,6 +78,7 @@ app.use('/api/organizations', orgRoutes);
 app.use('/api/departments', deptRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

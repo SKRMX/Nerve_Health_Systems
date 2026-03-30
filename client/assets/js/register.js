@@ -45,7 +45,7 @@ const planPrices = {
 // ---- Step navigation ----
 function nextStep() {
     if (currentStep === 1 && !selectedPlan) return;
-    if (currentStep === 4) return; // handled by submitPayment
+    if (currentStep === 4) return; // handled by activateWithMercadoPago
     goToStep(currentStep + 1);
 }
 
@@ -99,9 +99,9 @@ function updateSummary() {
     if (!selectedPlan) return;
     const price = planPrices[billingCycle][selectedPlan.plan] || 0;
     document.getElementById('summaryPlan').textContent = selectedPlan.label;
-    document.getElementById('summaryBilling').textContent = billingCycle === 'monthly' ? 'Facturación mensual' : 'Facturación anual (ahorra 20%)';
+    document.getElementById('summaryBilling').textContent = billingCycle === 'monthly' ? 'Facturación mensual' : 'Facturación anual (ahorra 17%)';
     document.getElementById('summaryPrice').textContent = `$${price.toLocaleString()}/mes`;
-    document.getElementById('summaryLabel').textContent = billingCycle === 'annual' ? 'Precio anual' : 'Desde el día 16';
+    document.getElementById('summaryLabel').textContent = billingCycle === 'annual' ? 'Precio anual' : 'Después del trial';
 }
 
 // ---- Billing toggle ----
@@ -141,45 +141,24 @@ function validateStep3() {
     if (!terms) { showNotification('Debes aceptar los términos de uso.', 'warning'); ok = false; }
 
     if (ok) {
-        document.getElementById('confirmEmail').textContent = email;
-        nextStep();
+        // Create the account first, then move to payment step
+        createAccountAndProceed();
     }
 }
 
-// ---- Card formatting ----
-function formatCard(el) {
-    let v = el.value.replace(/\D/g, '').substring(0, 16);
-    el.value = v.replace(/(.{4})/g, '$1 ').trim();
-}
-function formatExp(el) {
-    let v = el.value.replace(/\D/g, '').substring(0, 4);
-    if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2);
-    el.value = v;
-}
-
-// ---- Submit registration (Step 4) ----
-async function submitPayment() {
+// ---- Create account (Step 3 → Step 4) ----
+async function createAccountAndProceed() {
     const email = document.getElementById('userEmail')?.value?.trim();
     const password = document.getElementById('userPass')?.value;
     const name = (document.getElementById('userFirst')?.value?.trim() + ' ' + document.getElementById('userLast')?.value?.trim()).trim();
     const orgName = document.getElementById('orgName')?.value?.trim();
     const phone = document.getElementById('orgPhone')?.value?.trim();
     const specialty = document.getElementById('orgSpecialty')?.value;
+    const license = document.getElementById('userCedula')?.value?.trim();
 
-    // We don't strictly validate CC for the demo trial in this version, 
-    // but we check if the user filled something to keep the "feeling" of a real signup.
-    const num = document.getElementById('cardNumber').value.replace(/\s/g, '');
-    const exp = document.getElementById('cardExp').value;
-    const cvv = document.getElementById('cardCvv').value;
-    const cardName = document.getElementById('cardName').value.trim();
-
-    if (num.length < 13 || !exp.includes('/') || cvv.length < 3 || !cardName) {
-        showNotification('Por favor completa todos los datos de pago para activar tu prueba.', 'warning'); return;
-    }
-
-    const btn = document.querySelector('.order-summary .btn');
+    const btn = document.querySelector('#step3 .btn-primary');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></span> Procesando...';
+    btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></span> Creando cuenta...';
 
     // Add spinner style if it doesn't exist
     if (!document.getElementById('spinner-style')) {
@@ -190,8 +169,6 @@ async function submitPayment() {
     }
 
     try {
-        const license = document.getElementById('userCedula')?.value?.trim();
-        // CALL REAL API
         if (typeof API !== 'undefined') {
             await API.register(name, email, password, orgName, phone, specialty, license);
 
@@ -201,15 +178,57 @@ async function submitPayment() {
             localStorage.setItem('nerve_name', name);
 
             document.getElementById('confirmEmail').textContent = email;
-            goToStep(5);
+            
+            // Move to payment step (Step 4)
+            updateSummary();
+            goToStep(4);
         } else {
             throw new Error('API no disponible. Intenta de nuevo más tarde.');
         }
     } catch (err) {
         showNotification(err.message || 'Error al crear la cuenta', 'error');
+    } finally {
         btn.disabled = false;
-        btn.textContent = 'Activar prueba gratuita →';
+        btn.textContent = 'Continuar →';
     }
+}
+
+// ---- Activate with Mercado Pago (Step 4) ----
+async function activateWithMercadoPago() {
+    if (!selectedPlan || !selectedPlan.plan) {
+        showNotification('Selecciona un plan primero.', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('mpPayButton');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></span> Redirigiendo a Mercado Pago...';
+
+    try {
+        // Map frontend plan names to backend plan names
+        const planMap = { starter: 'starter', clinica: 'clinica_pro' };
+        const backendPlan = planMap[selectedPlan.plan] || selectedPlan.plan;
+
+        const data = await API.createPaymentPreference(backendPlan, billingCycle);
+
+        if (data.initPoint) {
+            // Redirect to Mercado Pago Checkout
+            window.location.href = data.initPoint;
+        } else {
+            throw new Error('No se pudo obtener el enlace de pago');
+        }
+    } catch (err) {
+        showNotification(err.message || 'Error al conectar con Mercado Pago', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '🔒 Pagar con Mercado Pago →';
+    }
+}
+
+// ---- Skip payment and start trial ----
+function skipPaymentAndStart() {
+    localStorage.setItem('nerve_firsttime', '1');
+    localStorage.setItem('nerve_role', 'org_owner');
+    goToStep(5);
 }
 
 function setFirstTimeUser() {

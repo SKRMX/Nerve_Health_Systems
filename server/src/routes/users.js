@@ -220,6 +220,13 @@ router.put('/:id',
     auditMiddleware('user'),
     async (req, res) => {
         try {
+            // Multi-tenancy check: verify user belongs to same org
+            const existing = await prisma.user.findUnique({ where: { id: req.params.id }, select: { orgId: true } });
+            if (!existing) return res.status(404).json({ error: 'Usuario no encontrado' });
+            if (req.user.role !== 'superadmin' && existing.orgId !== req.user.orgId) {
+                return res.status(403).json({ error: 'No tienes acceso a este usuario' });
+            }
+
             const { name, role, specialty, phone, active, departmentId } = req.body;
 
             const user = await prisma.user.update({
@@ -255,6 +262,13 @@ router.delete('/:id',
             // Prevent self-deletion
             if (req.params.id === req.user.id) {
                 return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
+            }
+
+            // Multi-tenancy check: verify user belongs to same org
+            const existing = await prisma.user.findUnique({ where: { id: req.params.id }, select: { orgId: true } });
+            if (!existing) return res.status(404).json({ error: 'Usuario no encontrado' });
+            if (req.user.role !== 'superadmin' && existing.orgId !== req.user.orgId) {
+                return res.status(403).json({ error: 'No tienes acceso a este usuario' });
             }
 
             await prisma.user.delete({ where: { id: req.params.id } });
