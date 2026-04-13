@@ -1,14 +1,127 @@
 // ================================================
-// NERVE Health Systems — Register Flow JS
+// NERVE Health Systems — Register Flow JS (Refactored)
 // ================================================
 
-// ---- Shared: specialty "other" toggle ----
-function toggleOtherSpecialty(select, inputId) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    const isOther = select.value === 'Otra especialidad...';
-    input.style.display = isOther ? 'block' : 'none';
-    if (isOther) input.focus();
+// ---- Zod Setup ----
+const z = window.Zod;
+
+// ---- Schemas ----
+const Step2Schema = z.object({
+    orgType: z.enum(['consultorio', 'clinica', 'hospital'], {
+        required_error: "Debes seleccionar un tipo de organización"
+    }),
+    orgName: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+    orgSpecialty: z.string().min(1, "Selecciona una especialidad"),
+    orgSpecialtyOther: z.string().optional(),
+    orgCountry: z.string().min(1, "Selecciona un país"),
+    orgCity: z.string().min(2, "Ingresa una ciudad válida"),
+    orgPhone: z.string().optional()
+}).superRefine((data, ctx) => {
+    if (data.orgSpecialty === 'Otra especialidad...') {
+        if (!data.orgSpecialtyOther || data.orgSpecialtyOther.length < 3) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Especifica la especialidad (mínimo 3 caracteres)",
+                path: ["orgSpecialtyOther"]
+            });
+        }
+    }
+});
+
+const Step3Schema = z.object({
+    userFirst: z.string().min(2, "Ingresa tu nombre validamente"),
+    userLast: z.string().min(2, "Ingresa tu apellido validamente"),
+    userEmail: z.string().email("Ingresa un correo electrónico válido"),
+    userPass: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+    userPassConf: z.string(),
+    userCedula: z.string().optional(),
+    acceptTerms: z.boolean().refine(val => val === true, "Debes aceptar los términos de uso")
+}).superRefine((data, ctx) => {
+    if (data.userPass !== data.userPassConf) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Las contraseñas no coinciden",
+            path: ["userPassConf"]
+        });
+    }
+});
+
+// ---- Centralized State (Proxy) ----
+const rawState = {
+    plan: null,         // starter, clinica, hospital
+    billingCycle: 'monthly',
+    orgType: null,      // consultorio, clinica, hospital
+    orgName: '',
+    orgSpecialty: 'Medicina General',
+    orgSpecialtyOther: '',
+    orgCountry: 'México',
+    orgCity: '',
+    orgPhone: '',
+    userFirst: '',
+    userLast: '',
+    userEmail: '',
+    userPass: '',
+    userPassConf: '',
+    userCedula: '',
+    acceptTerms: false
+};
+
+const WizardState = new Proxy(rawState, {
+    set(target, property, value) {
+        target[property] = value;
+        
+        // Persist session if simple string/bool
+        if(typeof value === 'string' || typeof value === 'boolean') {
+            sessionStorage.setItem('nerve_wizard_' + property, value);
+        }
+        
+        // Auto-triggers
+        if (property === 'plan' || property === 'billingCycle') {
+            updateSummary();
+        }
+        if (property === 'plan') {
+            applyConditionalLogic();
+        }
+        
+        return true;
+    }
+});
+
+// ---- Validation UI Helpers ----
+function showError(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('is-invalid');
+    
+    // Find or create error container
+    let errEl = el.nextElementSibling;
+    if (!errEl || !errEl.classList.contains('form-error')) {
+        errEl = document.createElement('div');
+        errEl.className = 'form-error';
+        el.parentNode.insertBefore(errEl, el.nextSibling);
+    }
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+}
+
+function clearError(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('is-invalid');
+    const errEl = el.nextElementSibling;
+    if (errEl && errEl.classList.contains('form-error')) {
+        errEl.style.display = 'none';
+    }
+}
+
+function clearAllErrors(stepId) {
+    const step = document.getElementById(stepId);
+    if (!step) return;
+    step.querySelectorAll('.form-control').forEach(el => clearError(el.id));
+    step.querySelectorAll('.form-error').forEach(el => el.style.display = 'none');
+    
+    // Special checkboxes
+    clearError('acceptTerms');
 }
 
 // ---- Notifications ----
@@ -33,32 +146,156 @@ window.showNotification = function (msg, type = 'success') {
     }, 4000);
 }
 
+// ---- Setup & Bootstrapping ----
 let currentStep = 1;
-let selectedPlan = null;
-let billingCycle = 'monthly';
-
 const planPrices = {
     monthly: { starter: 999, clinica: 6999 },
     annual: { starter: 832, clinica: 5832 },
 };
 
-// ---- Step navigation ----
-function nextStep() {
-    if (currentStep === 1 && !selectedPlan) return;
-    if (currentStep === 4) return; // handled by activateWithMercadoPago
-    goToStep(currentStep + 1);
+document.addEventListener('DOMContentLoaded', () => {
+    bindInputs();
+    loadPersistedState();
+    
+    // Default hiding for native error doms in HTML explicitly since we handle dynamically now
+    document.querySelectorAll('.form-error').forEach(e => e.style.display = 'none');
+});
+
+// Bind inputs dynamically to WizardState
+function bindInputs() {
+    const ids = ['orgName','orgSpecialty','orgSpecialtyOther','orgCountry','orgCity','orgPhone',
+                 'userFirst','userLast','userEmail','userPass','userPassConf','userCedula'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', (e) => {
+                WizardState[id] = e.target.value;
+                clearError(id);
+            });
+        }
+    });
+
+    const terms = document.getElementById('acceptTerms');
+    if(terms) {
+        terms.addEventListener('change', (e) => {
+            WizardState.acceptTerms = e.target.checked;
+            clearError('acceptTerms');
+        });
+    }
 }
 
-function prevStep() {
-    if (currentStep > 1) goToStep(currentStep - 1);
+function loadPersistedState() {
+    Object.keys(rawState).forEach(key => {
+        const val = sessionStorage.getItem('nerve_wizard_' + key);
+        if (val !== null) {
+            if (val === 'true' || val === 'false') {
+                WizardState[key] = val === 'true';
+            } else {
+                WizardState[key] = val;
+            }
+        }
+    });
+
+    // Sync DOM Inputs
+    const ids = ['orgName','orgSpecialty','orgSpecialtyOther','orgCountry','orgCity','orgPhone',
+                 'userFirst','userLast','userEmail','userPass','userPassConf','userCedula'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && WizardState[id]) el.value = WizardState[id];
+    });
+
+    if(document.getElementById('acceptTerms')) document.getElementById('acceptTerms').checked = WizardState.acceptTerms;
+
+    // Selections
+    if (WizardState.plan) {
+        const el = document.querySelector(`.plan-card[data-plan="${WizardState.plan}"]`);
+        if (el) {
+            document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('step1Next').disabled = false;
+        }
+    }
+    
+
+    
+    setBilling(WizardState.billingCycle);
+    toggleOtherSpecialty(document.getElementById('orgSpecialty'), 'orgSpecialtyOther');
 }
 
-function goToStep(n) {
-    document.getElementById('step' + currentStep).classList.remove('active');
-    currentStep = n;
-    document.getElementById('step' + currentStep).classList.add('active');
-    updateProgress();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+// ---- Shared: specialty "other" toggle ----
+window.toggleOtherSpecialty = function(select, inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isOther = select.value === 'Otra especialidad...';
+    input.style.display = isOther ? 'block' : 'none';
+    if (isOther) input.focus();
+    WizardState.orgSpecialty = select.value;
+}
+
+// ---- Step Transitions ----
+window.nextStep = async function() {
+    clearAllErrors('step' + currentStep);
+
+    // Validation before proceed
+    if (currentStep === 1) {
+        if (!WizardState.plan) {
+            showNotification('Selecciona un plan para continuar.', 'warning');
+            return;
+        }
+        if (WizardState.plan === 'hospital') {
+            window.location.href = 'index.html#contacto';
+            return;
+        }
+    }
+    
+    if (currentStep === 2) {
+        const result = Step2Schema.safeParse(WizardState);
+        if (!result.success) {
+            result.error.issues.forEach(issue => {
+                showError(issue.path[0], issue.message);
+            });
+            showNotification('Completa correctamente los datos de la organización', 'warning');
+            return;
+        }
+    }
+    
+    if (currentStep === 3) {
+        // Validation goes through validateStep3 specifically to simulate Async loaders
+        // Wait, validateStep3 is tied to the button. Handled there.
+        return; 
+    }
+
+    if (currentStep === 4) return; 
+
+    animateToStep(currentStep + 1);
+}
+
+window.prevStep = function() {
+    if (currentStep > 1) {
+        animateToStep(currentStep - 1);
+    }
+}
+
+function animateToStep(n) {
+    const currentEl = document.getElementById('step' + currentStep);
+    const nextEl = document.getElementById('step' + n);
+    
+    // Slide out current
+    currentEl.classList.remove('active', 'slide-in');
+    currentEl.classList.add('slide-out');
+    
+    setTimeout(() => {
+        currentEl.classList.remove('slide-out');
+        currentEl.style.display = 'none'; // Ensure hidden completely
+        
+        // Slide in next
+        currentStep = n;
+        nextEl.style.display = 'block';
+        nextEl.classList.add('active'); // active triggers animation in css
+        
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 300); // Wait for CSS animation
 }
 
 function updateProgress() {
@@ -74,93 +311,110 @@ function updateProgress() {
 }
 
 // ---- Plan selection ----
-function selectPlan(el) {
+window.selectPlan = function(el, proceed = false) {
     document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
-    selectedPlan = el.dataset;
-    document.getElementById('step1Next').disabled = false;
+    WizardState.plan = el.dataset.plan;
+    
+    const nextBtn = document.getElementById('step1Next');
+    nextBtn.disabled = false;
 
-    // If hospital plan → show contact instead of continue
-    if (el.dataset.plan === 'hospital') {
-        document.getElementById('step1Next').textContent = 'Contactar ventas →';
-        document.getElementById('step1Next').onclick = () => {
-            window.location.href = 'index.html#contacto';
-        };
-        return;
+    if (WizardState.plan === 'hospital') {
+        nextBtn.textContent = 'Contactar ventas →';
+    } else {
+        nextBtn.textContent = 'Continuar →';
     }
-    document.getElementById('step1Next').textContent = 'Continuar →';
-    document.getElementById('step1Next').onclick = nextStep;
+    
+    // optionally auto proceed if clicked manually
+    if(proceed && WizardState.plan !== 'hospital') {
+        // window.nextStep(); // if we want instant skip, but better just enable
+    }
+}
 
-    // Update summary
-    updateSummary();
+function applyConditionalLogic() {
+    const title = document.getElementById('step2Title');
+    const desc = document.getElementById('step2Desc');
+    const lblName = document.getElementById('labelOrgName');
+    const lblSpec = document.getElementById('labelOrgSpecialty');
+    const lblPhone = document.getElementById('labelOrgPhone');
+    const inputName = document.getElementById('orgName');
+
+    if (WizardState.plan === 'starter') {
+        WizardState.orgType = 'consultorio';
+        if(title) {
+            title.textContent = 'Tu consultorio';
+            desc.textContent = 'Cuéntanos un poco sobre tu práctica médica principal.';
+            lblName.textContent = 'Nombre del consultorio *';
+            lblSpec.textContent = 'Tu Especialidad';
+            lblPhone.textContent = 'Teléfono del consultorio';
+            inputName.placeholder = 'Ej. Consultorio Dr. Juan Pérez';
+        }
+    } else if (WizardState.plan === 'clinica') {
+        WizardState.orgType = 'clinica';
+        if(title) {
+            title.textContent = 'Tu clínica';
+            desc.textContent = 'Cuéntanos sobre tu clínica para configurar el espacio de tu equipo médico.';
+            lblName.textContent = 'Nombre de la clínica *';
+            lblSpec.textContent = 'Especialidad principal';
+            lblPhone.textContent = 'Teléfono de la clínica';
+            inputName.placeholder = 'Ej. Clínica Santa Fe';
+        }
+    }
 }
 
 function updateSummary() {
-    if (!selectedPlan) return;
-    const price = planPrices[billingCycle][selectedPlan.plan] || 0;
-    document.getElementById('summaryPlan').textContent = selectedPlan.label;
-    document.getElementById('summaryBilling').textContent = billingCycle === 'monthly' ? 'Facturación mensual' : 'Facturación anual (ahorra 17%)';
-    document.getElementById('summaryPrice').textContent = `$${price.toLocaleString()}/mes`;
-    document.getElementById('summaryLabel').textContent = billingCycle === 'annual' ? 'Precio anual' : 'Después del trial';
+    if (!WizardState.plan) return;
+    
+    // Label translations
+    const labels = { starter: 'Doctor Solo', clinica: 'Clínica Pro', hospital: 'Hospital' };
+    const price = planPrices[WizardState.billingCycle] ? planPrices[WizardState.billingCycle][WizardState.plan] || 0 : 0;
+    
+    const sumPlan = document.getElementById('summaryPlan');
+    if(sumPlan) sumPlan.textContent = labels[WizardState.plan];
+    
+    const sumBill = document.getElementById('summaryBilling');
+    if(sumBill) sumBill.textContent = WizardState.billingCycle === 'monthly' ? 'Facturación mensual' : 'Facturación anual (ahorra 17%)';
+    
+    const sumPrice = document.getElementById('summaryPrice');
+    if(sumPrice) sumPrice.textContent = `$${price.toLocaleString()}/mes`;
+    
+    const sumLabel = document.getElementById('summaryLabel');
+    if(sumLabel) sumLabel.textContent = WizardState.billingCycle === 'annual' ? 'Precio anual' : 'Después del trial';
 }
 
 // ---- Billing toggle ----
-function setBilling(cycle) {
-    billingCycle = cycle;
+window.setBilling = function(cycle) {
+    WizardState.billingCycle = cycle;
     document.getElementById('billMonthly').classList.toggle('active', cycle === 'monthly');
     document.getElementById('billAnnual').classList.toggle('active', cycle === 'annual');
-    updateSummary();
 }
 
-// ---- Org type selection ----
-function selectOrgType(el) {
-    document.querySelectorAll('.org-type-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-}
 
-// ---- Step 3 validation ----
-function validateStep3() {
-    const email = document.getElementById('userEmail').value.trim();
-    const pass = document.getElementById('userPass').value;
-    const conf = document.getElementById('userPassConf').value;
-    const terms = document.getElementById('acceptTerms').checked;
-    let ok = true;
-
-    // Email
-    const emailErr = document.getElementById('emailError');
-    if (!email.match(/^[^@]+@[^@]+\.[^@]+$/)) {
-        emailErr.style.display = 'block'; ok = false;
-    } else emailErr.style.display = 'none';
-
-    // Password match
-    const passErr = document.getElementById('passError');
-    if (pass !== conf || pass.length < 8) {
-        passErr.style.display = 'block'; ok = false;
-    } else passErr.style.display = 'none';
-
-    if (!terms) { showNotification('Debes aceptar los términos de uso.', 'warning'); ok = false; }
-
-    if (ok) {
-        // Create the account first, then move to payment step
-        createAccountAndProceed();
+// ---- Step 3 validation (Async wrapper) ----
+window.validateStep3 = async function() {
+    clearAllErrors('step3');
+    
+    const result = Step3Schema.safeParse(WizardState);
+    if (!result.success) {
+        result.error.issues.forEach(issue => {
+            showError(issue.path[0], issue.message);
+        });
+        showNotification('Corrige los errores para continuar', 'warning');
+        return;
     }
+    
+    // Create the account first, then move to payment
+    await createAccountAndProceed();
 }
 
 // ---- Create account (Step 3 → Step 4) ----
 async function createAccountAndProceed() {
-    const email = document.getElementById('userEmail')?.value?.trim();
-    const password = document.getElementById('userPass')?.value;
-    const name = (document.getElementById('userFirst')?.value?.trim() + ' ' + document.getElementById('userLast')?.value?.trim()).trim();
-    const orgName = document.getElementById('orgName')?.value?.trim();
-    const phone = document.getElementById('orgPhone')?.value?.trim();
-    const specialty = document.getElementById('orgSpecialty')?.value;
-    const license = document.getElementById('userCedula')?.value?.trim();
-
     const btn = document.querySelector('#step3 .btn-primary');
     btn.disabled = true;
+    
+    const originalText = btn.innerHTML;
     btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></span> Creando cuenta...';
 
-    // Add spinner style if it doesn't exist
     if (!document.getElementById('spinner-style')) {
         const style = document.createElement('style');
         style.id = 'spinner-style';
@@ -170,18 +424,25 @@ async function createAccountAndProceed() {
 
     try {
         if (typeof API !== 'undefined') {
-            await API.register(name, email, password, orgName, phone, specialty, license);
+            const name = (WizardState.userFirst + ' ' + WizardState.userLast).trim();
+            await API.register(
+                name, 
+                WizardState.userEmail, 
+                WizardState.userPass, 
+                WizardState.orgName, 
+                WizardState.orgPhone, 
+                WizardState.orgSpecialty, 
+                WizardState.userCedula
+            );
 
-            // Store some UI state for the app
+            // App State logic matching old setup
             localStorage.setItem('nerve_firsttime', '1');
-            localStorage.setItem('nerve_email', email);
+            localStorage.setItem('nerve_email', WizardState.userEmail);
             localStorage.setItem('nerve_name', name);
 
-            document.getElementById('confirmEmail').textContent = email;
+            document.getElementById('confirmEmail').textContent = WizardState.userEmail;
             
-            // Move to payment step (Step 4)
-            updateSummary();
-            goToStep(4);
+            animateToStep(4);
         } else {
             throw new Error('API no disponible. Intenta de nuevo más tarde.');
         }
@@ -189,30 +450,31 @@ async function createAccountAndProceed() {
         showNotification(err.message || 'Error al crear la cuenta', 'error');
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Continuar →';
+        btn.innerHTML = originalText;
     }
 }
 
 // ---- Activate with Mercado Pago (Step 4) ----
-async function activateWithMercadoPago() {
-    if (!selectedPlan || !selectedPlan.plan) {
+window.activateWithMercadoPago = async function() {
+    if (!WizardState.plan) {
         showNotification('Selecciona un plan primero.', 'warning');
         return;
     }
 
     const btn = document.getElementById('mpPayButton');
+    if(!btn) return;
+    
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></span> Redirigiendo a Mercado Pago...';
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;"></span> Redirigiendo...';
 
     try {
-        // Map frontend plan names to backend plan names
         const planMap = { starter: 'starter', clinica: 'clinica_pro' };
-        const backendPlan = planMap[selectedPlan.plan] || selectedPlan.plan;
+        const backendPlan = planMap[WizardState.plan] || WizardState.plan;
 
-        const data = await API.createPaymentPreference(backendPlan, billingCycle);
+        const data = await API.createPaymentPreference(backendPlan, WizardState.billingCycle);
 
         if (data.initPoint) {
-            // Redirect to Mercado Pago Checkout
             window.location.href = data.initPoint;
         } else {
             throw new Error('No se pudo obtener el enlace de pago');
@@ -220,23 +482,23 @@ async function activateWithMercadoPago() {
     } catch (err) {
         showNotification(err.message || 'Error al conectar con Mercado Pago', 'error');
         btn.disabled = false;
-        btn.innerHTML = '🔒 Pagar con Mercado Pago →';
+        btn.innerHTML = originalText;
     }
 }
 
 // ---- Skip payment and start trial ----
-function skipPaymentAndStart() {
+window.skipPaymentAndStart = function() {
     localStorage.setItem('nerve_firsttime', '1');
     localStorage.setItem('nerve_role', 'org_owner');
-    goToStep(5);
+    animateToStep(5);
 }
 
-function setFirstTimeUser() {
+window.setFirstTimeUser = function() {
     localStorage.setItem('nerve_firsttime', '1');
     localStorage.setItem('nerve_role', 'org_owner');
 }
 
-function resendEmail() {
+window.resendEmail = function(event) {
     const btn = event.target;
     btn.disabled = true;
     btn.textContent = 'Enviando...';
@@ -246,12 +508,15 @@ function resendEmail() {
     }, 1200);
 }
 
-// ---- Pre-select plan from URL param ----
+// ---- Analytics / Read URL Params ----
 (function initFromURL() {
     const params = new URLSearchParams(window.location.search);
     const planParam = params.get('plan');
     if (planParam) {
-        const card = document.querySelector(`[data-plan="${planParam}"]`);
-        if (card) selectPlan(card);
+        // Wait for DOM to be ready before selecting if it evaluates quickly
+        setTimeout(()=> {
+            const card = document.querySelector(`[data-plan="${planParam}"]`);
+            if (card) selectPlan(card);
+        }, 50);
     }
 })();

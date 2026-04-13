@@ -121,22 +121,31 @@
 /* ---- Step container ---- */
 .reg-step {
     display: none;
-    animation: fadeInUp 0.4s ease;
+    opacity: 0;
+    transform: translateY(15px);
 }
 
 .reg-step.active {
     display: block;
+    animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
+.reg-step.slide-out {
+    display: block;
+    animation: slideOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
+@keyframes slideIn {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes slideOut {
+    to {
+        opacity: 0;
+        transform: translateY(-15px);
     }
 }
 
@@ -341,6 +350,13 @@
     box-shadow: 0 0 16px rgba(0, 242, 244, 0.15);
 }
 
+.org-type-card.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(100%);
+}
+
 .ot-icon {
     font-size: 1.8rem;
     margin-bottom: 8px;
@@ -400,6 +416,11 @@
     outline: none;
     border-color: var(--cyan-mid);
     box-shadow: 0 0 0 3px rgba(6, 207, 215, 0.12);
+}
+
+.form-control.is-invalid {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.12);
 }
 
 .form-control option {

@@ -128,35 +128,19 @@
         <div class="reg-step" id="step2">
             <div class="reg-step-header">
                 <div class="reg-badge">✦ Paso 2 de 4</div>
-                <h1>Tu organización</h1>
-                <p>Cuéntanos sobre tu clínica u hospital para configurar tu espacio de trabajo.</p>
+                <h1 id="step2Title">Tu organización</h1>
+                <p id="step2Desc">Cuéntanos sobre tu clínica u hospital para configurar tu espacio de trabajo.</p>
             </div>
             <div class="reg-form">
-                <div class="org-type-grid">
-                    <div class="org-type-card selected" data-orgtype="consultorio" onclick="selectOrgType(this)">
-                        <div class="ot-icon">🩺</div>
-                        <div class="ot-name">Consultorio</div>
-                        <div class="ot-desc">1 doctor, práctica independiente</div>
-                    </div>
-                    <div class="org-type-card" data-orgtype="clinica" onclick="selectOrgType(this)">
-                        <div class="ot-icon">🏥</div>
-                        <div class="ot-name">Clínica</div>
-                        <div class="ot-desc">Varios doctores y especialidades</div>
-                    </div>
-                    <div class="org-type-card" data-orgtype="hospital" onclick="selectOrgType(this)">
-                        <div class="ot-icon">🏨</div>
-                        <div class="ot-name">Hospital</div>
-                        <div class="ot-desc">Estructura con departamentos</div>
-                    </div>
-                </div>
+
 
                 <div class="form-row form-row-2">
                     <div class="form-group">
-                        <label class="form-label">Nombre de la organización *</label>
+                        <label class="form-label" id="labelOrgName">Nombre de la organización *</label>
                         <input type="text" class="form-control" id="orgName" placeholder="Ej. Clínica Santa Fe" />
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Especialidad principal</label>
+                        <label class="form-label" id="labelOrgSpecialty">Especialidad principal</label>
                         <select class="form-control" id="orgSpecialty"
                             onchange="toggleOtherSpecialty(this,'orgSpecialtyOther')">
                             <option value="Medicina General">Medicina General</option>
@@ -191,7 +175,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Teléfono de la clínica</label>
+                    <label class="form-label" id="labelOrgPhone">Teléfono de la clínica</label>
                     <input type="tel" class="form-control" id="orgPhone" placeholder="+52 55 1234 5678" />
                 </div>
             </div>
@@ -357,6 +341,7 @@
 
     </div><!-- /reg-wrapper -->
 
+    <script src="https://unpkg.com/zod@3.22.4/lib/index.umd.js"></script>
     <script src="assets/js/api.js"></script>
     <script src="assets/js/register.js?v=2"></script>
 </body>
