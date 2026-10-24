@@ -1,1 +1,0 @@
-La versión para macOS se encuentra actualmente en proceso de revisión notarial por parte de Apple. Estará disponible para su descarga oficial muy pronto. Por favor utiliza la versión web mientras tanto.

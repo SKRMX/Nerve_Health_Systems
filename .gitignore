@@ -1,39 +1,84 @@
 # Dependencies
-node_modules/
-package-lock.json
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Environment variables
-.env
-.env.local
-.env.production
+# Testing
+/coverage
 
-# Prisma
-server/prisma/migrations/
+# Next.js & Production Builds
+/.next/
+/out/
+/build
 
-# OS files
+# Misc & OS
 .DS_Store
-Thumbs.db
 
-# IDE
-.vscode/
-.idea/
+# Certificates, Private Keys & Signing
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+*.mobileprovision
 
-# Logs
+# Debug & Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 *.log
-logs/
 
-# Build
-dist/
-build/
+# Environment Variables (allow .env.example)
+.env
+.env.*
+!.env.example
 
-# PM2
-ecosystem.config.js.bak
+# Vercel
+.vercel
 
-# Private credentials
-vps_credentials*
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
 
-# App Downloads
-client/downloads/
-Nerve_Desktop_App/
-desktop-app/built/
-node_modules/
+# Databases, Dumps, Backups & Archives
+*.dump
+*.bak
+*.backup
+*.sqlite
+*.sqlite3
+*.db
+*.zip
+*.tar.gz
+
+# Native Mobile Build & User Data (Capacitor Android / iOS)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+ios/App/Pods/
+ios/App/build/
+**/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+
+# Local VPS, SSH & Ad-hoc Maintenance/Debug Scripts
+*.exp
+/setup_evo_nginx.sh
+/check_*.js
+/get_rpc.js
+/migrate_local.js
+/query_users.js
+/reload_*.js
+/retry_reload.js
+/run_*_migration.js
+/seed_*.js
+/seed_demo.ts
+/test_*.js
+/scripts/signup_demo.js
