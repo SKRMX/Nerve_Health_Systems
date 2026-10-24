@@ -1,6 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,32 +8,77 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js & Production Builds
 /.next/
 /out/
-
-# production
 /build
 
-# misc
+# Misc & OS
 .DS_Store
-*.pem
 
-# debug
+# Certificates, Private Keys & Signing
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+*.mobileprovision
+
+# Debug & Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
-# env files (can opt-in for committing if needed)
-.env*
+# Environment Variables (allow .env.example)
+.env
+.env.*
+!.env.example
 
-# vercel
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Databases, Dumps, Backups & Archives
+*.dump
+*.bak
+*.backup
+*.sqlite
+*.sqlite3
+*.db
+*.zip
+*.tar.gz
+
+# Native Mobile Build & User Data (Capacitor Android / iOS)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+ios/App/Pods/
+ios/App/build/
+**/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+
+# Local VPS, SSH & Ad-hoc Maintenance/Debug Scripts
+*.exp
+/setup_evo_nginx.sh
+/check_*.js
+/get_rpc.js
+/migrate_local.js
+/query_users.js
+/reload_*.js
+/retry_reload.js
+/run_*_migration.js
+/seed_*.js
+/seed_demo.ts
+/test_*.js
+/scripts/signup_demo.js

@@ -1,0 +1,23 @@
+{
+  "name": "NERVE Health Systems",
+  "short_name": "NERVE",
+  "description": "Sistema de gestión médica, expedientes clínicos y agenda para médicos y clínicas.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#050B14",
+  "theme_color": "#050B14",
+  "icons": [
+    {
+      "src": "/logo_nerve.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo_nerve.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
